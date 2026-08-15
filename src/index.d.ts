@@ -4792,7 +4792,7 @@ declare namespace JXG {
         /**
          * An array containing all geometric objects on the board in the order of construction.
          */
-        objectsList: unknown[];
+        objectsList: Array<GeometryElement | Composition>;
         /**
          *
          */
@@ -5936,7 +5936,11 @@ declare namespace JXG {
          * @returns Reference to the board.
          */
         removeObject(
-            object: (string | GeometryElement) | (string | GeometryElement)[],
+            object:
+                | string
+                | GeometryElement
+                | Composition
+                | readonly (string | GeometryElement | Composition)[],
             saveMethod?: boolean
         ): this;
         removePointerEventHandlers(): unknown;

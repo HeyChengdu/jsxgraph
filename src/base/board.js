@@ -5531,7 +5531,7 @@ JXG.extend(
         /**
          * Inner, recursive method of removeObject.
          *
-         * @param {JXG.GeometryElement|Array} object The object to remove or array of objects to be removed.
+         * @param {JXG.GeometryElement|JXG.Composition|Array} object The object to remove or array of objects to be removed.
          * The element(s) is/are given by name, id or a reference.
          * @param {Boolean} [saveMethod=false] If saveMethod=true, the algorithm runs through all elements
          * and tests if the element to be deleted is a child element. If this is the case, it will be
@@ -5665,16 +5665,24 @@ JXG.extend(
          * @returns {JXG.Board} Reference to the board
          */
         removeObject: function (object, saveMethod) {
-            var i;
+            var remove;
+
+            remove = function (item) {
+                var j;
+
+                if (Type.isArray(item)) {
+                    for (j = 0; j < item.length; j++) {
+                        remove(item[j]);
+                    }
+                } else if (item instanceof JXG.Composition) {
+                    remove(item.objectsList);
+                } else {
+                    this._removeObj(item, saveMethod);
+                }
+            }.bind(this);
 
             this.renderer.suspendRedraw(this);
-            if (Type.isArray(object)) {
-                for (i = 0; i < object.length; i++) {
-                    this._removeObj(object[i], saveMethod);
-                }
-            } else {
-                this._removeObj(object, saveMethod);
-            }
+            remove(object);
             this.renderer.unsuspendRedraw();
 
             this.update();
