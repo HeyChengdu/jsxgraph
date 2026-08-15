@@ -445,7 +445,7 @@ JXG.extend(
                 style,
                 pixelDimRegExp = /\d+(\.\d*)?px/;
 
-            if (!this.isBrowser || elementId === null) {
+            if ((!this.isBrowser && !doc) || elementId === null) {
                 return {
                     width: 500,
                     height: 500
@@ -470,7 +470,8 @@ JXG.extend(
                 }
 
                 // A parent might be set to display:none; try reading them from styles
-                style = window.getComputedStyle ? window.getComputedStyle(element) : element.style;
+                style = doc.defaultView && doc.defaultView.getComputedStyle ?
+                    doc.defaultView.getComputedStyle(element) : element.style;
                 return {
                     width: pixelDimRegExp.test(style.width) ? parseFloat(style.width) : 0,
                     height: pixelDimRegExp.test(style.height) ? parseFloat(style.height) : 0
