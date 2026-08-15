@@ -19,6 +19,9 @@ describe("Local coordinate system runtime contracts", () => {
     let board: JXG.Board | undefined;
     let container: HTMLDivElement | undefined;
 
+    const collectObjectIds = (object: JXG.GeometryElement | JXG.Composition): string[] =>
+        "id" in object ? [object.id] : object.objectsList.flatMap(collectObjectIds);
+
     const createBoard = (renderer: "no" | "svg" = "no") => {
         board = JXG.JSXGraph.initBoard(containerId, {
             renderer,
@@ -98,13 +101,11 @@ describe("Local coordinate system runtime contracts", () => {
         const currentBoard = createBoard("svg");
         const layout = currentBoard.create("mainlayout");
         const plane = currentBoard.create("localcartesianplane", [layout.body]);
-        const childIds = plane.objectsList.flatMap((object) =>
-            "id" in object ? [object.id] : []
-        );
+        const childIds = plane.objectsList.flatMap(collectObjectIds);
 
         currentBoard.removeObject(plane);
 
-        expect(childIds.length).toBe(4);
+        expect(childIds.length).toBeGreaterThan(4);
         for (const id of childIds) {
             expect(currentBoard.objects[id]).toBeUndefined();
         }

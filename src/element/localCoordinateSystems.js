@@ -3,6 +3,7 @@ import { projectLayoutRegion } from "./layout/layoutRegion.js";
 const RANGE = [-5, 5];
 const RADIUS_RANGE = [0, 5];
 const PAD = 0.05;
+const MAX_POLAR_GRID_ELEMENTS = 4096;
 const value = (v) => (typeof v === "function" ? v() : v);
 function isRegion(v) {
     const r = v;
@@ -127,11 +128,19 @@ function createLocalNumberLine(board, parents, attributes) {
         ...attributes.ticks
     });
     const point = (v) => between(start, end, () => (value(v) - logicalRange[0]) / span);
-    return Object.assign(new JXG.Composition({ line, ticks }), {
-        point,
-        range: logicalRange,
-        subs: { line, ticks }
-    });
+    return Object.assign(
+        new JXG.Composition({
+            ticks,
+            line,
+            startPoint: line.point1,
+            endPoint: line.point2
+        }),
+        {
+            point,
+            range: logicalRange,
+            subs: { line, ticks }
+        }
+    );
 }
 function cartesianParts(parents, xr, yr) {
     if (parents.length === 1 && isRegion(parents[0])) {
@@ -191,23 +200,15 @@ function createLocalCartesianPlane(board, parents, attributes) {
             ((p.xe[1]() - p.origin[1]()) * value(x)) / xr[1] +
             ((p.ye[1]() - p.origin[1]()) * value(y)) / yr[1]
     ];
-    return Object.assign(
-        new JXG.Composition({
-            xLine: xAxis.subs.line,
+    return Object.assign(new JXG.Composition({ xAxis, yAxis }), {
+        point,
+        subs: {
+            xAxis,
             xTicks: xAxis.subs.ticks,
-            yLine: yAxis.subs.line,
+            yAxis,
             yTicks: yAxis.subs.ticks
-        }),
-        {
-            point,
-            subs: {
-                xAxis,
-                xTicks: xAxis.subs.ticks,
-                yAxis,
-                yTicks: yAxis.subs.ticks
-            }
         }
-    );
+    });
 }
 function createLocalPolarPlane(board, parents, attributes) {
     const rr = range(attributes.radiusRange, RADIUS_RANGE, "localpolarplane", "radiusRange");
@@ -225,11 +226,6 @@ function createLocalPolarPlane(board, parents, attributes) {
         throw new Error(
             "JSXGraph: localpolarplane accepts [LayoutRegion] or [center, radiusPoint]."
         );
-    const radialAxis = board.create("localnumberline", [center, end], {
-        ...childAttributes(attributes),
-        range: rr,
-        ...attributes.radialAxis
-    });
     const radiusStep = positiveNumber(
         attributes.radiusStep,
         1,
@@ -237,6 +233,18 @@ function createLocalPolarPlane(board, parents, attributes) {
         "radiusStep"
     );
     const angleStep = positiveNumber(attributes.angleStep, 30, "localpolarplane", "angleStep");
+    const circleCount = Math.floor(rr[1] / radiusStep);
+    const rayCount = Math.ceil(360 / angleStep);
+    if (circleCount + rayCount > MAX_POLAR_GRID_ELEMENTS) {
+        throw new RangeError(
+            `JSXGraph: localpolarplane would create ${circleCount + rayCount} grid elements; maximum is ${MAX_POLAR_GRID_ELEMENTS}. Increase "radiusStep" or "angleStep".`
+        );
+    }
+    const radialAxis = board.create("localnumberline", [center, end], {
+        ...childAttributes(attributes),
+        range: rr,
+        ...attributes.radialAxis
+    });
     const circles = [];
     for (let radius = radiusStep; radius <= rr[1]; radius += radiusStep) {
         circles.push(
