@@ -1302,6 +1302,8 @@ declare namespace JXG {
             attributes: TextAttributes,
             content: string | StringFunction
         );
+        /** The currently evaluated plain-text content. */
+        plaintext: string;
         getSize(): [width: number, height: number];
         setText(text: string): this;
         setTextJessieCode(text: string): void;
