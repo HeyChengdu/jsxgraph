@@ -94,7 +94,7 @@
     "serve": "http-server -c-1",
     "test": "make test",
     "test:coverage": "npm run buildCore && npm run test:contracts:compile && karma start karma/karma.coverage.conf.js",
-    "test:contracts": "npm run test:contracts:compile && karma start karma/karma.contracts.conf.js",
+    "test:contracts": "npm run buildCore && npm run test:contracts:compile && karma start karma/karma.contracts.conf.js",
     "test:contracts:compile": "tsc -p test/contracts/tsconfig.json",
     "test:types": "tsc -p test/types/tsconfig.json && tsc -p test/contracts/tsconfig.json --noEmit"
   },
