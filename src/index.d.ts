@@ -41,6 +41,14 @@ declare namespace JXG {
      * A composition is a simple container that manages none or more GeometryElements.
      */
     export class Composition {
+        /** Elements indexed by their JSXGraph id or composition key. */
+        elements: { [key: string]: GeometryElement | Composition };
+        /** Alias of {@link elements}. */
+        objects: { [key: string]: GeometryElement | Composition };
+        /** Elements indexed by their current non-empty name. */
+        elementsByName: { [name: string]: GeometryElement | Composition };
+        /** Elements in insertion order. */
+        objectsList: Array<GeometryElement | Composition>;
         /**
          * @param elements A list of elements with a descriptive name for the element as the key and a reference to the element as the value of every list entry. The name is used to access the element later on.
          */
@@ -3965,8 +3973,7 @@ declare namespace JXG {
     export type PolyhedronVertexMap = Readonly<Record<string, PolyhedronVertex>>;
     export type PolyhedronFace = readonly (number | string)[];
     export type PolyhedronFaceDefinition =
-        | PolyhedronFace
-        | readonly [PolyhedronFace, GeometryElementAttributes];
+        PolyhedronFace | readonly [PolyhedronFace, GeometryElementAttributes];
     export type Polyhedron3DParents =
         | readonly [
               readonly PolyhedronVertex[] | PolyhedronVertexMap,
@@ -4015,9 +4022,7 @@ declare namespace JXG {
 
     export type View3DNavigationKey = "none" | "shift" | "ctrl";
     export type View3DSliderPosition =
-        | "auto"
-        | readonly [number, number]
-        | (() => readonly [number, number]);
+        "auto" | readonly [number, number] | (() => readonly [number, number]);
 
     export interface View3DPointerNavigationAttributes {
         enabled?: boolean;
@@ -4037,8 +4042,10 @@ declare namespace JXG {
         pos?: View3DSliderPosition;
     }
 
-    export interface View3DSliderAttributes
-        extends Omit<SliderAttributes, "point1" | "point2"> {
+    export interface View3DSliderAttributes extends Omit<
+        SliderAttributes,
+        "point1" | "point2"
+    > {
         min?: EvaluatableAttribute<number>;
         max?: EvaluatableAttribute<number>;
         start?: EvaluatableAttribute<number>;
@@ -4478,7 +4485,8 @@ declare namespace JXG {
         DynamicCoordinate
     ];
     export type TransformationList = Transformation | readonly Transformation[];
-    export type CoordinateConstraint = () => AffineCoordinates | HomogeneousCoordinates | Coords;
+    export type CoordinateConstraint = () =>
+        AffineCoordinates | HomogeneousCoordinates | Coords;
     export type PointParents =
         | AffineCoordinates
         | HomogeneousCoordinates
