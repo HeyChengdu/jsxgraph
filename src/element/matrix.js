@@ -3,6 +3,7 @@ import {
     createCellGridGeometry,
     normalizeCellContent,
     omitUndefined,
+    ownGeneratedLine,
     readCellGridVisualAttributes,
     validateCellRows
 } from "./cellGrid.js";
@@ -97,7 +98,7 @@ function createMatrix(board, parents, attributes) {
         ...entries.flatMap((row, rowIndex) =>
             row.map((entry, columnIndex) => [`entry${rowIndex}_${columnIndex}`, entry])
         ),
-        ...brackets.map((line, index) => [`bracket${index}`, line])
+        ...brackets.map((line, index) => [`bracket${index}`, ownGeneratedLine(line)])
     ]);
     return Object.assign(new JXG.Composition(objects), {
         brackets,

@@ -6212,49 +6212,57 @@ JXG.extend(
             }
             this.inUpdate = true;
 
-            if (
-                this.attr.minimizereflow === 'all' &&
-                this.containerObj &&
-                this.renderer.type !== 'vml'
-            ) {
-                storeActiveEl = this.document.activeElement; // Store focus element
-                insert = this.renderer.removeToInsertLater(this.containerObj);
-            }
-
-            if (this.attr.minimizereflow === 'svg' && this.renderer.type === 'svg') {
-                storeActiveEl = this.document.activeElement;
-                insert = this.renderer.removeToInsertLater(this.renderer.svgRoot);
-            }
-
-            this.prepareUpdate(drag).updateElements(drag).updateConditions();
-
-            this.renderer.suspendRedraw(this);
-            this.updateRenderer();
-            this.renderer.unsuspendRedraw();
-            this.triggerEventHandlers(['update'], []);
-
-            if (insert) {
-                insert();
-                storeActiveEl.focus(); // Restore focus element
-            }
-
-            // To resolve dependencies between boards
-            // for (var board in JXG.boards) {
-            len = this.dependentBoards.length;
-            for (i = 0; i < len; i++) {
-                b = this.dependentBoards[i];
-                if (Type.exists(b) && b !== this) {
-                    b.updateQuality = this.updateQuality;
-                    b.prepareUpdate().updateElements().updateConditions();
-                    b.renderer.suspendRedraw(this);
-                    b.updateRenderer();
-                    b.renderer.unsuspendRedraw();
-                    b.triggerEventHandlers(['update'], []);
+            try {
+                if (
+                    this.attr.minimizereflow === 'all' &&
+                    this.containerObj &&
+                    this.renderer.type !== 'vml'
+                ) {
+                    storeActiveEl = this.document.activeElement; // Store focus element
+                    insert = this.renderer.removeToInsertLater(this.containerObj);
                 }
-            }
 
-            this.inUpdate = false;
-            return this;
+                if (this.attr.minimizereflow === 'svg' && this.renderer.type === 'svg') {
+                    storeActiveEl = this.document.activeElement;
+                    insert = this.renderer.removeToInsertLater(this.renderer.svgRoot);
+                }
+
+                this.prepareUpdate(drag).updateElements(drag).updateConditions();
+
+                this.renderer.suspendRedraw(this);
+                this.updateRenderer();
+                this.renderer.unsuspendRedraw();
+                this.triggerEventHandlers(['update'], []);
+
+                if (insert) {
+                    insert();
+                    insert = null;
+                    storeActiveEl.focus(); // Restore focus element
+                }
+
+                // To resolve dependencies between boards
+                // for (var board in JXG.boards) {
+                len = this.dependentBoards.length;
+                for (i = 0; i < len; i++) {
+                    b = this.dependentBoards[i];
+                    if (Type.exists(b) && b !== this) {
+                        b.updateQuality = this.updateQuality;
+                        b.prepareUpdate().updateElements().updateConditions();
+                        b.renderer.suspendRedraw(this);
+                        b.updateRenderer();
+                        b.renderer.unsuspendRedraw();
+                        b.triggerEventHandlers(['update'], []);
+                    }
+                }
+
+                return this;
+            } finally {
+                if (insert) {
+                    insert();
+                    storeActiveEl.focus();
+                }
+                this.inUpdate = false;
+            }
         },
 
         /**

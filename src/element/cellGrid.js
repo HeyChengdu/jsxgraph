@@ -1,3 +1,13 @@
+import JXG from "../jxg.js";
+
+export function ownGeneratedLine(line) {
+    return new JXG.Composition({
+        line,
+        startPoint: line.point1,
+        endPoint: line.point2
+    });
+}
+
 export function readCellGridVisualAttributes(elementType, attributes) {
     return {
         fillColor: readEvaluatableAttribute(

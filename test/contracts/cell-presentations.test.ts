@@ -19,6 +19,9 @@ describe("Cell presentation runtime contracts", () => {
     let board: JXG.Board | undefined;
     let container: HTMLDivElement | undefined;
 
+    const collectObjectIds = (object: JXG.GeometryElement | JXG.Composition): string[] =>
+        "id" in object ? [object.id] : object.objectsList.flatMap(collectObjectIds);
+
     const createBoard = () => {
         board = JXG.JSXGraph.initBoard(containerId, {
             renderer: "svg",
@@ -91,9 +94,7 @@ describe("Cell presentation runtime contracts", () => {
         const currentBoard = createBoard();
         const layout = currentBoard.create("mainlayout");
         const table = currentBoard.create("table", [layout.body, [["A", "B"]]]);
-        const childIds = table.objectsList.flatMap((object) =>
-            "id" in object ? [object.id] : []
-        );
+        const childIds = table.objectsList.flatMap(collectObjectIds);
 
         currentBoard.removeObject(table);
 
