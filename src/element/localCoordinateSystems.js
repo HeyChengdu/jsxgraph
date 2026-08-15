@@ -28,12 +28,23 @@ function range(v, fallback, type, key) {
         v.length !== 2 ||
         typeof v[0] !== "number" ||
         typeof v[1] !== "number" ||
+        !Number.isFinite(v[0]) ||
+        !Number.isFinite(v[1]) ||
         v[0] >= v[1]
     )
         throw new RangeError(
             `JSXGraph: ${type} attribute "${key}" must be [minimum, maximum].`
         );
     return [v[0], v[1]];
+}
+function positiveNumber(value, fallback, type, key) {
+    const number = value ?? fallback;
+    if (typeof number !== "number" || !Number.isFinite(number) || number <= 0) {
+        throw new RangeError(
+            `JSXGraph: ${type} attribute "${key}" must be a positive finite number.`
+        );
+    }
+    return number;
 }
 function between(a, b, ratio) {
     return [
@@ -85,8 +96,12 @@ function createLocalNumberLine(board, parents, attributes) {
     const logicalRange = range(attributes.range, RANGE, "localnumberline", "range");
     const [start, end] = endpoints(parents, attributes);
     const span = logicalRange[1] - logicalRange[0];
-    const tickDistance =
-        typeof attributes.tickDistance === "number" ? attributes.tickDistance : 1;
+    const tickDistance = positiveNumber(
+        attributes.tickDistance,
+        1,
+        "localnumberline",
+        "tickDistance"
+    );
     const shared = childAttributes(attributes);
     const line = board.create("segment", [start, end], {
         ...shared,
@@ -215,8 +230,13 @@ function createLocalPolarPlane(board, parents, attributes) {
         range: rr,
         ...attributes.radialAxis
     });
-    const radiusStep = typeof attributes.radiusStep === "number" ? attributes.radiusStep : 1;
-    const angleStep = typeof attributes.angleStep === "number" ? attributes.angleStep : 30;
+    const radiusStep = positiveNumber(
+        attributes.radiusStep,
+        1,
+        "localpolarplane",
+        "radiusStep"
+    );
+    const angleStep = positiveNumber(attributes.angleStep, 30, "localpolarplane", "angleStep");
     const circles = [];
     for (let radius = radiusStep; radius <= rr[1]; radius += radiusStep) {
         circles.push(
