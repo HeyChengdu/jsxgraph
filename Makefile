@@ -1,4 +1,4 @@
-.PHONY: test docs core core-min prettier release lint eslint readers
+.PHONY: test test-contracts docs core core-min prettier release lint eslint readers
 
 # Build tools
 WEBPACK=./node_modules/.bin/webpack
@@ -176,7 +176,10 @@ lint:
 eslint:
 	$(ESLINT) $(ESLINTFLAGS) $(LINTLIST)
 
-test: core
+test-contracts:
+	npm run test:contracts:compile
+
+test: core test-contracts
 ifeq ($(shell which google-chrome | wc -l), 1)
 	@echo "Use google chrome"
 	$(KARMA) start karma/karma.conf.js
@@ -191,4 +194,3 @@ endif
 
 testchromium: core
 	export CHROME_BIN=/usr/bin/chromium; $(KARMA) start karma/karma.conf.js
-

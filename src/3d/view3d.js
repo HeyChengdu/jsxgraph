@@ -256,7 +256,7 @@ JXG.extend(
         var prefix = [],
             el;
 
-        if (elementType.indexOf('3d') > 0) {
+        if (elementType.toLowerCase().indexOf('3d') > 0) {
             // is3D = true;
             prefix.push(this);
         }

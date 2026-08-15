@@ -60,6 +60,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.4.0",
+    "@types/jasmine": "^5.1.8",
     "eslint": ">=10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5",
@@ -71,11 +72,13 @@
     "jslint": "^0.12.1",
     "karma": "^6.4.3",
     "karma-chrome-launcher": "^3.2.0",
+    "karma-coverage": "^2.2.1",
     "karma-jasmine": "^5.1.0",
     "npmignore": "^0.3.1",
     "path-browserify": "^1.0.1",
     "prettier": "^3.8.1",
     "terser-webpack-plugin": ">=5.6.1",
+    "typescript": "^5.9.3",
     "webpack": ">=5.105.4",
     "webpack-cli": ">=7.2.1"
   },
@@ -89,9 +92,12 @@
     "check-format": "prettier --check src test extensions",
     "//No! format": "//prettier --write src test extensions",
     "serve": "http-server -c-1",
-    "test": "make test"
+    "test": "make test",
+    "test:coverage": "npm run buildCore && npm run test:contracts:compile && karma start karma/karma.coverage.conf.js",
+    "test:contracts": "npm run buildCore && npm run test:contracts:compile && karma start karma/karma.contracts.conf.js",
+    "test:contracts:compile": "tsc -p test/contracts/tsconfig.json",
+    "test:declaration-quality": "node test/types/declaration-quality.mjs",
+    "test:types": "npm run test:declaration-quality && tsc -p test/types/tsconfig.json && tsc -p test/contracts/tsconfig.json --noEmit"
   },
-  "dependencies": {
-    "jsxgraph": "^1.12.0"
-  }
+  "dependencies": {}
 }

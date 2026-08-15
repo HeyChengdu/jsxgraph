@@ -4,7 +4,7 @@
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/prefer-namespace-keyword */
 //
-// Type definitions for JSXGraph 1.4.x
+// Type declarations ship with JSXGraph and follow the package version.
 // Project: https://jsxgraph.org
 // Definitions by: David Holmes https://github.com/geometryzen
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -840,9 +840,7 @@ declare namespace JXG {
      *
      */
     export interface GeometryElementAttributes {
-        /**
-         * ???
-         */
+        /** Applies the same color to the element's stroke and fill where supported. */
         color?: string;
         /**
          * Determines the elements border-style.
@@ -862,9 +860,7 @@ declare namespace JXG {
          */
         draft?: boolean | GeometryElementAttributes;
 
-        /**
-         * ???
-         */
+        /** Moves the SVG node to the top of its layer while the element is dragged. */
         dragToTopOfLayer?: boolean;
 
         /**
@@ -1021,16 +1017,12 @@ declare namespace JXG {
         highlightStrokeWidth?: number;
 
         /**
-         * ???
+         * Marks an internally created text element as a label.
          * @private
-         * By default, an element is not a label. Do not change this.
          */
         isLabel?: boolean;
 
-        /**
-         * ???
-         * Display layer which will contain the element.
-         */
+        /** Display layer that contains the rendered element. */
         layer?: number;
 
         /**
@@ -1047,10 +1039,7 @@ declare namespace JXG {
          */
         precision?: PrecisionOptions;
 
-        /**
-         * ???
-         * Not necessarily unique name for the element.
-         */
+        /** Human-readable, not necessarily unique element name. */
         name?: string | (() => string);
 
         /**
@@ -1060,15 +1049,10 @@ declare namespace JXG {
          */
         needsRegularUpdate?: boolean;
 
-        /**
-         * ???
-         */
+        /** Applies the same opacity to the element's stroke and fill where supported. */
         opacity?: number;
 
-        /**
-         * ???
-         * A private element will be inaccessible in certain environments, e.g. a graphical user interface.
-         */
+        /** Hides the element from environments such as graphical construction UIs. */
         priv?: boolean;
 
         /**
@@ -1104,9 +1088,7 @@ declare namespace JXG {
          */
         strokeWidth?: number | NumberFunction | string;
 
-        /**
-         * ???
-         */
+        /** Legacy renderer-specific style identifier. */
         style?: number | string;
 
         /**
@@ -2232,18 +2214,14 @@ declare namespace JXG {
          * Default Value: 'user'
          */
         attractorUnit?: "screen" | "user";
-        /**
-         * ???
-         */
+        /** Applies the same color to the point's stroke and fill. */
         color?: string;
         /**
          * There are different point styles which differ in appearance.
          */
         face?: FaceType;
-        /**
-         * ???
-         */
-        highlight?: any;
+        /** Enables pointer hover highlighting for the point. */
+        highlight?: boolean;
         /**
          * List of elements which are ignored by snapToPoints.
          */
@@ -2256,13 +2234,9 @@ declare namespace JXG {
          * Default: 'auto'
          */
         infoboxDigits?: "auto" | "none" | number;
-        /**
-         * ???
-         */
+        /** Attributes used for the point's generated label. */
         label?: LabelOptions;
-        /**
-         * ???
-         */
+        /** Legacy alias for the point size in user coordinates. */
         radius?: number;
         /**
          * If true, the infobox is shown on mouse over, else not.

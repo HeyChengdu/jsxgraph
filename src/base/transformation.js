@@ -982,7 +982,7 @@ JXG.extend(
  * <p>
  * Transformations acting on texts and images are considered to be affine, i.e. b and c are ignored.
  *
- * @name Transformation
+ * @name Transform
  * @augments JXG.Transformation
  * @constructor
  * @type JXG.Transformation
@@ -1412,7 +1412,7 @@ JXG.registerElement('transform', JXG.createTransform);
  * In this case, finite points will stay finite. This is not the case for general projective coordinates.
  * <p>
  *
- * @name Transformation3D
+ * @name Transform3D
  * @augments JXG.Transformation
  * @constructor
  * @type JXG.Transformation
@@ -1567,4 +1567,3 @@ JXG.createTransform3D = function (board, parents, attributes) {
 JXG.registerElement('transform3d', JXG.createTransform3D);
 
 export default JXG.Transformation;
-

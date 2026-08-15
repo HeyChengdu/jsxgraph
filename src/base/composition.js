@@ -200,7 +200,9 @@ JXG.extend(
                     this.elementsByName[element.name] = element;
                 }
 
-                element.on("attribute:name", this.nameListener, this);
+                if (Type.isFunction(element.on)) {
+                    element.on("attribute:name", this.nameListener, this);
+                }
 
                 this.objectsList.push(element);
                 this[what] = element;
@@ -233,7 +235,7 @@ JXG.extend(
             if (found) {
                 delete this.elements[this[what].id];
                 if (Type.exists(this[what].name)) {
-                   delete this.elementsByName[this[what].name];
+                    delete this.elementsByName[this[what].name];
                 }
                 Type.removeElementFromArray(this.objectsList, this[what]);
                 if (this.hasOwnProperty("methodMap")) {
