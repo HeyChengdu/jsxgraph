@@ -1,16 +1,63 @@
 import JXG from "jsxgraph";
 
 declare const board: JXG.Board;
+declare const composition: JXG.Composition;
+
+composition.setAttribute({ visible: true }).update();
+// @ts-expect-error Composition attributes use the same typed visual properties as geometry elements.
+composition.setAttribute({ visible: "yes" });
 
 const a = board.create("point", [0, 0]);
 const b = board.create("point", [2, 0]);
 const c = board.create("point", [0, 2]);
 const d = board.create("point", [-1, 1]);
 const e = board.create("point", [1, -1]);
+board.create("point", [() => [0, 1, 2]]);
+// @ts-expect-error A coordinate constraint returns affine or homogeneous coordinates.
+board.create("point", [() => [1]]);
+a.hasPoint(10, 20).valueOf();
+// @ts-expect-error Hit testing uses two numeric screen coordinates.
+a.hasPoint("10", 20);
 const line = board.create("line", [a, b]);
 const circle = board.create("circle", [a, b]);
 const curve = board.create("functiongraph", [(x) => x * x]);
+board.create("curve", [[], []], { lineCap: "square" });
+// @ts-expect-error Curve line caps follow the renderer's supported values.
+board.create("curve", [[], []], { lineCap: "flat" });
+const compiledFunction = board.jc.snippet("x * x", true, "x", false);
+compiledFunction(2).toFixed();
+board.create("functiongraph", [compiledFunction]);
 const glider = board.create("glider", [1, 0, line]);
+const defaultXAxis = board.defaultAxes.x;
+if (defaultXAxis) {
+    board.create("glider", [1, 0, defaultXAxis]);
+}
+const targetValues = [20, 40, 10, 35, 5] as const;
+const guide = board.create("segment", [
+    [1, 0],
+    [1, 100]
+]);
+const gliderAttributes = {
+    name: "bar-a-handle",
+    withLabel: false,
+    snapToGrid: true,
+    face: "minus",
+    size: 15,
+    strokeWidth: 4,
+    strokeColor: "#22c55e",
+    fillColor: "#22c55e",
+    showInfobox: false,
+    visible: false
+} satisfies JXG.GliderAttributes;
+board.create("glider", [1, targetValues[0], guide], gliderAttributes);
+board.create("point", [0, 0], { face: "divide" });
+board.create("point", [0, 0], { face: "triangleup" });
+board.create("point", [0, 0], { size: () => 5 });
+board.create("point", [0, 0], { highlightFillColor: () => "#fff" });
+// @ts-expect-error Point size evaluators must return a number.
+board.create("point", [0, 0], { size: () => "5" });
+// @ts-expect-error Point face names follow the exact values accepted by normalizePointFace.
+board.create("point", [0, 0], { face: "triangleUp" });
 const tangent = board.create("tangent", [glider]);
 const polygon = board.create("polygon", [a, b, c]);
 
@@ -21,6 +68,12 @@ curve.clearTrace();
 board.sketches[0]?.clearTrace();
 
 board.create("segment", [[0, 0], [1, 1], () => 2]);
+board.create("arrow", [[0, 0], [1, 1]], { straightFirst: false, straightLast: false });
+board.create("segment", [
+    [1, 0, 0],
+    [1, 1, 1]
+]);
+board.create("segment", [() => [1, 0, 0] as const, () => [1, 1, 1] as const]);
 board.create("arrow", [a, [2, 1]]);
 board.create("text", [0, 0, () => "text"]);
 board.create("text", [0, 0, "x^2"], {
@@ -46,12 +99,30 @@ board.create("angle", [a, b, c]);
 board.create("axis", [
     [0, 0],
     [1, 0]
-]);
+], { firstArrow: true, lastArrow: true });
+board.create("line", [[0, 0], [1, 1]], {
+    shadow: { enabled: true, color: "#000", blend: 0.5, opacity: 0.5, blur: 6, offset: [0, 18] }
+});
+// @ts-expect-error Shadow offsets contain exactly two numeric coordinates.
+board.create("line", [[0, 0], [1, 1]], { shadow: { offset: [0, 1, 2] } });
 board.create("slider", [
     [-2, -1],
     [2, -1],
     [-1, 0, 1]
 ]);
+board.create(
+    "slider",
+    [
+        [-2, -1],
+        [2, -1],
+        [0, 0, Math.PI]
+    ],
+    {
+        snapValues: [0, Math.PI / 2, Math.PI],
+        snapValueDistance: 0.1
+    }
+);
+board.create("slider", [[-2, -1], [2, -1], [-1, 0, 1]], { size: () => 4 });
 board.create("transform", [1, () => 2], { type: "translate" });
 board.create("transform", [line], { type: "reflect" });
 board.create("transform", [Math.PI / 2, a], { type: "rotate" });
@@ -108,15 +179,50 @@ board.create("grid", [
     ])
 ]);
 board.create("boxplot", [[0, 1, 2, 3, 4], 0, 1]);
+board.create("boxplot", [[0, 1, 2, 3, 4, [-1, 5]], 0, 1], {
+    outlier: { face: "x", size: 6, strokeColor: "#f00", opacity: () => 0.5 }
+});
 board.create("cardinalspline", [[a, b, c], 0.5, "centripetal"]);
-board.create("chart", [
+const chartResult: JXG.ChartResult = board.create("chart", [
     [1, 2, 3],
     [3, 2, 1]
 ]);
-board.create("chart", ["chart-table"]);
+const tableChartResult: JXG.ChartResult[] = board.create("chart", ["chart-table"]);
+// @ts-expect-error Board chart creation returns the generated chart elements, not the helper object.
+const chartHelper: JXG.Chart = chartResult;
+void tableChartResult;
+void chartHelper;
+const pointChartAttributes = {
+    name: "samples",
+    withLabel: false,
+    chartStyle: "point",
+    size: 2,
+    fixed: true,
+    fillColor: "#2563eb",
+    strokeColor: "none",
+    visible: false
+} satisfies JXG.ChartAttributes;
+board.create(
+    "chart",
+    [
+        [0.1, 0.2],
+        [0.3, 0.4]
+    ],
+    pointChartAttributes
+);
+const chartData = [1, 4, 2, 7, 3] as const;
+board.create("chart", chartData, {
+    chartStyle: "spline",
+    opacity: () => 0.5
+});
+board.create("chart", [[() => 1, () => 2]], {
+    chartStyle: "bar",
+    labels: [1, () => 2, "three"]
+});
 board.create("comb", [a, b]);
 board.create("curvedifference", [polygon, circle]);
 board.create("curveintersection", [polygon, circle]);
+board.create("curveintersection", [polygon, circle], { hasInnerPoints: true });
 board.create("curveunion", [polygon, circle]);
 board.create("ticks", [line, 1]);
 board.create("hatch", [line, 3]);
@@ -135,19 +241,61 @@ board.create("tapemeasure", [
 ]);
 board.create("tracecurve", [glider, c]);
 board.create("turtle", [[0, 0], 90]);
-board.create("view3d", [
-    [-6, -3],
-    [8, 8],
+board.create(
+    "view3d",
     [
-        [-5, 5],
-        [-5, 5],
-        [-5, 5]
-    ]
-]);
-board.create("implicitcurve", [(x, y) => x * x + y * y - 1]);
+        [-6, -3],
+        [8, 8],
+        [
+            [-5, 5],
+            [-5, 5],
+            [-5, 5]
+        ]
+    ],
+    {
+        projection: "central",
+        axesPosition: "none",
+        az: {
+            pointer: { enabled: true, button: -1, key: "none" },
+            keyboard: { enabled: true, step: 10, key: "ctrl" },
+            continuous: true,
+            slider: {
+                visible: false,
+                min: 0,
+                start: Math.PI / 4,
+                max: Math.PI * 2,
+                point1: { pos: "auto" },
+                point2: { pos: () => [5, 4] }
+            }
+        },
+        el: { slider: { visible: false, start: 0.3 } },
+        bank: { slider: { visible: false, start: 0 } },
+        trackball: { enabled: true, outside: true, button: 0, key: "shift" }
+    }
+);
+// @ts-expect-error View3D axes use one of the three runtime-supported placements.
+board.create("view3d", [[-6, -3], [8, 8], [[-5, 5], [-5, 5], [-5, 5]]], {
+    axesPosition: "outside"
+});
+// @ts-expect-error View3D navigation keys are limited to the runtime-supported modifiers.
+board.create("view3d", [[-6, -3], [8, 8], [[-5, 5], [-5, 5], [-5, 5]]], {
+    az: { pointer: { key: "alt" } }
+});
+board.create("implicitcurve", [(x, y) => x * x + y * y - 1], {
+    resolution_outer: 1,
+    resolution_inner: () => 2,
+    loop_detection: true
+});
+// @ts-expect-error Implicit curve resolutions are numeric or numeric evaluators.
+board.create("implicitcurve", [(x, y) => x * x + y * y - 1], { resolution_outer: "fine" });
 board.create("plot", [(x) => x * x]);
 board.create("sketchcurve", []);
-board.create("nonreflexangle", [a, b, c]);
+board.create("nonreflexangle", [a, b, c], {
+    hasInnerPoints: true,
+    highlightOnSector: true
+});
+// @ts-expect-error Sector hit-testing flags are boolean.
+board.create("nonreflexangle", [a, b, c], { hasInnerPoints: "inside" });
 board.create("reflexangle", [a, b, c]);
 board.create("arrowparallel", [line, c]);
 board.create("bisectorlines", [line, board.create("line", [c, d])]);
@@ -190,17 +338,40 @@ const view = board.create("view3d", [
         [-5, 5]
     ]
 ]);
+view.az_slide.Value().toFixed();
+view.el_slide.Value().toFixed();
+view.bank_slide.Value().toFixed();
 const p3a = view.create("point3d", [0, 0, 0]);
 const p3b = view.create("point3d", [[1, 0, 0]]);
 const p3c = view.create("point3d", [0, 1, 0]);
+view.create("transform3d", [() => Math.PI / 2, [1, 0, 0], p3a], {
+    type: "rotate"
+});
+view.create("transform3d", [1, 2, 3], { type: "translate" });
+// @ts-expect-error A 3D translation requires exactly three components.
+view.create("transform3d", [1, 2], { type: "translate" });
+// @ts-expect-error A 3D rotation requires an angle and a normal vector.
+view.create("transform3d", [Math.PI / 2], { type: "rotate" });
 const line3 = view.create("line3d", [p3a, p3b]);
 const plane3 = view.create("plane3d", [p3a, [1, 0, 0], [0, 1, 0]]);
 const sphere3 = view.create("sphere3d", [p3a, p3b]);
 view.create("circle3d", [p3a, [0, 0, 1], 2]);
 view.create("curve3d", [(u) => Math.cos(u), (u) => Math.sin(u), (u) => u, [0, 1]]);
 view.create("functiongraph3d", [(x, y) => x + y, [-2, 2], [-2, 2]]);
+view.create("functiongraph3d", [(x, y) => x + y, [-2, 2], [-2, 2]], {
+    type: "colormap",
+    colormap: { min: [-2, 240], max: [2, 0], s: 0.7, v: 0.9 }
+});
+// @ts-expect-error Surface rendering modes follow the runtime options.
+view.create("functiongraph3d", [(x, y) => x + y, [-2, 2], [-2, 2]], { type: "heatmap" });
 view.create("parametricsurface3d", [(u, v) => [u, v, u * v], [-2, 2], [-2, 2]]);
 view.create("polygon3d", [p3a, p3b, p3c]);
+view.create("polyhedron3d", [
+    { a: p3a, b: "point-b", c: [0, 1, 0], d: () => [0, 0, 1] },
+    [["a", "b", "c"], [["a", "c", "d"], { fillColor: "#fff" }]]
+]);
+// @ts-expect-error Polyhedron vertices are 3D points, ids, or dynamic 3D coordinates.
+view.create("polyhedron3d", [{ a: [0, 1] }, [["a"]]]);
 view.create("axes3d", []);
 view.create("axis3d", [
     [0, 0, 0],

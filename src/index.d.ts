@@ -78,7 +78,7 @@ declare namespace JXG {
         /**
          * Invokes setAttribute for every stored element with a setAttribute method and hands over the given arguments. See JXG.GeometryElement#setAttribute for further description, valid parameters and return values.
          */
-        setAttribute(): void;
+        setAttribute(attributes: GeometryElementAttributes): this;
         /**
          * Invokes setParents for every stored element with a setParents method and hands over the given arguments. See JXG.GeometryElement#setParents for further description, valid parameters and return values.
          */
@@ -669,6 +669,12 @@ declare namespace JXG {
         getName(): string;
 
         /**
+         * Checks whether the screen coordinate is near the element.
+         * Element classes override the default implementation where hit testing is supported.
+         */
+        hasPoint(x: number, y: number): boolean;
+
+        /**
          * Hide the element. It will still exist but not be visible on the board.
          * Alias for "element.setAttribute({visible: false});"
          * @returns Reference to the element
@@ -844,6 +850,15 @@ declare namespace JXG {
      */
     export type EvaluatableAttribute<T> = T | ((element: GeometryElement) => T);
 
+    export interface ShadowAttributes {
+        enabled?: boolean;
+        color?: string | readonly [number, number, number];
+        opacity?: number;
+        blur?: number;
+        blend?: number;
+        offset?: readonly [number, number];
+    }
+
     export interface GeometryElementAttributes {
         /**
          * ???
@@ -1003,7 +1018,7 @@ declare namespace JXG {
         /**
          * The fill color of the given geometry element when the mouse is pointed over it.
          */
-        highlightFillColor?: string;
+        highlightFillColor?: EvaluatableAttribute<string>;
 
         /**
          * Opacity for fill color when the object is highlighted.
@@ -1085,7 +1100,7 @@ declare namespace JXG {
         /**
          * If true the element will get a shadow.
          */
-        shadow?: boolean;
+        shadow?: boolean | ShadowAttributes;
 
         /**
          * Snaps the element or its parents to the grid. Currently only relevant for points, circles,
@@ -1416,15 +1431,32 @@ declare namespace JXG {
      *
      */
     export class Chart extends GeometryElement {
-        // Nothing
+        elements: ChartStyleResult[];
     }
+
+    export interface PieChart {
+        sectors: Sector[];
+        points: Point[];
+        midpoint: Point;
+    }
+
+    export interface RadarChart {
+        circles: Circle[];
+        lines: Line[];
+        points: Point[][];
+        midpoint: Point;
+        polygons: Polygon[];
+    }
+
+    export type ChartStyleResult = Curve | Polygon[] | Point[] | PieChart | RadarChart;
+    export type ChartResult = ChartStyleResult[];
 
     /**
      *
      */
     export interface ChartAttributes extends GeometryElementAttributes {
         center?: PointSpecification;
-        chartStyle: "bar" | "pie" | "line";
+        chartStyle: "bar" | "line" | "fit" | "spline" | "pie" | "point" | "radar";
         colors?: string[];
         fillcolor?: string | null;
         gradient?: "linear";
@@ -1432,7 +1464,13 @@ declare namespace JXG {
         highlightonsector?: boolean;
         highlightbysize?: boolean;
         label?: LabelOptions;
-        labels?: string[];
+        labels?: readonly TextContent[];
+        /** Point size forwarded by point charts to each generated point. */
+        size?: number;
+        /** Width of generated bars relative to their category interval. */
+        width?: number;
+        /** Infobox contents assigned cyclically to generated points. */
+        infoboxArray?: TextContent[];
         withLines?: boolean;
     }
 
@@ -1702,6 +1740,25 @@ declare namespace JXG {
      */
     export interface CurveAttributes extends GeometryElementAttributes {
         curveType?: "none" | "plot" | "parameter" | "functiongraph" | "polar" | "implicit";
+        hasInnerPoints?: boolean;
+        lineCap?: "butt" | "round" | "square";
+    }
+
+    export interface ImplicitCurveAttributes extends CurveAttributes {
+        margin?: EvaluatableAttribute<number>;
+        resolution_outer?: EvaluatableAttribute<number>;
+        resolution_inner?: EvaluatableAttribute<number>;
+        max_steps?: EvaluatableAttribute<number>;
+        tol_newton?: EvaluatableAttribute<number>;
+        tol_cusp?: EvaluatableAttribute<number>;
+        tol_progress?: EvaluatableAttribute<number>;
+        qdt_box?: EvaluatableAttribute<number>;
+        h_initial?: EvaluatableAttribute<number>;
+        h_critical?: EvaluatableAttribute<number>;
+        h_max?: EvaluatableAttribute<number>;
+        loop_dist?: EvaluatableAttribute<number>;
+        loop_dir?: EvaluatableAttribute<number>;
+        loop_detection?: boolean;
     }
 
     export interface SketchCurveAttributes extends CurveAttributes {
@@ -1742,6 +1799,8 @@ declare namespace JXG {
          * Relative width of the maximum and minimum quantile.
          */
         smallWidth?: number;
+        /** Marker attributes used for values outside the whiskers. */
+        outlier?: PointAttributes;
     }
 
     /**
@@ -2066,7 +2125,10 @@ declare namespace JXG {
         selection: "minor" | "major" | "auto";
         setAttribute(attributes: SectorAttributes): this;
     }
-    export interface SectorAttributes extends CurveAttributes {}
+    export interface SectorAttributes extends CurveAttributes {
+        hasInnerPoints?: boolean;
+        highlightOnSector?: boolean;
+    }
     export interface SectorOptions extends CurveOptions {
         anglePoint?: PointOptions;
         arc?: ArcOptions;
@@ -2215,17 +2277,24 @@ declare namespace JXG {
         | "square"
         | "+"
         | "plus"
+        | "-"
+        | "minus"
+        | "|"
+        | "divide"
         | "<>"
         | "diamond"
         | "<<>>"
         | "diamond2"
         | "^"
-        | "triangleUp"
-        | "triangleDown"
+        | "a"
+        | "A"
+        | "triangleup"
+        | "v"
+        | "triangledown"
         | "<"
-        | "triangleLeft"
+        | "triangleleft"
         | ">"
-        | "triangleRight";
+        | "triangleright";
 
     /**
      *
@@ -2296,7 +2365,7 @@ declare namespace JXG {
          * Means radius resp. half the width of a point (depending on the face).
          * Default Value: 3
          */
-        size?: number;
+        size?: EvaluatableAttribute<number>;
         /** Keyboard tab order of the rendered point. */
         tabIndex?: number;
         /**
@@ -2636,12 +2705,16 @@ declare namespace JXG {
          * Size of slider point.
          * Default Value: 2
          */
-        size?: number;
+        size?: EvaluatableAttribute<number>;
         /**
          * The slider only returns integer multiples of this value, e.g. for discrete values set this property to 1.
          * For continuous results set this to -1.
          */
         snapWidth?: number;
+        /** Values to which the slider point may snap. */
+        snapValues?: number[];
+        /** Maximum distance from a configured snap value. */
+        snapValueDistance?: number;
         /**
          * If not null, this replaces the part "name = " in the slider label.
          * Possible types: string, number or function.
@@ -3008,7 +3081,7 @@ declare namespace JXG {
     }
 
     export interface ArrowSpecification {
-        type?: number;
+        type?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
         highlightSize?: number;
         size?: number;
     }
@@ -3046,7 +3119,7 @@ declare namespace JXG {
     export interface Arrow extends Line {
         setAttribute(attributes: ArrowAttributes): this;
     }
-    export interface ArrowAttributes extends GeometryElementAttributes {
+    export interface ArrowAttributes extends LineAttributes {
         firstArrow?: boolean | ArrowSpecification;
         lastArrow?: boolean | ArrowSpecification;
     }
@@ -3067,6 +3140,7 @@ declare namespace JXG {
          * Attributes for the axis label.
          */
         label?: LabelOptions;
+        firstArrow?: boolean | ArrowSpecification;
         lastArrow?: boolean | ArrowSpecification;
         margin?: number;
         /**
@@ -3759,10 +3833,19 @@ declare namespace JXG {
 
     export interface Polyhedron3D extends Transformable3D {}
 
+    export interface Surface3DColormapOptions {
+        min?: readonly [number, number];
+        max?: readonly [number, number];
+        s?: number;
+        v?: number;
+    }
+
     export interface Surface3DAttributes extends GeometryElementAttributes {
         stepsU?: number;
         stepsV?: number;
         tiling?: "wireframe" | "triangle" | "rectangle";
+        type?: "wireframe" | "colormap" | "shader" | "colorarray";
+        colormap?: Surface3DColormapOptions;
         polyhedron?: Polyhedron3DAttributes;
     }
 
@@ -3777,6 +3860,55 @@ declare namespace JXG {
     export type HomogeneousVector3 = readonly [Scalar3D, Scalar3D, Scalar3D, Scalar3D];
     export type DynamicVector3 =
         Vector3 | HomogeneousVector3 | (() => Vector3 | HomogeneousVector3);
+    export type Transform3DTranslateParents = Vector3;
+    export type Transform3DScaleParents = Vector3 | HomogeneousVector3;
+    export type Transform3DRotationPoint = Point3D | DynamicVector3;
+    export type Transform3DRotateParents = readonly [
+        Scalar3D,
+        DynamicVector3,
+        Transform3DRotationPoint?
+    ];
+    export type Transform3DAxisRotateParents = readonly [Scalar3D, Transform3DRotationPoint?];
+    export type Transform3DAffineParents = readonly [
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D
+    ];
+    export type Transform3DAffineMatrixParents = readonly [
+        readonly [Scalar3D, Scalar3D, Scalar3D],
+        readonly [Scalar3D, Scalar3D, Scalar3D],
+        readonly [Scalar3D, Scalar3D, Scalar3D]
+    ];
+    export type Transform3DGenericParents = readonly [
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D,
+        Scalar3D
+    ];
+    export type Transform3DMatrixParents = readonly [
+        readonly [Scalar3D, Scalar3D, Scalar3D, Scalar3D],
+        readonly [Scalar3D, Scalar3D, Scalar3D, Scalar3D],
+        readonly [Scalar3D, Scalar3D, Scalar3D, Scalar3D],
+        readonly [Scalar3D, Scalar3D, Scalar3D, Scalar3D]
+    ];
     export type Range3D = readonly [Scalar3D, Scalar3D];
     export type Point3DInput = Point3D | DynamicVector3;
     export type Point3DParents =
@@ -3827,10 +3959,17 @@ declare namespace JXG {
         Range3D,
         Range3D
     ];
-    export type PolyhedronVertexMap = Readonly<Record<string, Vector3>>;
+    export type PolyhedronVertex = Point3D | string | DynamicVector3;
+    export type PolyhedronVertexMap = Readonly<Record<string, PolyhedronVertex>>;
     export type PolyhedronFace = readonly (number | string)[];
+    export type PolyhedronFaceDefinition =
+        | PolyhedronFace
+        | readonly [PolyhedronFace, GeometryElementAttributes];
     export type Polyhedron3DParents =
-        | readonly [readonly Vector3[] | PolyhedronVertexMap, readonly PolyhedronFace[]]
+        | readonly [
+              readonly PolyhedronVertex[] | PolyhedronVertexMap,
+              readonly PolyhedronFaceDefinition[]
+          ]
         | readonly [Polyhedron3D, TransformationList];
     export interface Face3D extends Transformable3D {}
     export type Face3DParents = readonly [Polyhedron3D, number];
@@ -3868,10 +4007,60 @@ declare namespace JXG {
         scale?: EvaluatableAttribute<number>;
     }
 
+    export type View3DNavigationKey = "none" | "shift" | "ctrl";
+    export type View3DSliderPosition =
+        | "auto"
+        | readonly [number, number]
+        | (() => readonly [number, number]);
+
+    export interface View3DPointerNavigationAttributes {
+        enabled?: boolean;
+        speed?: number;
+        outside?: boolean;
+        button?: -1 | 0 | 2;
+        key?: View3DNavigationKey;
+    }
+
+    export interface View3DKeyboardNavigationAttributes {
+        enabled?: boolean;
+        step?: number;
+        key?: View3DNavigationKey;
+    }
+
+    export interface View3DSliderPointAttributes extends PointAttributes {
+        pos?: View3DSliderPosition;
+    }
+
+    export interface View3DSliderAttributes
+        extends Omit<SliderAttributes, "point1" | "point2"> {
+        min?: EvaluatableAttribute<number>;
+        max?: EvaluatableAttribute<number>;
+        start?: EvaluatableAttribute<number>;
+        point1?: View3DSliderPointAttributes;
+        point2?: View3DSliderPointAttributes;
+    }
+
+    export interface View3DNavigationAttributes {
+        pointer?: View3DPointerNavigationAttributes;
+        keyboard?: View3DKeyboardNavigationAttributes;
+        continuous?: boolean;
+        slider?: View3DSliderAttributes;
+    }
+
+    export interface View3DTrackballAttributes {
+        enabled?: boolean;
+        outside?: boolean;
+        button?: -1 | 0 | 2;
+        key?: View3DNavigationKey;
+    }
+
     export interface View3DAttributes extends GeometryElementAttributes {
-        axesPosition?: "center";
+        axesPosition?: "center" | "border" | "none";
         projection?: "central" | "parallel";
-        trackball?: { enabled?: boolean };
+        az?: View3DNavigationAttributes;
+        el?: View3DNavigationAttributes;
+        bank?: View3DNavigationAttributes;
+        trackball?: View3DTrackballAttributes;
         depthOrder?: { enabled?: boolean };
 
         xAxis?: Line3DAttributes;
@@ -3900,6 +4089,9 @@ declare namespace JXG {
     }
 
     export class View3D extends GeometryElement {
+        az_slide: Slider;
+        el_slide: Slider;
+        bank_slide: Slider;
         /**
          * Constructs a new View3D object.
          * @param board
@@ -3999,8 +4191,43 @@ declare namespace JXG {
         ): Curve;
         create(
             elementType: "transform3d",
-            parents: readonly Scalar3D[],
-            attributes: Transformation3DAttributes
+            parents: Transform3DTranslateParents,
+            attributes: { type: "translate" }
+        ): Transformation;
+        create(
+            elementType: "transform3d",
+            parents: Transform3DScaleParents,
+            attributes: { type: "scale" }
+        ): Transformation;
+        create(
+            elementType: "transform3d",
+            parents: Transform3DRotateParents,
+            attributes: { type: "rotate" }
+        ): Transformation;
+        create(
+            elementType: "transform3d",
+            parents: Transform3DAxisRotateParents,
+            attributes: { type: "rotateX" | "rotateY" | "rotateZ" }
+        ): Transformation;
+        create(
+            elementType: "transform3d",
+            parents: Transform3DAffineParents,
+            attributes: { type: "affine" }
+        ): Transformation;
+        create(
+            elementType: "transform3d",
+            parents: readonly [Transform3DAffineMatrixParents],
+            attributes: { type: "affinematrix" }
+        ): Transformation;
+        create(
+            elementType: "transform3d",
+            parents: Transform3DGenericParents,
+            attributes: { type: "generic" }
+        ): Transformation;
+        create(
+            elementType: "transform3d",
+            parents: readonly [Transform3DMatrixParents],
+            attributes: { type: "matrix" }
         ): Transformation;
         create(
             elementType: "vectorfield3D" | "vectorfield3d",
@@ -4227,9 +4454,14 @@ declare namespace JXG {
         };
     }
 
-    export interface DefaultAxes {
+    export interface DefaultAxesAttributes {
         x: AxisAttributes;
         y: AxisAttributes;
+    }
+
+    export interface DefaultAxes {
+        x: Axis;
+        y: Axis;
     }
 
     export type DynamicCoordinate = number | string | NumberFunction;
@@ -4240,9 +4472,11 @@ declare namespace JXG {
         DynamicCoordinate
     ];
     export type TransformationList = Transformation | readonly Transformation[];
+    export type CoordinateConstraint = () => AffineCoordinates | HomogeneousCoordinates | Coords;
     export type PointParents =
         | AffineCoordinates
         | HomogeneousCoordinates
+        | readonly [CoordinateConstraint]
         | readonly [GeometryElement, TransformationList];
     export type ConstructiblePoint =
         | Point
@@ -4250,8 +4484,7 @@ declare namespace JXG {
         | AffineCoordinates
         | HomogeneousCoordinates
         | (() => Point | AffineCoordinates | HomogeneousCoordinates);
-    export type LineEndpoint =
-        Point | string | AffineCoordinates | (() => Point | AffineCoordinates);
+    export type LineEndpoint = ConstructiblePoint;
     export type LineParents =
         | readonly [LineEndpoint, LineEndpoint]
         | HomogeneousCoordinates
@@ -4293,7 +4526,8 @@ declare namespace JXG {
               number | NumberFunction,
               number | NumberFunction
           ];
-    export type CurveEvaluator = (value: number, suspendedUpdate: boolean) => number;
+    export type CurveEvaluator = (value: number, suspendedUpdate?: boolean) => number;
+    export type FunctiongraphEvaluator = (value: number) => number;
     export type CurveTerm = number | string | CurveEvaluator;
     export type CurveData = readonly (number | NumberFunction)[];
     export type CurveParents =
@@ -4310,8 +4544,12 @@ declare namespace JXG {
         | readonly [readonly AffineCoordinates[]]
         | readonly [Curve, TransformationList];
     export type FunctiongraphParents =
-        | readonly [string | CurveEvaluator]
-        | readonly [string | CurveEvaluator, number | NumberFunction, number | NumberFunction];
+        | readonly [string | FunctiongraphEvaluator]
+        | readonly [
+              string | FunctiongraphEvaluator,
+              number | NumberFunction,
+              number | NumberFunction
+          ];
     export type SplineSample = Point | AffineCoordinates | (() => AffineCoordinates);
     export type SplineParents = readonly SplineSample[] | readonly [CurveData, CurveData];
     export type GliderParents =
@@ -4468,7 +4706,8 @@ declare namespace JXG {
     export type GridParents = readonly [] | readonly [Axis] | readonly [Axis, Axis];
     export type CurveSampleCollection =
         readonly SplineSample[] | readonly [CurveData, CurveData];
-    export type BoxplotQuantile = number | NumberFunction | (() => readonly number[]);
+    export type BoxplotOutliers = readonly number[] | (() => readonly number[]);
+    export type BoxplotQuantile = number | string | NumberFunction;
     export type BoxplotParents = readonly [
         readonly [
             BoxplotQuantile,
@@ -4476,7 +4715,7 @@ declare namespace JXG {
             BoxplotQuantile,
             BoxplotQuantile,
             BoxplotQuantile,
-            ...BoxplotQuantile[]
+            ...(BoxplotQuantile | BoxplotOutliers)[]
         ],
         number | NumberFunction,
         number | NumberFunction
@@ -4488,7 +4727,9 @@ declare namespace JXG {
     ];
     export type ChartValue = number | NumberFunction;
     export type ChartParents =
-        readonly ChartValue[] | readonly [readonly ChartValue[], readonly ChartValue[]];
+        | readonly ChartValue[]
+        | readonly [readonly ChartValue[]]
+        | readonly [readonly ChartValue[], readonly ChartValue[]];
     export type ChartTableParents = readonly [string];
     export type CombParents = readonly [ConstructiblePoint, ConstructiblePoint];
     export type ClosedPath = Curve | Polygon | Circle | Inequality;
@@ -5032,12 +5273,12 @@ declare namespace JXG {
             elementType: "chart",
             parents: ChartTableParents,
             attributes?: ChartAttributes
-        ): Chart[];
+        ): ChartResult[];
         create(
             elementType: "chart",
             parents: ChartParents,
             attributes?: ChartAttributes
-        ): Chart;
+        ): ChartResult;
         /**
          *
          * @param elementType 'checkbox'
@@ -5700,7 +5941,7 @@ declare namespace JXG {
         create(
             elementType: "implicitcurve",
             parents: ImplicitcurveParents,
-            attributes?: CurveAttributes
+            attributes?: ImplicitCurveAttributes
         ): Curve;
         create(
             elementType: "nonreflexangle",
@@ -6114,7 +6355,7 @@ declare namespace JXG {
         /**
          *
          */
-        defaultAxes: Partial<DefaultAxes>;
+        defaultAxes: Partial<DefaultAxesAttributes>;
 
         /**
          * Bounding box of the visible area in user coordinates.
