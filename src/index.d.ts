@@ -839,11 +839,13 @@ declare namespace JXG {
     /**
      *
      */
+    export type EvaluatableAttribute<T> = T | ((element: GeometryElement) => T);
+
     export interface GeometryElementAttributes {
         /**
          * ???
          */
-        color?: string;
+        color?: EvaluatableAttribute<string>;
         /**
          * Determines the elements border-style.
          * Possible values are:
@@ -855,7 +857,7 @@ declare namespace JXG {
          * 5 for a line with alternating medium and big dashes and large gaps, and
          * 6 for a line with alternating medium and big dashes and small gaps.
          */
-        dash?: number | string;
+        dash?: EvaluatableAttribute<number | string>;
 
         /**
          * If true the element will be drawn in grey scale colors to visualize that it's only a draft.
@@ -870,17 +872,17 @@ declare namespace JXG {
         /**
          * The fill color of this geometry element.
          */
-        fillColor?: string;
+        fillColor?: EvaluatableAttribute<string>;
 
         /**
          * Opacity for fill color.
          */
-        fillOpacity?: number | NumberFunction;
+        fillOpacity?: EvaluatableAttribute<number>;
 
         /**
          * If true, the element is fixed and can not be dragged around.
          */
-        fixed?: boolean;
+        fixed?: EvaluatableAttribute<boolean>;
 
         /**
          * If true the element is fixed and can not be dragged around. The element
@@ -1051,7 +1053,7 @@ declare namespace JXG {
          * ???
          * Not necessarily unique name for the element.
          */
-        name?: string | (() => string);
+        name?: EvaluatableAttribute<string>;
 
         /**
          * If this is set to true, the element is updated in every update
@@ -1063,7 +1065,7 @@ declare namespace JXG {
         /**
          * ???
          */
-        opacity?: number;
+        opacity?: EvaluatableAttribute<number>;
 
         /**
          * ???
@@ -1092,17 +1094,17 @@ declare namespace JXG {
         /**
          * The stroke color of the given geometry element.
          */
-        strokeColor?: string | (() => string);
+        strokeColor?: EvaluatableAttribute<string>;
 
         /**
          * Opacity for element's stroke color.
          */
-        strokeOpacity?: number;
+        strokeOpacity?: EvaluatableAttribute<number>;
 
         /**
          * Width of the element's stroke.
          */
-        strokeWidth?: number | NumberFunction | string;
+        strokeWidth?: EvaluatableAttribute<number | string>;
 
         /**
          * ???
@@ -1133,12 +1135,12 @@ declare namespace JXG {
         /**
          * If false the element won't be visible on the board, otherwise it is shown.
          */
-        visible?: boolean | BooleanFunction | 'inherit';
+        visible?: EvaluatableAttribute<boolean | "inherit">;
 
         /**
          * If true, a label will display the element's name.
          */
-        withLabel?: boolean;
+        withLabel?: EvaluatableAttribute<boolean>;
     }
     export interface GeometryElementOptions extends GeometryElementAttributes {}
 
@@ -1303,7 +1305,7 @@ declare namespace JXG {
          * If the distance of the text is less than attractorDistance the text is made to glider of this element.
          */
         attractors?: GeometryElement[];
-        color?: string;
+        color?: EvaluatableAttribute<string>;
         /**
          * The precision of the slider value displayed in the optional text.
          */
@@ -1690,13 +1692,7 @@ declare namespace JXG {
     }
     export interface CurveOptions extends GeometryElementAttributes {
         curveType?:
-            | "none"
-            | "plot"
-            | "parameter"
-            | "functiongraph"
-            | "polar"
-            | "implicit"
-            | null;
+            "none" | "plot" | "parameter" | "functiongraph" | "polar" | "implicit" | null;
         doAdvancedPlot?: boolean;
         doAdvancedPlotOld?: boolean;
         handDrawing?: boolean;
@@ -1927,9 +1923,9 @@ declare namespace JXG {
         anchorX?: AnchorX;
         anchorY?: AnchorY;
         autoPosition?: boolean;
-        color?: string;
+        color?: EvaluatableAttribute<string>;
         display?: "internal";
-        fixed?: boolean;
+        fixed?: EvaluatableAttribute<boolean>;
         fontSize?: number;
         highlight?: boolean;
         highlightStrokeColor?: string;
@@ -1945,10 +1941,10 @@ declare namespace JXG {
          * Determines the label anchor.
          */
         position?: "lft" | "rt" | "top" | "bot" | "ulft" | "urt" | "llft" | "lrt";
-        strokeColor?: string;
-        strokeOpacity?: number;
+        strokeColor?: EvaluatableAttribute<string>;
+        strokeOpacity?: EvaluatableAttribute<number>;
         useMathJax?: boolean;
-        visible?: 'inherit' | boolean;
+        visible?: EvaluatableAttribute<"inherit" | boolean>;
     }
 
     export interface Legend extends GeometryElement {}
@@ -2235,7 +2231,7 @@ declare namespace JXG {
         /**
          * ???
          */
-        color?: string;
+        color?: EvaluatableAttribute<string>;
         /**
          * There are different point styles which differ in appearance.
          */
@@ -2629,7 +2625,7 @@ declare namespace JXG {
         /**
          * Show slider label.
          */
-        withLabel?: boolean;
+        withLabel?: EvaluatableAttribute<boolean>;
         /**
          * Show slider ticks.
          */
@@ -3234,8 +3230,7 @@ declare namespace JXG {
          *
          */
         generateLabelText?:
-            | ((labeled: Coords, center: Coords, value: null | Number | String) => string)
-            | null;
+            ((labeled: Coords, center: Coords, value: null | Number | String) => string) | null;
         /**
          *
          */
@@ -3314,8 +3309,7 @@ declare namespace JXG {
         face?: "|" | "<" | ">";
         fillColor?: string;
         generateLabelText?:
-            | ((one: Coords, two: Coords, value: null | Number | String) => void)
-            | null;
+            ((one: Coords, two: Coords, value: null | Number | String) => void) | null;
         generateLabelValue?: ((labeled: Coords, center: Coords) => string) | null;
         highlightFillColor?: string;
         highlightStrokeColor?: string;
@@ -3344,7 +3338,7 @@ declare namespace JXG {
         // TODO: linear used in JSXGraph workshop Dec 16, 2020.
         type?: "line" | "linear" | "polar";
         useUnicodeMinus?: boolean;
-        visible?: 'inherit' | boolean;
+        visible?: "inherit" | boolean;
     }
 
     /**
@@ -3375,7 +3369,10 @@ declare namespace JXG {
     }
 
     export type TransformationType =
+        | "affine"
+        | "affinematrix"
         | "generic"
+        | "matrix"
         | "reflect"
         | "rotate"
         | "scale"
@@ -3654,7 +3651,16 @@ declare namespace JXG {
         arrow?: ArrowOptions;
     }
 
+    export interface Transformable3D extends GeometryElement {
+        addTransform(
+            element: Transformable3D,
+            transform: Transformation | Transformation[]
+        ): this;
+    }
+
     export interface Circle3DAttributes extends GeometryElementAttributes {}
+
+    export interface Circle3D extends Transformable3D {}
 
     export interface Curve3DAttributes extends CurveAttributes {}
 
@@ -3674,13 +3680,149 @@ declare namespace JXG {
 
     export interface Point3DAttributes extends GeometryElementAttributes {}
 
-    export interface Point3D {
+    export interface Point3D extends Transformable3D {
+        coords: number[];
         X(): number;
         Y(): number;
         Z(): number;
     }
 
+    export interface Polygon3DAttributes extends GeometryElementAttributes {}
+
+    export interface Polygon3D extends Transformable3D {}
+
     export interface Sphere3DAttributes extends GeometryElementAttributes {}
+
+    export interface Sphere3D extends Transformable3D {}
+
+    export interface Shader3DOptions {
+        enabled?: boolean;
+        fixed?: boolean;
+        type?: "angle" | "zIndex";
+        hue?: number;
+        saturation?: number;
+        minLightness?: number;
+        maxLightness?: number;
+        light?: {
+            type?: 1 | 2 | 3;
+            az?: number;
+            el?: number;
+            bank?: number;
+            dir?: -1 | 0 | 1;
+        };
+    }
+
+    export interface Polyhedron3DAttributes extends GeometryElementAttributes {
+        fillColorArray?: readonly EvaluatableAttribute<string>[];
+        shader?: Shader3DOptions;
+    }
+
+    export interface Polyhedron3D extends Transformable3D {}
+
+    export interface Surface3DAttributes extends GeometryElementAttributes {
+        stepsU?: number;
+        stepsV?: number;
+        tiling?: "wireframe" | "triangle" | "rectangle";
+        polyhedron?: Polyhedron3DAttributes;
+    }
+
+    export interface Surface3D extends Transformable3D {}
+
+    export interface Transformation3DAttributes {
+        type: TransformationType | "rotateX" | "rotateY" | "rotateZ";
+    }
+
+    export type Scalar3D = number | NumberFunction;
+    export type Vector3 = readonly [Scalar3D, Scalar3D, Scalar3D];
+    export type HomogeneousVector3 = readonly [Scalar3D, Scalar3D, Scalar3D, Scalar3D];
+    export type DynamicVector3 =
+        Vector3 | HomogeneousVector3 | (() => Vector3 | HomogeneousVector3);
+    export type Range3D = readonly [Scalar3D, Scalar3D];
+    export type Point3DInput = Point3D | DynamicVector3;
+    export type Point3DParents =
+        | readonly [DynamicVector3]
+        | Vector3
+        | HomogeneousVector3
+        | readonly [DynamicVector3, Transformable3D]
+        | readonly [Scalar3D, Scalar3D, Scalar3D, Transformable3D]
+        | readonly [Point3D, TransformationList];
+    export type Line3DParents =
+        | readonly [Point3DInput, Point3DInput]
+        | readonly [Point3DInput, DynamicVector3 | Line3D, Range3D]
+        | readonly [Line3D, TransformationList, Range3D?];
+    export type Plane3DParents =
+        | readonly [Point3DInput, Point3DInput, Point3DInput, Range3D?, Range3D?]
+        | readonly [Point3DInput, DynamicVector3, DynamicVector3, Range3D?, Range3D?]
+        | readonly [Plane3D, TransformationList, Range3D?, Range3D?];
+    export type Circle3DParents = readonly [Point3DInput, DynamicVector3, Scalar3D];
+    export type Sphere3DParents = readonly [Point3DInput, Point3DInput | Scalar3D | string];
+    export type Polygon3DParents =
+        | readonly Point3DInput[]
+        | readonly [readonly Point3D[]]
+        | readonly [Polygon3D, TransformationList];
+    export type Curve3DEvaluator = (u: number) => number;
+    export type Curve3DVectorEvaluator = (u: number) => readonly [number, number, number];
+    export type Curve3DParents =
+        | readonly [Curve3DVectorEvaluator, Range3D]
+        | readonly [Curve3DEvaluator, Curve3DEvaluator, Curve3DEvaluator, Range3D]
+        | readonly [readonly Vector3[]]
+        | readonly [Curve3D, TransformationList];
+    export type Surface3DEvaluator = (u: number, v: number) => number;
+    export type Surface3DVectorEvaluator = (
+        u: number,
+        v: number
+    ) => readonly [number, number, number];
+    export type ParametricSurface3DParents =
+        | readonly [Surface3DVectorEvaluator, Range3D, Range3D]
+        | readonly [
+              Surface3DEvaluator,
+              Surface3DEvaluator,
+              Surface3DEvaluator,
+              Range3D,
+              Range3D
+          ]
+        | readonly [Surface3D, TransformationList];
+    export type Functiongraph3DParents = readonly [
+        Surface3DEvaluator | string,
+        Range3D,
+        Range3D
+    ];
+    export type PolyhedronVertexMap = Readonly<Record<string, Vector3>>;
+    export type PolyhedronFace = readonly (number | string)[];
+    export type Polyhedron3DParents =
+        | readonly [readonly Vector3[] | PolyhedronVertexMap, readonly PolyhedronFace[]]
+        | readonly [Polyhedron3D, TransformationList];
+    export interface Face3D extends Transformable3D {}
+    export type Face3DParents = readonly [Polyhedron3D, number];
+    export type IntersectionCircle3DParents = readonly [Sphere3D | Plane3D, Sphere3D | Plane3D];
+    export type IntersectionLine3DParents = readonly [Plane3D, Plane3D];
+    export type Mesh3DParents = readonly [
+        DynamicVector3,
+        DynamicVector3,
+        DynamicVector3,
+        Range3D,
+        Range3D
+    ];
+    export type Text3DParents =
+        | readonly [DynamicVector3, TextContent, Transformable3D?]
+        | readonly [Scalar3D, Scalar3D, Scalar3D, TextContent, Transformable3D?];
+    export type Ticks3DParents = readonly [
+        DynamicVector3,
+        DynamicVector3,
+        Scalar3D,
+        DynamicVector3
+    ];
+    export type VectorField3DComponent = string | ((x: number, y: number, z: number) => number);
+    export type VectorField3DFunction =
+        | readonly [VectorField3DComponent, VectorField3DComponent, VectorField3DComponent]
+        | string
+        | ((x: number, y: number, z: number) => readonly [number, number, number]);
+    export type VectorField3DParents = readonly [
+        VectorField3DFunction,
+        FieldMesh,
+        FieldMesh,
+        FieldMesh
+    ];
 
     export interface View3DAttributes extends GeometryElementAttributes {
         axesPosition?: "center";
@@ -3720,49 +3862,104 @@ declare namespace JXG {
         constructor(board: Board, parents: unknown[], attributes: View3DAttributes);
         create(
             elementType: "circle3d",
-            parents: unknown[],
+            parents: Circle3DParents,
             attributes?: Circle3DAttributes
         ): Circle3D;
         create(
             elementType: "curve3d",
-            parents: unknown[],
+            parents: Curve3DParents,
             attributes?: Curve3DAttributes
         ): Curve3D;
         create(
             elementType: "functiongraph3d",
-            parents: unknown[],
-            attributes?: unknown
-        ): unknown;
+            parents: Functiongraph3DParents,
+            attributes?: Surface3DAttributes
+        ): Surface3D;
         create(
             elementType: "line3d",
-            parents: unknown[],
+            parents: Line3DParents,
             attributes?: Line3DAttributes
         ): Line3D;
         create(
             elementType: "parametricsurface3d",
-            parents: unknown[],
-            attributes?: unknown
-        ): unknown;
+            parents: ParametricSurface3DParents,
+            attributes?: Surface3DAttributes
+        ): Surface3D;
         create(
             elementType: "plane3d",
-            parents: unknown[],
+            parents: Plane3DParents,
             attributes?: Plane3DAttributes
         ): Plane3D;
         create(
             elementType: "point3d",
-            parents: unknown[],
+            parents: Point3DParents,
             attributes?: Point3DAttributes
         ): Point3D;
         create(
             elementType: "polygon3d",
-            parents: unknown[],
+            parents: Polygon3DParents,
             attributes?: Polygon3DAttributes
         ): Polygon3D;
         create(
             elementType: "sphere3d",
-            parents: unknown[],
+            parents: Sphere3DParents,
             attributes?: Sphere3DAttributes
         ): Sphere3D;
+        create(
+            elementType: "axes3d",
+            parents?: readonly [],
+            attributes?: GeometryElementAttributes
+        ): Composition;
+        create(
+            elementType: "axis3d",
+            parents: readonly [Vector3, Vector3],
+            attributes?: Line3DAttributes
+        ): Line3D;
+        create(
+            elementType: "face3d",
+            parents: Face3DParents,
+            attributes?: GeometryElementAttributes
+        ): Face3D;
+        create(
+            elementType: "intersectioncircle3d",
+            parents: IntersectionCircle3DParents,
+            attributes?: Circle3DAttributes
+        ): Circle3D;
+        create(
+            elementType: "intersectionline3d",
+            parents: IntersectionLine3DParents,
+            attributes?: Line3DAttributes
+        ): Line3D;
+        create(
+            elementType: "mesh3d",
+            parents: Mesh3DParents,
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "polyhedron3d",
+            parents: Polyhedron3DParents,
+            attributes?: Polyhedron3DAttributes
+        ): Polyhedron3D;
+        create(
+            elementType: "text3d",
+            parents: Text3DParents,
+            attributes?: TextAttributes
+        ): Text;
+        create(
+            elementType: "ticks3d",
+            parents: Ticks3DParents,
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "transform3d",
+            parents: readonly Scalar3D[],
+            attributes: Transformation3DAttributes
+        ): Transformation;
+        create(
+            elementType: "vectorfield3D",
+            parents: VectorField3DParents,
+            attributes?: Curve3DAttributes
+        ): Curve3D;
         add(el: unknown): void;
         update(): this;
         updateRenderer(): this;
@@ -3786,103 +3983,120 @@ declare namespace JXG {
      *
      */
     type ElementType =
-        | 'angle'
-        | 'arc'
-        | 'arrow'
-        | 'arrowparallel'
-        | 'axis'
-        | 'bisector'
-        | 'bisectorlines'
-        | 'boxplot'
-        | 'button'
-        | 'cardinalspline'
-        | 'chart'
-        | 'checkbox'
-        | 'circle'
-        | 'circle3d'
-        | 'circumcenter'
-        | 'circumcircle'
-        | 'circumcirclearc'
-        | 'circumcirclesector'
-        | 'comb'
-        | 'conic'
-        | 'curve'
-        | 'curve3d'
-        | 'curvedifference'
-        | 'curveintersection'
-        | 'curveunion'
-        | 'derivative'
-        | 'ellipse'
-        | 'foreignobject'
-        | 'functiongraph'
-        | 'functiongraph3d'
-        | 'glider'
-        | 'grid'
-        | 'group'
-        | 'hatch'
-        | 'hyperbola'
-        | 'image'
-        | 'incenter'
-        | 'incircle'
-        | 'inequality'
-        | 'input'
-        | 'integral'
-        | 'intersection'
-        | 'intersectioncircle3d'
-        | 'intersectionline3d'
-        | 'label'
-        | 'legend'
-        | 'line'
-        | 'line3d'
-        | 'locus'
-        | 'majorarc'
-        | 'majorsector'
-        | 'metapostspline'
-        | 'midpoint'
-        | 'minorarc'
-        | 'minorsector'
-        | 'mirrorelement'
-        | 'mirrorpoint'
-        | 'nonreflexangle'
-        | 'normal'
-        | 'orthogonalprojection'
-        | 'otherintersection'
-        | 'parabola'
-        | 'parallel'
-        | 'parallelpoint'
-        | 'parametricsurface3d'
-        | 'perpendicular'
-        | 'perpendicularpoint'
-        | 'perpendicularsegment'
-        | 'plot'
-        | 'point'
-        | 'point3d'
-        | 'polygon3d'
-        | 'polarline'
-        | 'polepoint'
-        | 'polygon'
-        | 'polygonalchain'
-        | 'radicalaxis'
-        | 'reflection'
-        | 'reflexangle'
-        | 'regularpolygon'
-        | 'riemannsum'
-        | 'sector'
-        | 'segment'
-        | 'semicircle'
-        | 'slider'
-        | 'slopetriangle'
-        | 'sphere3d'
-        | 'spline'
-        | 'stepfunction'
-        | 'tangent'
-        | 'tapemeasure'
-        | 'text'
-        | 'ticks'
-        | 'tracecurve'
-        | 'transform'
-        | 'turtle'
-        | 'view3d';
+        | "angle"
+        | "arc"
+        | "arrow"
+        | "arrowparallel"
+        | "axes3d"
+        | "axis"
+        | "axis3d"
+        | "bisector"
+        | "bisectorlines"
+        | "boxplot"
+        | "button"
+        | "cardinalspline"
+        | "chart"
+        | "checkbox"
+        | "circle"
+        | "circle3d"
+        | "circumcenter"
+        | "circumcircle"
+        | "circumcirclearc"
+        | "circumcirclesector"
+        | "comb"
+        | "conic"
+        | "curve"
+        | "curve3d"
+        | "curvedifference"
+        | "curveintersection"
+        | "curveunion"
+        | "derivative"
+        | "ellipse"
+        | "face3d"
+        | "foreignobject"
+        | "functiongraph"
+        | "functiongraph3d"
+        | "glider"
+        | "grid"
+        | "group"
+        | "hatch"
+        | "hash"
+        | "htmlslider"
+        | "hyperbola"
+        | "image"
+        | "incenter"
+        | "incircle"
+        | "inequality"
+        | "input"
+        | "integral"
+        | "intersection"
+        | "intersectioncircle3d"
+        | "intersectionline3d"
+        | "label"
+        | "legend"
+        | "line"
+        | "line3d"
+        | "locus"
+        | "majorarc"
+        | "majorsector"
+        | "measurement"
+        | "mesh3d"
+        | "metapostspline"
+        | "midpoint"
+        | "minorarc"
+        | "minorsector"
+        | "mirrorelement"
+        | "mirrorpoint"
+        | "nonreflexangle"
+        | "normal"
+        | "orthogonalprojection"
+        | "otherintersection"
+        | "parabola"
+        | "parallel"
+        | "parallelpoint"
+        | "parametricsurface3d"
+        | "perpendicular"
+        | "perpendicularpoint"
+        | "perpendicularsegment"
+        | "plot"
+        | "point"
+        | "point3d"
+        | "polyhedron3d"
+        | "polygon3d"
+        | "polarline"
+        | "polepoint"
+        | "polygon"
+        | "polygonalchain"
+        | "radicalaxis"
+        | "reflection"
+        | "reflexangle"
+        | "regularpolygon"
+        | "riemannsum"
+        | "sector"
+        | "segment"
+        | "semicircle"
+        | "slider"
+        | "sketchcurve"
+        | "slopetriangle"
+        | "slopefield"
+        | "smartlabel"
+        | "sphere3d"
+        | "spline"
+        | "stepfunction"
+        | "tangent"
+        | "tangentto"
+        | "tapemeasure"
+        | "text"
+        | "text3d"
+        | "ticks"
+        | "ticks3d"
+        | "tracecurve"
+        | "transform"
+        | "transform3d"
+        | "turtle"
+        | "vectorfield"
+        | "vectorfield3D"
+        | "view3d";
 
     /**
      * GEONExT syntax for coordinates.
@@ -3944,14 +4158,7 @@ declare namespace JXG {
     type StringOrFunction = string | StringFunction;
 
     type RiemannSumType =
-        | "left"
-        | "right"
-        | "middle"
-        | "lower"
-        | "upper"
-        | "random"
-        | "simpson"
-        | "trapezoidal";
+        "left" | "right" | "middle" | "lower" | "upper" | "random" | "simpson" | "trapezoidal";
     type RiemannSumTypeFunction = () => RiemannSumType;
     type RiemannSumTypeOrFunction = RiemannSumType | RiemannSumTypeFunction;
 
@@ -3965,7 +4172,7 @@ declare namespace JXG {
             anchorY?: AnchorY;
             label?: LabelOptions;
             drawZero?: boolean;
-            visible?: 'inherit';
+            visible?: "inherit";
         };
     }
 
@@ -3973,6 +4180,363 @@ declare namespace JXG {
         x: AxisAttributes;
         y: AxisAttributes;
     }
+
+    export type DynamicCoordinate = number | string | NumberFunction;
+    export type AffineCoordinates = readonly [DynamicCoordinate, DynamicCoordinate];
+    export type HomogeneousCoordinates = readonly [
+        DynamicCoordinate,
+        DynamicCoordinate,
+        DynamicCoordinate
+    ];
+    export type TransformationList = Transformation | readonly Transformation[];
+    export type PointParents =
+        | AffineCoordinates
+        | HomogeneousCoordinates
+        | readonly [GeometryElement, TransformationList];
+    export type ConstructiblePoint =
+        | Point
+        | string
+        | AffineCoordinates
+        | HomogeneousCoordinates
+        | (() => Point | AffineCoordinates | HomogeneousCoordinates);
+    export type LineEndpoint =
+        Point | string | AffineCoordinates | (() => Point | AffineCoordinates);
+    export type LineParents =
+        | readonly [LineEndpoint, LineEndpoint]
+        | HomogeneousCoordinates
+        | readonly [() => readonly [Point, Point]]
+        | readonly [() => readonly [number, number, number]]
+        | readonly [Line, TransformationList];
+    export type SegmentParents =
+        | readonly [LineEndpoint, LineEndpoint]
+        | readonly [LineEndpoint, LineEndpoint, number | NumberFunction];
+    export type TextContent = string | number | (() => string | number);
+    export type TextParents =
+        | readonly [DynamicCoordinate, DynamicCoordinate, TextContent]
+        | readonly [DynamicCoordinate, DynamicCoordinate, DynamicCoordinate, TextContent]
+        | readonly [GeometryElement, TransformationList, TextContent];
+    export type PolygonParents =
+        | ReadonlyArray<Point | AffineCoordinates | (() => AffineCoordinates)>
+        | readonly [Polygon, TransformationList];
+    export type CircleRadius = number | string | NumberFunction | Circle | Line;
+    export type CircleParents =
+        | readonly [ConstructiblePoint, ConstructiblePoint | CircleRadius]
+        | readonly [CircleRadius, ConstructiblePoint]
+        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint];
+    export type TransformedCircleParents = readonly [Circle, TransformationList];
+    export type ArcParents =
+        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint]
+        | readonly [
+              ConstructiblePoint,
+              ConstructiblePoint,
+              ConstructiblePoint,
+              ConstructiblePoint
+          ];
+    export type EllipseBoundary = ConstructiblePoint | number | NumberFunction;
+    export type EllipseParents =
+        | readonly [ConstructiblePoint, ConstructiblePoint, EllipseBoundary]
+        | readonly [
+              ConstructiblePoint,
+              ConstructiblePoint,
+              EllipseBoundary,
+              number | NumberFunction,
+              number | NumberFunction
+          ];
+    export type CurveEvaluator = (value: number, suspendedUpdate: boolean) => number;
+    export type CurveTerm = number | string | CurveEvaluator;
+    export type CurveData = readonly (number | NumberFunction)[];
+    export type CurveParents =
+        | readonly [CurveData, CurveData]
+        | readonly [CurveTerm, CurveTerm]
+        | readonly [CurveTerm, CurveTerm, number | NumberFunction, number | NumberFunction]
+        | readonly [CurveEvaluator, AffineCoordinates]
+        | readonly [
+              CurveEvaluator,
+              AffineCoordinates,
+              number | NumberFunction,
+              number | NumberFunction
+          ]
+        | readonly [readonly AffineCoordinates[]]
+        | readonly [Curve, TransformationList];
+    export type FunctiongraphParents =
+        | readonly [string | CurveEvaluator]
+        | readonly [string | CurveEvaluator, number | NumberFunction, number | NumberFunction];
+    export type SplineSample = Point | AffineCoordinates | (() => AffineCoordinates);
+    export type SplineParents = readonly SplineSample[] | readonly [CurveData, CurveData];
+    export type GliderParents =
+        | readonly [GeometryElement]
+        | readonly [DynamicCoordinate, DynamicCoordinate, GeometryElement];
+    export type IntersectionParents =
+        | readonly [GeometryElement, GeometryElement]
+        | readonly [GeometryElement, GeometryElement, number | NumberFunction]
+        | readonly [
+              GeometryElement,
+              GeometryElement,
+              number | NumberFunction,
+              number | NumberFunction
+          ];
+    export type MidpointParents =
+        readonly [ConstructiblePoint, ConstructiblePoint] | readonly [Line];
+    export type TangentObject = Line | Circle | Curve | Turtle;
+    export type TangentParents =
+        readonly [Glider] | readonly [Point, TangentObject] | readonly [TangentObject, Point];
+    export type ParallelParents =
+        | readonly [Line, ConstructiblePoint]
+        | readonly [ConstructiblePoint, Line]
+        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint];
+    export type AngleLineDirection = number | AffineCoordinates;
+    export type AngleParents =
+        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint]
+        | readonly [Line, Line, AngleLineDirection, AngleLineDirection];
+    export type AxisParents = LineParents;
+    export type SliderRange = readonly [number, number, number];
+    export type SliderParents = readonly [PointParents, PointParents, SliderRange];
+    export type TransformScalar = number | NumberFunction;
+    export type TransformLinearParents = readonly [TransformScalar, TransformScalar];
+    export type TransformReflectParents =
+        | readonly [Line]
+        | readonly [Point, Point]
+        | readonly [TransformScalar, TransformScalar, TransformScalar, TransformScalar];
+    export type TransformRotateParents =
+        | readonly [TransformScalar]
+        | readonly [TransformScalar, Point | string | AffineCoordinates]
+        | readonly [TransformScalar, TransformScalar, TransformScalar];
+    export type TransformAffineParents = readonly [
+        TransformScalar,
+        TransformScalar,
+        TransformScalar,
+        TransformScalar
+    ];
+    export type TransformAffineMatrixParents = readonly [
+        readonly [TransformScalar, TransformScalar],
+        readonly [TransformScalar, TransformScalar]
+    ];
+    export type TransformGenericParents = readonly [
+        TransformScalar,
+        TransformScalar,
+        TransformScalar,
+        TransformScalar,
+        TransformScalar,
+        TransformScalar,
+        TransformScalar,
+        TransformScalar,
+        TransformScalar
+    ];
+    export type TransformMatrixParents = readonly [
+        readonly [TransformScalar, TransformScalar, TransformScalar],
+        readonly [TransformScalar, TransformScalar, TransformScalar],
+        readonly [TransformScalar, TransformScalar, TransformScalar]
+    ];
+    export type PerpendicularParents =
+        readonly [Line, ConstructiblePoint] | readonly [ConstructiblePoint, Line];
+    export type CircumcircleParents = readonly [
+        ConstructiblePoint,
+        ConstructiblePoint,
+        ConstructiblePoint
+    ];
+    export type RegularPolygonSides<Sides extends number> = Sides extends 0 | 1 | 2
+        ? never
+        : Sides;
+    export type RegularPolygonParents<Sides extends number = number> =
+        | readonly [ConstructiblePoint, ConstructiblePoint, RegularPolygonSides<Sides>]
+        | readonly [
+              ConstructiblePoint,
+              ConstructiblePoint,
+              ConstructiblePoint,
+              ...ConstructiblePoint[]
+          ];
+    export type HyperbolaBoundary = ConstructiblePoint | number | NumberFunction;
+    export type HyperbolaParents =
+        | readonly [ConstructiblePoint, ConstructiblePoint, HyperbolaBoundary]
+        | readonly [
+              ConstructiblePoint,
+              ConstructiblePoint,
+              HyperbolaBoundary,
+              number | NumberFunction,
+              number | NumberFunction
+          ];
+    export type ParabolaDirectrix = Line | readonly [LineEndpoint, LineEndpoint];
+    export type ParabolaParents =
+        | readonly [ConstructiblePoint, ParabolaDirectrix]
+        | readonly [
+              ConstructiblePoint,
+              ParabolaDirectrix,
+              number | NumberFunction,
+              number | NumberFunction
+          ];
+    export type InequalityParents = readonly [Line | Curve];
+    export type SemicircleParents = readonly [ConstructiblePoint, ConstructiblePoint];
+    export type CircumcircleArcParents = CircumcircleParents;
+    export type CircumcircleSectorParents = CircumcircleParents;
+    export type SectorRadius = number | string | NumberFunction;
+    export type SectorParents =
+        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint]
+        | readonly [Line, Line, AngleLineDirection, AngleLineDirection, SectorRadius];
+    export type PerpendicularPointParents = PerpendicularParents;
+    export type BisectorParents = CircumcircleParents;
+    export type NormalParents =
+        readonly [Glider] | readonly [Point, TangentObject] | readonly [TangentObject, Point];
+    export type PolygonalChainParents = PolygonParents;
+    export type ConicParents =
+        | readonly [
+              ConstructiblePoint,
+              ConstructiblePoint,
+              ConstructiblePoint,
+              ConstructiblePoint,
+              ConstructiblePoint
+          ]
+        | readonly [
+              TransformScalar,
+              TransformScalar,
+              TransformScalar,
+              TransformScalar,
+              TransformScalar,
+              TransformScalar
+          ];
+    export type ButtonHandler = string | (() => void);
+    export type ButtonParents = readonly [
+        DynamicCoordinate,
+        DynamicCoordinate,
+        TextContent,
+        ButtonHandler
+    ];
+    export type CheckboxParents = readonly [DynamicCoordinate, DynamicCoordinate, TextContent];
+    export type InputParents = readonly [
+        DynamicCoordinate,
+        DynamicCoordinate,
+        string,
+        TextContent
+    ];
+    export type ImageSource = string | StringFunction;
+    export type ImageSize = readonly [DynamicCoordinate, DynamicCoordinate];
+    export type ImageParents = readonly [ImageSource, PointParents, ImageSize];
+    export interface ForeignObject extends CoordsElement {}
+    export type ForeignObjectParents =
+        readonly [string, PointParents] | readonly [string, PointParents, ImageSize];
+    export type GroupParents = readonly GeometryElement[];
+    export type GridParents = readonly [] | readonly [Axis] | readonly [Axis, Axis];
+    export type CurveSampleCollection =
+        readonly SplineSample[] | readonly [CurveData, CurveData];
+    export type BoxplotQuantile = number | NumberFunction | (() => readonly number[]);
+    export type BoxplotParents = readonly [
+        readonly [
+            BoxplotQuantile,
+            BoxplotQuantile,
+            BoxplotQuantile,
+            BoxplotQuantile,
+            BoxplotQuantile,
+            ...BoxplotQuantile[]
+        ],
+        number | NumberFunction,
+        number | NumberFunction
+    ];
+    export type CardinalsplineParents = readonly [
+        CurveSampleCollection,
+        number | NumberFunction,
+        ("uniform" | "centripetal")?
+    ];
+    export type ChartValue = number | NumberFunction;
+    export type ChartParents =
+        readonly ChartValue[] | readonly [readonly ChartValue[], readonly ChartValue[]];
+    export type ChartTableParents = readonly [string];
+    export type CombParents = readonly [ConstructiblePoint, ConstructiblePoint];
+    export type ClosedPath = Curve | Polygon | Circle | Inequality;
+    export type CurveBooleanParents = readonly [ClosedPath, ClosedPath];
+    export type TickDistance = number | NumberFunction | readonly number[];
+    export type TicksParents = readonly [Line | Curve, TickDistance?];
+    export type HatchParents = readonly [Line | Curve, number];
+    export type IntegralInterval = readonly [number | NumberFunction, number | NumberFunction];
+    export type IntegralParents =
+        readonly [IntegralInterval, Curve] | readonly [Curve, IntegralInterval];
+    export interface MetapostControls {
+        tension?: number | NumberFunction;
+        direction?: Readonly<Record<number, number | NumberFunction>>;
+        curl?: Readonly<Record<number, number | NumberFunction>>;
+        isClosed?: boolean;
+    }
+    export type MetapostsplineParents = readonly [CurveSampleCollection, MetapostControls];
+    export type RiemannFunction = string | CurveEvaluator;
+    export type RiemannType =
+        "left" | "right" | "middle" | "lower" | "upper" | "random" | "simpson" | "trapezoidal";
+    export type RiemannsumParents = readonly [
+        RiemannFunction | readonly [RiemannFunction, RiemannFunction],
+        number | NumberFunction,
+        RiemannType | (() => RiemannType),
+        (number | NumberFunction)?,
+        (number | NumberFunction)?
+    ];
+    export type SlopetriangleParents =
+        readonly [Tangent] | readonly [Glider] | readonly [Line, Point];
+    export type StepfunctionParents = readonly [CurveData, CurveData];
+    export type TapemeasureParents = readonly [PointParents, PointParents];
+    export type TracecurveParents = readonly [Glider, Point];
+    export type TurtleParents =
+        | readonly []
+        | readonly [number, number]
+        | readonly [number, number, number]
+        | readonly [readonly [number, number]]
+        | readonly [readonly [number, number], number];
+    export type ImplicitFunction = string | ((x: number, y: number) => number);
+    export type NumericRange = readonly [number | NumberFunction, number | NumberFunction];
+    export type ImplicitcurveParents =
+        | readonly [ImplicitFunction]
+        | readonly [ImplicitFunction, NumericRange, NumericRange]
+        | readonly [
+              ImplicitFunction,
+              ImplicitFunction,
+              ImplicitFunction,
+              NumericRange,
+              NumericRange
+          ];
+    export type View3DRange = readonly [number, number];
+    export type View3DParents = readonly [
+        readonly [number, number],
+        readonly [number, number],
+        readonly [View3DRange, View3DRange, View3DRange]
+    ];
+    export type ParallelConstructionParents = ParallelParents;
+    export type BisectorlinesParents = readonly [Line, Line];
+    export type TrianglePointParents = CircumcircleParents;
+    export type OrthogonalProjectionParents = PerpendicularParents;
+    export type OtherIntersectionParents =
+        | readonly [Circle | Curve, Circle | Curve | Line, Point | readonly Point[]]
+        | readonly [Line, Circle | Curve, Point | readonly Point[]];
+    export type ParallelogramParents = readonly [
+        ConstructiblePoint,
+        ConstructiblePoint,
+        ConstructiblePoint
+    ];
+    export type PolarConic = Circle | Conic;
+    export type PolarlineParents = readonly [PolarConic, Point] | readonly [Point, PolarConic];
+    export type PolepointParents = readonly [PolarConic, Line] | readonly [Line, PolarConic];
+    export type RadicalaxisParents = readonly [Circle, Circle];
+    export type TangentToParents = readonly [
+        PolarConic,
+        ConstructiblePoint,
+        (number | NumberFunction)?
+    ];
+    export type HtmlsliderParents = readonly [AffineCoordinates, SliderRange];
+    export type MeasurementTerm =
+        number | string | GeometryElement | readonly MeasurementTerm[];
+    export type MeasurementParents = readonly [
+        DynamicCoordinate,
+        DynamicCoordinate,
+        MeasurementTerm
+    ];
+    export type SmartLabelTarget = Point | Line | Circle | Polygon | Angle;
+    export type SmartLabelParents = readonly [SmartLabelTarget, TextContent?];
+    export type VectorFieldComponent = string | ((x: number, y: number) => number);
+    export type VectorFieldFunction =
+        | readonly [VectorFieldComponent, VectorFieldComponent]
+        | string
+        | ((x: number, y: number) => readonly [number, number]);
+    export type FieldMesh = readonly [
+        number | NumberFunction,
+        number | NumberFunction,
+        number | NumberFunction
+    ];
+    export type VectorFieldParents = readonly [VectorFieldFunction, FieldMesh, FieldMesh];
+    export type SlopeFieldParents = readonly [ImplicitFunction, FieldMesh, FieldMesh];
 
     /**
      *
@@ -4326,39 +4890,37 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create<T extends GeometryElement | Composition | Array<GeometryElement>>(
-            elementType: string,
-            parents: unknown[],
-            attributes?: Record<string, unknown>
-        ): T;
         /**
-         *
          * @param elementType 'angle'
          * @param parents [centerPoint, radiusPoint, anglePoint] or [line1, line2, coords1 or direction1, coords2 or direction2]
          * @param attributes
          */
-        create(elementType: "angle", parents: unknown[], attributes?: AngleAttributes): Angle;
+        create(
+            elementType: "angle",
+            parents: AngleParents,
+            attributes?: AngleAttributes
+        ): Angle;
         /**
          *
          * @param elementType 'arc'
          * @param parents
          * @param attributes
          */
-        create(elementType: "arc", parents: unknown[], attributes?: ArcAttributes): Arc;
+        create(elementType: "arc", parents: ArcParents, attributes?: ArcAttributes): Arc;
         /**
          *
          * @param elementType 'arrow'
          * @param parents
          * @param attributes
          */
-        create(elementType: "arrow", parents: unknown[], attributes?: ArrowAttributes): Arrow;
+        create(elementType: "arrow", parents: LineParents, attributes?: ArrowAttributes): Arrow;
         /**
          *
          * @param elementType 'axis'
          * @param parents
          * @param attributes
          */
-        create(elementType: "axis", parents: unknown[], attributes?: AxisAttributes): Axis;
+        create(elementType: "axis", parents: AxisParents, attributes?: AxisAttributes): Axis;
         /**
          *
          * @param elementType 'bisector'
@@ -4367,7 +4929,7 @@ declare namespace JXG {
          */
         create(
             elementType: "bisector",
-            parents: unknown[],
+            parents: BisectorParents,
             attributes?: BisectorAttributes
         ): Bisector;
         /**
@@ -4378,7 +4940,7 @@ declare namespace JXG {
          */
         create(
             elementType: "boxplot",
-            parents: unknown[],
+            parents: BoxplotParents,
             attributes?: BoxplotAttributes
         ): Boxplot;
         /**
@@ -4389,7 +4951,7 @@ declare namespace JXG {
          */
         create(
             elementType: "button",
-            parents: unknown[],
+            parents: ButtonParents,
             attributes?: ButtonAttributes
         ): Button;
         /**
@@ -4400,7 +4962,7 @@ declare namespace JXG {
          */
         create(
             elementType: "cardinalspline",
-            parents: unknown[],
+            parents: CardinalsplineParents,
             attributes?: CardinalsplineAttributes
         ): Cardinalspline;
         /**
@@ -4409,7 +4971,16 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "chart", parents: unknown[], attributes?: ChartAttributes): Chart;
+        create(
+            elementType: "chart",
+            parents: ChartTableParents,
+            attributes?: ChartAttributes
+        ): Chart[];
+        create(
+            elementType: "chart",
+            parents: ChartParents,
+            attributes?: ChartAttributes
+        ): Chart;
         /**
          *
          * @param elementType 'checkbox'
@@ -4418,7 +4989,7 @@ declare namespace JXG {
          */
         create(
             elementType: "checkbox",
-            parents: unknown[],
+            parents: CheckboxParents,
             attributes?: CheckboxAttributes
         ): Checkbox;
         /**
@@ -4429,9 +5000,14 @@ declare namespace JXG {
          */
         create(
             elementType: "circle",
-            parents: unknown[],
+            parents: CircleParents,
             attributes?: CircleAttributes
         ): Circle;
+        create(
+            elementType: "circle",
+            parents: TransformedCircleParents,
+            attributes?: CircleAttributes
+        ): Ellipse;
         /**
          * @param elementType 'circumcircle'
          * @param parents
@@ -4439,7 +5015,7 @@ declare namespace JXG {
          */
         create(
             elementType: "circumcircle",
-            parents: unknown[],
+            parents: CircumcircleParents,
             attributes?: CircumcircleAttributes
         ): Circumcircle;
         /**
@@ -4449,7 +5025,7 @@ declare namespace JXG {
          */
         create(
             elementType: "circumcirclearc",
-            parents: unknown[],
+            parents: CircumcircleArcParents,
             attributes?: CircumcircleArcAttributes
         ): CircumcircleArc;
         /**
@@ -4459,7 +5035,7 @@ declare namespace JXG {
          */
         create(
             elementType: "circumcirclesector",
-            parents: unknown[],
+            parents: CircumcircleSectorParents,
             attributes?: CircumcircleSectorAttributes
         ): CircumcircleSector;
         /**
@@ -4468,21 +5044,29 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "comb", parents: unknown[], attributes?: CombAttributes): Comb;
+        create(elementType: "comb", parents: CombParents, attributes?: CombAttributes): Comb;
         /**
          *
          * @param elementType 'conic'
          * @param parents
          * @param attributes
          */
-        create(elementType: "conic", parents: unknown[], attributes?: ConicAttributes): Conic;
+        create(
+            elementType: "conic",
+            parents: ConicParents,
+            attributes?: ConicAttributes
+        ): Conic;
         /**
          *
          * @param elementType 'curve'
          * @param parents
          * @param attributes
          */
-        create(elementType: "curve", parents: unknown[], attributes?: CurveAttributes): Curve;
+        create(
+            elementType: "curve",
+            parents: CurveParents,
+            attributes?: CurveAttributes
+        ): Curve;
         /**
          *
          * @param elementType 'curvedifference'
@@ -4491,7 +5075,7 @@ declare namespace JXG {
          */
         create(
             elementType: "curvedifference",
-            parents: unknown[],
+            parents: CurveBooleanParents,
             attributes?: CurveAttributes
         ): Curve;
         /**
@@ -4502,7 +5086,7 @@ declare namespace JXG {
          */
         create(
             elementType: "curveintersection",
-            parents: unknown[],
+            parents: CurveBooleanParents,
             attributes?: CurveAttributes
         ): Curve;
         /**
@@ -4513,7 +5097,7 @@ declare namespace JXG {
          */
         create(
             elementType: "curveunion",
-            parents: unknown[],
+            parents: CurveBooleanParents,
             attributes?: CurveAttributes
         ): Curve;
         /**
@@ -4524,7 +5108,7 @@ declare namespace JXG {
          */
         create(
             elementType: "ellipse",
-            parents: unknown[],
+            parents: EllipseParents,
             attributes?: EllipseAttributes
         ): Ellipse;
         /**
@@ -4535,7 +5119,7 @@ declare namespace JXG {
          */
         create(
             elementType: "functiongraph",
-            parents: unknown[] | ((x: number) => number),
+            parents: FunctiongraphParents,
             attributes?: FunctiongraphAttributes
         ): Functiongraph;
         /**
@@ -4546,7 +5130,7 @@ declare namespace JXG {
          */
         create(
             elementType: "glider",
-            parents: unknown[],
+            parents: GliderParents,
             attributes?: GliderAttributes
         ): Glider;
         /**
@@ -4555,21 +5139,29 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "grid", parents: unknown[], attributes?: GridAttributes): Grid;
+        create(elementType: "grid", parents?: GridParents, attributes?: GridAttributes): Grid;
         /**
          *
          * @param elementType 'group'
          * @param parents
          * @param attributes
          */
-        create(elementType: "group", parents: unknown[], attributes?: GroupAttributes): Group;
+        create(
+            elementType: "group",
+            parents: GroupParents,
+            attributes?: GroupAttributes
+        ): Group;
         /**
          *
          * @param elementType 'hatch'
          * @param parents
          * @param attributes
          */
-        create(elementType: "hatch", parents: unknown[], attributes?: HatchAttributes): Hatch;
+        create(
+            elementType: "hatch" | "hash",
+            parents: HatchParents,
+            attributes?: HatchAttributes
+        ): Hatch;
         /**
          *
          * @param elementType 'hyperbola'
@@ -4578,7 +5170,7 @@ declare namespace JXG {
          */
         create(
             elementType: "hyperbola",
-            parents: unknown[],
+            parents: HyperbolaParents,
             attributes?: HyperbolaAttributes
         ): Hyperbola;
         /**
@@ -4587,7 +5179,16 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "image", parents: unknown[], attributes?: ImageAttributes): Image;
+        create(
+            elementType: "image",
+            parents: ImageParents,
+            attributes?: ImageAttributes
+        ): Image;
+        create(
+            elementType: "foreignobject" | "fo",
+            parents: ForeignObjectParents,
+            attributes?: CoordsElementAttributes
+        ): ForeignObject;
         /**
          *
          * @param elementType 'inequality'
@@ -4596,7 +5197,7 @@ declare namespace JXG {
          */
         create(
             elementType: "inequality",
-            parents: unknown[],
+            parents: InequalityParents,
             attributes?: InequalityAttributes
         ): Inequality;
         /**
@@ -4605,7 +5206,11 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "input", parents: unknown[], attributes?: InputAttributes): Input;
+        create(
+            elementType: "input",
+            parents: InputParents,
+            attributes?: InputAttributes
+        ): Input;
         /**
          *
          * @param elementType 'integral'
@@ -4614,7 +5219,7 @@ declare namespace JXG {
          */
         create(
             elementType: "integral",
-            parents: unknown[],
+            parents: IntegralParents,
             attributes?: IntegralAttributes
         ): Integral;
         /**
@@ -4625,7 +5230,7 @@ declare namespace JXG {
          */
         create(
             elementType: "intersection",
-            parents: unknown[],
+            parents: IntersectionParents,
             attributes?: IntersectionAttributes
         ): Intersection;
         /**
@@ -4634,7 +5239,7 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "line", parents: unknown[], attributes?: LineAttributes): Line;
+        create(elementType: "line", parents: LineParents, attributes?: LineAttributes): Line;
         /**
          *
          * @param elementType 'metapostspline'
@@ -4643,7 +5248,7 @@ declare namespace JXG {
          */
         create(
             elementType: "metapostspline",
-            parents: unknown[],
+            parents: MetapostsplineParents,
             attributes?: MetapostsplineAttributes
         ): Metapostspline;
         /**
@@ -4654,20 +5259,36 @@ declare namespace JXG {
          */
         create(
             elementType: "midpoint",
-            parents: unknown[],
+            parents: MidpointParents,
             attributes?: MidpointAttributes
         ): Midpoint;
+        create(
+            elementType: "parallel",
+            parents: ParallelParents,
+            attributes?: ParallelAttributes
+        ): Parallel;
         /**
          *
-         * @param elementType 'minorArc'
+         * @param elementType 'minorarc'
          * @param parents
          * @param attributes
          */
         create(
-            elementType: "minorArc",
-            parents: unknown[],
+            elementType: "minorarc",
+            parents: ArcParents,
             attributes?: MinorArcAttributes
         ): MinorArc;
+        create(elementType: "majorarc", parents: ArcParents, attributes?: ArcAttributes): Arc;
+        create(
+            elementType: "minorsector",
+            parents: SectorParents,
+            attributes?: SectorAttributes
+        ): Sector;
+        create(
+            elementType: "majorsector",
+            parents: SectorParents,
+            attributes?: SectorAttributes
+        ): Sector;
         /**
          *
          * @param elementType 'mirrorelement'
@@ -4676,9 +5297,29 @@ declare namespace JXG {
          */
         create(
             elementType: "mirrorelement",
-            parents: unknown[],
+            parents: readonly [Point, Point],
             attributes?: MirrorelementAttributes
         ): Mirrorelement;
+        create(
+            elementType: "mirrorelement",
+            parents: readonly [Line, Point],
+            attributes?: LineAttributes
+        ): Line;
+        create(
+            elementType: "mirrorelement",
+            parents: readonly [Curve, Point],
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "mirrorelement",
+            parents: readonly [Polygon, Point],
+            attributes?: PolygonAttributes
+        ): Polygon;
+        create(
+            elementType: "mirrorelement",
+            parents: readonly [Circle, Point],
+            attributes?: CircleAttributes
+        ): Circle | Ellipse;
         /**
          *
          * @param elementType 'normal'
@@ -4687,7 +5328,7 @@ declare namespace JXG {
          */
         create(
             elementType: "normal",
-            parents: unknown[],
+            parents: NormalParents,
             attributes?: NormalAttributes
         ): Normal;
         /**
@@ -4698,7 +5339,7 @@ declare namespace JXG {
          */
         create(
             elementType: "parabola",
-            parents: unknown[],
+            parents: ParabolaParents,
             attributes?: ParabolaAttributes
         ): Parabola;
         /**
@@ -4709,7 +5350,7 @@ declare namespace JXG {
          */
         create(
             elementType: "perpendicular",
-            parents: unknown[],
+            parents: PerpendicularParents,
             attributes?: PerpendicularAttributes
         ): Perpendicular;
         /**
@@ -4718,14 +5359,22 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "plot", parents: unknown[], attributes?: CurveAttributes): Curve;
+        create(
+            elementType: "plot",
+            parents: FunctiongraphParents,
+            attributes?: CurveAttributes
+        ): Curve;
         /**
          *
          * @param elementType 'point'
          * @param parents [x, y], [z, x, y], and [element, transformation].
          * @param attributes
          */
-        create(elementType: "point", parents: unknown[], attributes?: PointAttributes): Point;
+        create(
+            elementType: "point",
+            parents: PointParents,
+            attributes?: PointAttributes
+        ): Point;
         /**
          *
          * @param elementType 'polygon'
@@ -4734,7 +5383,7 @@ declare namespace JXG {
          */
         create(
             elementType: "polygon",
-            parents: unknown[],
+            parents: PolygonParents,
             attributes?: PolygonAttributes
         ): Polygon;
         /**
@@ -4745,20 +5394,25 @@ declare namespace JXG {
          */
         create(
             elementType: "polygonalchain",
-            parents: unknown[],
+            parents: PolygonalChainParents,
             attributes?: PolygonAttributes
         ): Polygon;
+        create(
+            elementType: "perpendicularpoint",
+            parents: PerpendicularPointParents,
+            attributes?: PointAttributes
+        ): Point;
         /**
          *
          * @param elementType 'regularpolygon'
          * @param parents
          * @param attributes
          */
-        create(
+        create<const Sides extends number>(
             elementType: "regularpolygon",
-            parents: unknown[],
+            parents: RegularPolygonParents<Sides>,
             attributes?: PolygonAttributes
-        ): Polygon;
+        ): RegularPolygon;
         /**
          *
          * @param elementType 'reflection'
@@ -4767,9 +5421,29 @@ declare namespace JXG {
          */
         create(
             elementType: "reflection",
-            parents: unknown[],
-            attributes?: ReflectionAttributes
-        ): Reflection;
+            parents: readonly [Point, Line],
+            attributes?: PointAttributes
+        ): Point;
+        create(
+            elementType: "reflection",
+            parents: readonly [Line, Line],
+            attributes?: LineAttributes
+        ): Line;
+        create(
+            elementType: "reflection",
+            parents: readonly [Curve, Line],
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "reflection",
+            parents: readonly [Polygon, Line],
+            attributes?: PolygonAttributes
+        ): Polygon;
+        create(
+            elementType: "reflection",
+            parents: readonly [Circle, Line],
+            attributes?: CircleAttributes
+        ): Circle | Ellipse;
         /**
          *
          * @param elementType 'riemannsum'
@@ -4778,7 +5452,7 @@ declare namespace JXG {
          */
         create(
             elementType: "riemannsum",
-            parents: unknown[],
+            parents: RiemannsumParents,
             attributes?: CurveAttributes
         ): Riemannsum;
         /**
@@ -4789,7 +5463,7 @@ declare namespace JXG {
          */
         create(
             elementType: "sector",
-            parents: unknown[],
+            parents: SectorParents,
             attributes?: SectorAttributes
         ): Sector;
         /**
@@ -4800,7 +5474,7 @@ declare namespace JXG {
          */
         create(
             elementType: "semicircle",
-            parents: unknown[],
+            parents: SemicircleParents,
             attributes?: SemicircleAttributes
         ): Semicircle;
         /**
@@ -4811,7 +5485,7 @@ declare namespace JXG {
          */
         create(
             elementType: "segment",
-            parents: unknown[],
+            parents: SegmentParents,
             attributes?: SegmentAttributes
         ): Segment;
         /**
@@ -4822,9 +5496,14 @@ declare namespace JXG {
          */
         create(
             elementType: "slider",
-            parents: unknown[],
+            parents: SliderParents,
             attributes?: SliderAttributes
         ): Slider;
+        create(
+            elementType: "spline",
+            parents: SplineParents,
+            attributes?: CurveAttributes
+        ): Curve;
         /**
          *
          * @param elementType 'slopetriangle'
@@ -4833,7 +5512,7 @@ declare namespace JXG {
          */
         create(
             elementType: "slopetriangle",
-            parents: unknown[],
+            parents: SlopetriangleParents,
             attributes?: SlopetriangleAttributes
         ): Slopetriangle;
         /**
@@ -4844,7 +5523,7 @@ declare namespace JXG {
          */
         create(
             elementType: "stepfunction",
-            parents: unknown[],
+            parents: StepfunctionParents,
             attributes?: StepfunctionAttributes
         ): Stepfunction;
         /**
@@ -4855,7 +5534,7 @@ declare namespace JXG {
          */
         create(
             elementType: "tangent",
-            parents: unknown[],
+            parents: TangentParents,
             attributes?: TangentAttributes
         ): Tangent;
         /**
@@ -4866,7 +5545,7 @@ declare namespace JXG {
          */
         create(
             elementType: "tapemeasure",
-            parents?: unknown[],
+            parents: TapemeasureParents,
             attributes?: TapemeasureAttributes
         ): Tapemeasure;
         /**
@@ -4875,14 +5554,18 @@ declare namespace JXG {
          * @param parents
          * @param attributes
          */
-        create(elementType: "text", parents: unknown[], attributes?: TextAttributes): Text;
+        create(elementType: "text", parents: TextParents, attributes?: TextAttributes): Text;
         /**
          *
          * @param elementType 'ticks'
          * @param parents
          * @param attributes
          */
-        create(elementType: "ticks", parents: unknown[], attributes?: TicksAttributes): Ticks;
+        create(
+            elementType: "ticks",
+            parents: TicksParents,
+            attributes?: TicksAttributes
+        ): Ticks;
         /**
          *
          * @param elementType 'tracecurve'
@@ -4891,7 +5574,7 @@ declare namespace JXG {
          */
         create(
             elementType: "tracecurve",
-            parents: unknown[],
+            parents: TracecurveParents,
             attributes?: TracecurveAttributes
         ): Tracecurve;
         /**
@@ -4902,8 +5585,38 @@ declare namespace JXG {
          */
         create(
             elementType: "transform",
-            parents: unknown[],
-            attributes?: TransformationAttributes
+            parents: TransformLinearParents,
+            attributes: { type: "translate" | "scale" | "shear" }
+        ): Transformation;
+        create(
+            elementType: "transform",
+            parents: TransformReflectParents,
+            attributes: { type: "reflect" }
+        ): Transformation;
+        create(
+            elementType: "transform",
+            parents: TransformRotateParents,
+            attributes: { type: "rotate" }
+        ): Transformation;
+        create(
+            elementType: "transform",
+            parents: TransformAffineParents,
+            attributes: { type: "affine" }
+        ): Transformation;
+        create(
+            elementType: "transform",
+            parents: TransformAffineMatrixParents,
+            attributes: { type: "affinematrix" }
+        ): Transformation;
+        create(
+            elementType: "transform",
+            parents: TransformGenericParents,
+            attributes: { type: "generic" }
+        ): Transformation;
+        create(
+            elementType: "transform",
+            parents: TransformMatrixParents,
+            attributes: { type: "matrix" }
         ): Transformation;
         /**
          * Constructs a new Turtle object.
@@ -4913,7 +5626,7 @@ declare namespace JXG {
          */
         create(
             elementType: "turtle",
-            parents?: unknown[],
+            parents?: TurtleParents,
             attributes?: TurtleAttributes
         ): Turtle;
         /**
@@ -4924,9 +5637,139 @@ declare namespace JXG {
          */
         create(
             elementType: "view3d",
-            parents?: unknown[],
+            parents: View3DParents,
             attributes?: View3DAttributes
         ): View3D;
+        create(
+            elementType: "implicitcurve",
+            parents: ImplicitcurveParents,
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "nonreflexangle",
+            parents: AngleParents,
+            attributes?: AngleAttributes
+        ): Angle;
+        create(
+            elementType: "reflexangle",
+            parents: AngleParents,
+            attributes?: AngleAttributes
+        ): Angle;
+        create(
+            elementType: "arrowparallel",
+            parents: ParallelConstructionParents,
+            attributes?: ArrowAttributes
+        ): Arrow;
+        create(
+            elementType: "bisectorlines",
+            parents: BisectorlinesParents,
+            attributes?: LineAttributes
+        ): Composition;
+        create(
+            elementType: "circumcenter" | "circumcirclemidpoint",
+            parents: TrianglePointParents,
+            attributes?: PointAttributes
+        ): Point;
+        create(
+            elementType: "incenter",
+            parents: TrianglePointParents,
+            attributes?: PointAttributes
+        ): Point;
+        create(
+            elementType: "incircle",
+            parents: TrianglePointParents,
+            attributes?: IncircleAttributes
+        ): Incircle;
+        create(
+            elementType: "orthogonalprojection",
+            parents: OrthogonalProjectionParents,
+            attributes?: OrthogonalprojectionAttributes
+        ): Orthogonalprojection;
+        create(
+            elementType: "mirrorpoint",
+            parents: readonly [Point, Point],
+            attributes?: PointAttributes
+        ): Point;
+        create(
+            elementType: "parallelpoint",
+            parents: ParallelConstructionParents,
+            attributes?: PointAttributes
+        ): Point;
+        create(
+            elementType: "perpendicularsegment",
+            parents: PerpendicularParents,
+            attributes?: LineAttributes
+        ): Segment;
+        create(
+            elementType: "otherintersection",
+            parents: OtherIntersectionParents,
+            attributes?: PointAttributes
+        ): Point;
+        create(
+            elementType: "parallelogram",
+            parents: ParallelogramParents,
+            attributes?: PolygonAttributes
+        ): Polygon;
+        create(
+            elementType: "polar" | "polarline",
+            parents: PolarlineParents,
+            attributes?: LineAttributes
+        ): Line;
+        create(
+            elementType: "polepoint",
+            parents: PolepointParents,
+            attributes?: PointAttributes
+        ): Point;
+        create(
+            elementType: "radicalaxis",
+            parents: RadicalaxisParents,
+            attributes?: LineAttributes
+        ): Line;
+        create(
+            elementType: "tangentto",
+            parents: TangentToParents,
+            attributes?: LineAttributes
+        ): Line;
+        create(
+            elementType: "derivative",
+            parents: readonly [Curve],
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "legend",
+            parents: AffineCoordinates,
+            attributes?: GeometryElementAttributes
+        ): Legend;
+        create(
+            elementType: "htmlslider",
+            parents: HtmlsliderParents,
+            attributes?: TextAttributes
+        ): Text;
+        create(
+            elementType: "measurement",
+            parents: MeasurementParents,
+            attributes?: TextAttributes
+        ): Text;
+        create(
+            elementType: "smartlabel",
+            parents: SmartLabelParents,
+            attributes?: TextAttributes
+        ): Text;
+        create(
+            elementType: "vectorfield",
+            parents: VectorFieldParents,
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "slopefield",
+            parents: SlopeFieldParents,
+            attributes?: CurveAttributes
+        ): Curve;
+        create(
+            elementType: "sketchcurve",
+            parents?: readonly [],
+            attributes?: CurveAttributes
+        ): Curve;
         /**
          * @param c1
          * @param c2
