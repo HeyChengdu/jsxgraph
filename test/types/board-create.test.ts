@@ -413,3 +413,47 @@ board.create("image", ["image.png", [0, 0]]);
 board.create("group", [[0, 0]]);
 // @ts-expect-error A grid only accepts axes.
 board.create("grid", [a]);
+
+const mainLayout = board.create("mainlayout", [
+    { sections: { demonstration: 0.7, conclusion: 0.3 } }
+]);
+const asideLayout = board.create("mainasidelayout");
+const comparisonLayout = board.create("comparisonlayout", [{ panels: ["before", "after"] }]);
+const stepFlowLayout = board.create("stepflowlayout", [{ steps: ["observe", "explain"] }]);
+const localNumberLine = board.create("localnumberline", [mainLayout.body]);
+const localPlane = board.create("localcartesianplane", [asideLayout.body.leftMain]);
+const localPolarPlane = board.create("localpolarplane", [asideLayout.body.rightAside]);
+const table = board.create("table", [mainLayout.body, [["x", "y"]]]);
+const matrix = board.create("matrix", [
+    mainLayout.body,
+    [
+        [1, 0],
+        [0, 1]
+    ]
+]);
+
+const nativeRegion: JXG.LayoutRegion = mainLayout.body;
+const nativeTable: JXG.TableComposition = table;
+const nativeMatrix: JXG.MatrixComposition = matrix;
+const nativePlane: JXG.LocalCartesianPlaneComposition = localPlane;
+void nativeRegion;
+void nativeTable;
+void nativeMatrix;
+void nativePlane;
+
+mainLayout.body.section("demonstration").point(["center", "center"]);
+comparisonLayout.body.panel("before").point(["center", "center"]);
+stepFlowLayout.body.step("observe").point(["center", "center"]);
+localNumberLine.point(1);
+localPlane.point([1, 2]);
+localPolarPlane.point([1, Math.PI / 2]);
+table.cell(0, 0).setAttribute({ visible: true });
+matrix.entry(0, 0).setAttribute({ visible: true });
+board.create("text", [0, 0, "native reveal"], { typewriter: () => 0.5 });
+
+// @ts-expect-error A comparison layout requires at least two panels.
+board.create("comparisonlayout", [{ panels: ["only"] }]);
+// @ts-expect-error A table requires a LayoutRegion as its first parent.
+board.create("table", [a, [["x"]]]);
+// @ts-expect-error A local coordinate system requires a region or two points.
+board.create("localcartesianplane", [a]);
