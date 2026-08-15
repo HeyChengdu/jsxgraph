@@ -60,6 +60,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.4.0",
+    "@types/jasmine": "^5.1.8",
     "eslint": ">=10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5",
@@ -91,7 +92,9 @@
     "//No! format": "//prettier --write src test extensions",
     "serve": "http-server -c-1",
     "test": "make test",
-    "test:types": "tsc -p test/types/tsconfig.json"
+    "test:contracts": "npm run test:contracts:compile && karma start karma/karma.contracts.conf.js",
+    "test:contracts:compile": "tsc -p test/contracts/tsconfig.json",
+    "test:types": "tsc -p test/types/tsconfig.json && tsc -p test/contracts/tsconfig.json --noEmit"
   },
   "dependencies": {}
 }

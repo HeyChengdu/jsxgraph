@@ -3772,7 +3772,9 @@ declare namespace JXG {
 
     export interface Curve3DAttributes extends CurveAttributes {}
 
-    export interface Curve3D extends Curve {}
+    export interface Curve3D extends Curve {
+        view: View3D;
+    }
 
     export interface Line3DAttributes extends LineAttributes {}
 
@@ -4007,6 +4009,10 @@ declare namespace JXG {
         scale?: EvaluatableAttribute<number>;
     }
 
+    export interface VectorField3D extends Curve3D {
+        setF(func: VectorField3DFunction, varnames?: string): this;
+    }
+
     export type View3DNavigationKey = "none" | "shift" | "ctrl";
     export type View3DSliderPosition =
         | "auto"
@@ -4233,7 +4239,7 @@ declare namespace JXG {
             elementType: "vectorfield3D" | "vectorfield3d",
             parents: VectorField3DParents,
             attributes?: VectorField3DAttributes
-        ): Curve3D;
+        ): VectorField3D;
         removeObject(
             object: string | GeometryElement | readonly (string | GeometryElement)[],
             saveMethod?: boolean
@@ -6529,7 +6535,7 @@ declare namespace JXG {
          */
         resize: {
             enabled?: boolean;
-            throttle: number;
+            throttle?: number;
         };
 
         selection: {

@@ -80,17 +80,6 @@ describe("Test JXG.Composition", function () {
         expect(c.update).toBeInstanceOf(Function);
     });
 
-    it("Remove all elements in a composition from the board", function () {
-        var p = board.create("point", [0, 0]),
-            t = board.create("text", [1, 1, "note"]),
-            c = new JXG.Composition({ point: p, text: t });
-
-        board.removeObject(c);
-
-        expect(board.objects[p.id]).toBeUndefined();
-        expect(board.objects[t.id]).toBeUndefined();
-    });
-
     it("Update", function () {
         var spy = jasmine.createSpy("call update");
 

@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "lib": ["DOM", "ES2022"],
+        "module": "None",
+        "noEmitOnError": true,
+        "outDir": "../../tmp/test-contracts",
+        "rootDir": ".",
+        "skipLibCheck": false,
+        "strict": true,
+        "target": "ES2022",
+        "types": ["jasmine"]
+    },
+    "include": ["./**/*.test.ts"]
+}
