@@ -638,6 +638,9 @@ declare namespace JXG {
          */
         addChild(obj: GeometryElement): void;
 
+        /** Remove every renderer node previously created for this element's trace. */
+        clearTrace(): this;
+
         /**
          * Adds ids of elements to the array this.parents.
          * This method needs to be called if some dependencies can not be detected automatically by JSXGraph.
@@ -1332,6 +1335,8 @@ declare namespace JXG {
          * The default value is 12.
          */
         fontSize?: number;
+        /** CSS unit used by {@link TextAttributes.fontSize}. */
+        fontUnit?: "px" | "vw" | "vh" | "vmax" | "vmin" | "rem";
         /**
          *
          */
@@ -1370,6 +1375,10 @@ declare namespace JXG {
          *
          */
         useMathJax?: boolean;
+        /** Render TeX content with KaTeX. */
+        useKatex?: boolean;
+        /** Macros forwarded to KaTeX when {@link TextAttributes.useKatex} is enabled. */
+        katexMacros?: Record<string, string>;
     }
 
     /**
@@ -1485,7 +1494,7 @@ declare namespace JXG {
         /**
          *
          */
-        center?: Point;
+        center?: PointAttributes;
         /**
          *
          */
@@ -1497,7 +1506,7 @@ declare namespace JXG {
         /**
          *
          */
-        point?: Point;
+        point?: PointAttributes;
     }
 
     export interface CircleOptions {
@@ -1514,7 +1523,9 @@ declare namespace JXG {
 
     export interface Circumcircle extends Circle {}
 
-    export interface CircumcircleAttributes extends CircleAttributes {}
+    export interface CircumcircleAttributes extends CircleAttributes {
+        useDirection?: boolean;
+    }
 
     export interface CircumcircleOptions extends CircleOptions {
         useDirection?: boolean;
@@ -1572,6 +1583,8 @@ declare namespace JXG {
      * Curves are the common object for function graphs, parametric curves, polar curves, and data plots.
      */
     export class Curve extends GeometryElement {
+        /** Polynomial degree used by Bézier curve segments. */
+        bezierDegree: number;
         /**
          * Array holding the x-coordinates of a data plot.
          * This array can be updated during run time by overwriting the method updateDataArray.
@@ -1689,6 +1702,11 @@ declare namespace JXG {
      */
     export interface CurveAttributes extends GeometryElementAttributes {
         curveType?: "none" | "plot" | "parameter" | "functiongraph" | "polar" | "implicit";
+    }
+
+    export interface SketchCurveAttributes extends CurveAttributes {
+        deleteOnUp?: boolean;
+        maxLength?: number;
     }
     export interface CurveOptions extends GeometryElementAttributes {
         curveType?:
@@ -1903,7 +1921,9 @@ declare namespace JXG {
     export interface IncircleOptions extends CircleOptions {}
 
     export interface Inequality extends Curve {}
-    export interface InequalityAttributes extends CurveAttributes {}
+    export interface InequalityAttributes extends CurveAttributes {
+        inverse?: boolean;
+    }
     export interface InequalityOptions extends CurveOptions {
         inverse?: boolean;
     }
@@ -2211,6 +2231,12 @@ declare namespace JXG {
      *
      */
     export interface PointAttributes extends CoordsElementAttributes {
+        /** Accessibility attributes forwarded to the rendered point. */
+        aria?: {
+            enabled?: boolean;
+            label?: string | ((self: Point) => string);
+            live?: "off" | "polite" | "assertive";
+        };
         /**
          * If the distance of the point to one of its attractors is less than this number the point will be a glider on this attracting element.
          * If set to zero nothing happens.
@@ -2271,6 +2297,8 @@ declare namespace JXG {
          * Default Value: 3
          */
         size?: number;
+        /** Keyboard tab order of the rendered point. */
+        tabIndex?: number;
         /**
          * Unit for size.
          * Default Value: 'screen'
@@ -2360,6 +2388,8 @@ declare namespace JXG {
      */
     export class Polygon extends GeometryElement {
         constructor(board: Board, vertices: unknown[], attributes: PolygonAttributes);
+        /** Border line elements in the same order as the polygon vertices. */
+        borders: Line[];
         /**
          * References to the points defining the polygon. The last vertex is the same as the first vertex.
          */
@@ -2454,6 +2484,8 @@ declare namespace JXG {
      * A glider is a point which lives on another geometric element like a line, circle, curve, turtle.
      */
     export interface Glider extends Point {
+        /** Parametric position of the glider on its slide object. */
+        position: number;
         /**
          * When used as a glider this member stores the object, where to glide on.
          * To set the object to glide on use the method makeGlider.
@@ -2567,6 +2599,8 @@ declare namespace JXG {
          * The default value is 2.
          */
         digits?: number;
+        /** Face of the draggable slider point. */
+        face?: FaceType;
         /**
          * Attributes for the highlighting line of the slider.
          */
@@ -3670,15 +3704,21 @@ declare namespace JXG {
 
     export interface Line3D extends Line {}
 
-    export interface Plane3DAttributes extends GeometryElementAttributes {
-        mesh3d?: {
-            visible?: boolean;
-        };
+    export interface Plane3DMeshAttributes extends GeometryElementAttributes {
+        stepWidthU?: number;
+        stepWidthV?: number;
+    }
+
+    export interface Plane3DAttributes extends Surface3DAttributes {
+        mesh3d?: Plane3DMeshAttributes;
+        type?: "colorarray" | "colormap" | "shader" | "wireframe";
     }
 
     export interface Plane3D extends GeometryElement {}
 
-    export interface Point3DAttributes extends GeometryElementAttributes {}
+    export interface Point3DAttributes extends GeometryElementAttributes {
+        size?: number;
+    }
 
     export interface Point3D extends Transformable3D {
         coords: number[];
@@ -3824,8 +3864,15 @@ declare namespace JXG {
         FieldMesh
     ];
 
+    export interface VectorField3DAttributes extends Curve3DAttributes {
+        scale?: EvaluatableAttribute<number>;
+    }
+
     export interface View3DAttributes extends GeometryElementAttributes {
         axesPosition?: "center";
+        projection?: "central" | "parallel";
+        trackball?: { enabled?: boolean };
+        depthOrder?: { enabled?: boolean };
 
         xAxis?: Line3DAttributes;
         xPlaneFront?: Plane3DAttributes;
@@ -3956,10 +4003,14 @@ declare namespace JXG {
             attributes: Transformation3DAttributes
         ): Transformation;
         create(
-            elementType: "vectorfield3D",
+            elementType: "vectorfield3D" | "vectorfield3d",
             parents: VectorField3DParents,
-            attributes?: Curve3DAttributes
+            attributes?: VectorField3DAttributes
         ): Curve3D;
+        removeObject(
+            object: string | GeometryElement | readonly (string | GeometryElement)[],
+            saveMethod?: boolean
+        ): this;
         add(el: unknown): void;
         update(): this;
         updateRenderer(): this;
@@ -4542,6 +4593,12 @@ declare namespace JXG {
      *
      */
     export class Board {
+        /** Sketching state for the two pointer slots supported by JSXGraph. */
+        isSketching: boolean[];
+        /** Alias for the primary sketch curve. */
+        sketch: Curve | null;
+        /** Curves used by pointer sketching. */
+        sketches: Array<Curve | null>;
         /**
          *
          * @param event
@@ -6035,6 +6092,11 @@ declare namespace JXG {
      * Attributes used in board initialization.
      */
     export interface BoardAttributes {
+        sketches?: {
+            enabled?: boolean;
+            0?: SketchCurveAttributes;
+            1?: SketchCurveAttributes;
+        };
         /**
          * Show default axis.
          * If shown, the horizontal axis can be accessed via JXG.Board.defaultAxes.x, the
@@ -7050,6 +7112,34 @@ declare namespace JXG {
      * The JXG.Math.Numerics namespace holds numerical algorithms, constants, and variables.
      */
     export interface Numerics {
+        CardinalSpline(
+            points: Point[],
+            tension: number | (() => number),
+            type?: string
+        ): [
+            x: (t: number, suspendedUpdate?: boolean) => number,
+            y: (t: number, suspendedUpdate?: boolean) => number,
+            start: number,
+            end: () => number
+        ];
+        CatmullRomSpline(
+            points: Point[],
+            type?: "uniform" | "centripetal"
+        ): [
+            x: (t: number, suspendedUpdate?: boolean) => number,
+            y: (t: number, suspendedUpdate?: boolean) => number,
+            start: number,
+            end: () => number
+        ];
+        Neville(
+            points: Point[]
+        ): [
+            x: (t: number, suspendedUpdate?: boolean) => number,
+            y: (t: number, suspendedUpdate?: boolean) => number,
+            start: number,
+            end: () => number
+        ];
+        Visvalingam(coords: Coords[], count: number): Coords[];
         maxIterationsMinimize: number;
         maxIterationsRoot: number;
         /**

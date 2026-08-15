@@ -14,9 +14,20 @@ const glider = board.create("glider", [1, 0, line]);
 const tangent = board.create("tangent", [glider]);
 const polygon = board.create("polygon", [a, b, c]);
 
+glider.position.toFixed();
+polygon.borders[0].setAttribute({ strokeWidth: 2 });
+curve.bezierDegree.toFixed();
+curve.clearTrace();
+board.sketches[0]?.clearTrace();
+
 board.create("segment", [[0, 0], [1, 1], () => 2]);
 board.create("arrow", [a, [2, 1]]);
 board.create("text", [0, 0, () => "text"]);
+board.create("text", [0, 0, "x^2"], {
+    fontUnit: "rem",
+    useKatex: true,
+    katexMacros: { "\\RR": "\\mathbb{R}" }
+});
 board.create("polygon", [a, b, c]);
 board.create("circle", [a, () => 2]);
 board.create("arc", [a, b, c]);
@@ -231,6 +242,31 @@ view.create("vectorfield3D", [
     [-2, 5, 2],
     [-2, 5, 2]
 ]);
+view.create(
+    "vectorfield3d",
+    [
+        [(x, y, z) => x, (x, y, z) => y, (x, y, z) => z],
+        [-2, 5, 2],
+        [-2, 5, 2],
+        [-2, 5, 2]
+    ],
+    { scale: () => 0.5 }
+);
+view.removeObject(p3a);
+
+board.create("point", [0, 0], {
+    aria: { enabled: true, label: (point) => point.name, live: "polite" },
+    tabIndex: 0
+});
+board.create(
+    "slider",
+    [
+        [-2, 0],
+        [2, 0],
+        [0, 1, 2]
+    ],
+    { face: "circle" }
+);
 
 // @ts-expect-error Point parents cannot contain two nested coordinates.
 board.create("point", [
