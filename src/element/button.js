@@ -262,8 +262,13 @@ JXG.createButton = function (board, parents, attributes) {
     // Restore whichever setText method was set before this contructor was called.
     Text.prototype.setText = setTextBackup;
 
-    t.rendNodeButton = t.rendNode.childNodes[0];
-    t.rendNodeButton.id = t.rendNode.id + "_button";
+    if (t.rendNode) {
+        t.rendNodeButton = t.rendNode.childNodes[0];
+        t.rendNodeButton.id = t.rendNode.id + "_button";
+    } else {
+        t.rendNodeButton = board.document.createElement("button");
+        t.rendNodeButton.id = t.id + "_button";
+    }
 
     t.rendNodeTag = t.rendNodeButton; // Needed for unified treatment in setAttribute
     t.rendNodeTag.disabled = !!attr.disabled;

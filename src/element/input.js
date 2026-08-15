@@ -284,13 +284,21 @@ JXG.createInput = function (board, parents, attributes) {
     // Restore whichever setText method was set before this contructor was called.
     Text.prototype.setText = setTextBackup;
 
-    t.rendNodeLabel = t.rendNode.childNodes[0].childNodes[0];
-    t.rendNodeInput = t.rendNode.childNodes[0].childNodes[1];
+    if (t.rendNode) {
+        t.rendNodeLabel = t.rendNode.childNodes[0].childNodes[0];
+        t.rendNodeInput = t.rendNode.childNodes[0].childNodes[1];
+        t.rendNodeLabel.id = t.rendNode.id + "_label";
+        t.rendNodeInput.id = t.rendNode.id + "_input";
+    } else {
+        t.rendNodeLabel = board.document.createElement("label");
+        t.rendNodeInput = board.document.createElement("input");
+        t.rendNodeInput.type = "text";
+        t.rendNodeLabel.id = t.id + "_label";
+        t.rendNodeInput.id = t.id + "_input";
+    }
     t.rendNodeInput.value = parents[2];
     t.rendNodeTag = t.rendNodeInput; // Needed for unified treatment in setAttribute
     t.rendNodeTag.disabled = !!attr.disabled;
-    t.rendNodeLabel.id = t.rendNode.id + "_label";
-    t.rendNodeInput.id = t.rendNode.id + "_input";
     t.rendNodeInput.setAttribute("aria-labelledby", t.rendNodeLabel.id);
 
     // 2. Set parents[3] (string|function) as label of the input element.

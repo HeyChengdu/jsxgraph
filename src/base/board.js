@@ -159,9 +159,9 @@ JXG.Board = function (container, renderer, id,
     if (Type.isString(container)) {
         // Hosting div is given as string
         this.container = container; // container
-        this.containerObj = (Env.isBrowser ? this.document.getElementById(this.container) : null);
+        this.containerObj = (this.document ? this.document.getElementById(this.container) : null);
 
-    } else if (Env.isBrowser) {
+    } else if (container && Type.isFunction(container.getAttribute)) {
 
         // Hosting div is given as object pointer
         this.containerObj = container;
@@ -173,7 +173,7 @@ JXG.Board = function (container, renderer, id,
         }
     }
 
-    if (Env.isBrowser && renderer.type !== 'no' && this.containerObj === null) {
+    if (renderer.type !== 'no' && this.containerObj === null) {
         throw new Error('\nJSXGraph: HTML container element "' + container + '" not found.');
     }
 

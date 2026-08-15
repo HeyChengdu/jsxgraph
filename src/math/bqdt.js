@@ -331,25 +331,25 @@ Type.extend(
         subdivide: function(nw_it, sw_it, ne_it, se_it, l, t, r, b) {
             if (nw_it.length > 0) {
                 if (this.northWest === null) {
-                    this.northWest = new JXG.Math.BoxQuadtree(this.depth, this.capacity, [l, t, this.cx, this.cy]);
+                    this.northWest = new Mat.BoxQuadtree(this.depth, this.capacity, [l, t, this.cx, this.cy]);
                 }
                 this.northWest.insert(nw_it);
             }
             if (sw_it.length > 0) {
                 if (this.southWest === null) {
-                    this.southWest = new JXG.Math.BoxQuadtree(this.depth, this.capacity, [l, this.cy, this.cx, b]);
+                    this.southWest = new Mat.BoxQuadtree(this.depth, this.capacity, [l, this.cy, this.cx, b]);
                 }
                 this.southWest.insert(sw_it);
             }
             if (ne_it.length > 0) {
                 if (this.northEast === null) {
-                    this.northEast = new JXG.Math.BoxQuadtree(this.depth, this.capacity, [this.cx, t, r, this.cy]);
+                    this.northEast = new Mat.BoxQuadtree(this.depth, this.capacity, [this.cx, t, r, this.cy]);
                 }
                 this.northEast.insert(ne_it);
             }
             if (se_it.length > 0) {
                 if (this.southEast === null) {
-                    this.southEast = new JXG.Math.BoxQuadtree(this.depth, this.capacity, [this.cx, this.cy, r, b]);
+                    this.southEast = new Mat.BoxQuadtree(this.depth, this.capacity, [this.cx, this.cy, r, b]);
                 }
                 this.southEast.insert(se_it);
             }
