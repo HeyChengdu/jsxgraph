@@ -196,6 +196,34 @@ describe("Test JXG util functions", function () {
         expect(s.label.visProp.strokecolor).toEqual('red');
     });
 
+    it("copyAttributes preserves defaults when special values are undefined", function () {
+        var attributes = JXG.copyAttributes(
+            {
+                strokeColor: undefined,
+                strokeWidth: 0,
+                visible: false,
+                label: {strokeColor: undefined}
+            },
+            JXG.Options,
+            'line'
+        );
+
+        expect(attributes.strokecolor).toEqual(JXG.Options.elements.strokeColor);
+        expect(attributes.strokewidth).toEqual(0);
+        expect(attributes.visible).toEqual(false);
+        expect(attributes.label.strokecolor).toEqual(JXG.Options.label.strokeColor);
+    });
+
+    it("polygon borders inherit the default stroke color", function () {
+        var polygon = board.create('polygon', [[0, 0], [1, 0], [0, 1]], {
+            borders: {strokeWidth: 2}
+        });
+
+        expect(polygon.borders[0].visProp.strokecolor).toEqual(
+            board.options.elements.strokeColor
+        );
+    });
+
 });
 
 /*

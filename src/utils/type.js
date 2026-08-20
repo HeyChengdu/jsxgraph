@@ -1383,7 +1383,7 @@ JXG.extend(
                             // Lower case key already exists - this should not happen
                             // We have to unify the two key-value pairs
                             // It is not clear which has precedence.
-                            this.mergeAttr(attr[e2], attr[e], toLower);
+                            this.mergeAttr(attr[e2], attr[e], toLower, ignoreUndefinedSpecials);
                         } else {
                             attr[e2] = attr[e];
                         }
@@ -1402,7 +1402,7 @@ JXG.extend(
                             //   special.draft = { strokewidth: 4}
                             attr[e2] = {};
                         }
-                        this.mergeAttr(attr[e2], o, toLower);
+                        this.mergeAttr(attr[e2], o, toLower, ignoreUndefinedSpecials);
                     } else if(!ignoreUndefinedSpecials || this.exists(o)) {
                         // Flat copy
                         // This is also used in the cases
@@ -1534,7 +1534,7 @@ JXG.extend(
                 }
             }
             if (isAvail) {
-                this.mergeAttr(a, o, true);
+                this.mergeAttr(a, o, true, true);
             }
 
             if (arguments[2] === 'board') {
