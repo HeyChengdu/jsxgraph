@@ -196,6 +196,102 @@ describe("Test JXG util functions", function () {
         expect(s.label.visProp.strokecolor).toEqual('red');
     });
 
+    it("copyAttributes preserves defaults when special values are undefined", function () {
+        var attributes = JXG.copyAttributes(
+            {
+                strokeColor: undefined,
+                strokeWidth: 0,
+                visible: false,
+                label: {strokeColor: undefined}
+            },
+            JXG.Options,
+            'line'
+        );
+
+        expect(attributes.strokecolor).toEqual(JXG.Options.elements.strokeColor);
+        expect(attributes.strokewidth).toEqual(0);
+        expect(attributes.visible).toEqual(false);
+        expect(attributes.label.strokecolor).toEqual(JXG.Options.label.strokeColor);
+    });
+
+    it("copyAttributes preserves explicit null values", function () {
+        var attributes = JXG.copyAttributes(
+            {
+                strokeColor: null,
+                name: "",
+                strokeWidth: 0,
+                visible: false
+            },
+            JXG.Options,
+            "line"
+        );
+
+        expect(attributes.strokecolor).toBeNull();
+        expect(attributes.name).toEqual("");
+        expect(attributes.strokewidth).toEqual(0);
+        expect(attributes.visible).toBeFalse();
+    });
+
+    it("mergeAttr ignores only undefined special values", function () {
+        var attributes = {
+            nullable: "default",
+            enabled: true,
+            count: 1,
+            text: "default",
+            nested: {
+                preserved: "default",
+                nullable: "default"
+            }
+        };
+
+        JXG.mergeAttr(
+            attributes,
+            {
+                nullable: null,
+                enabled: false,
+                count: 0,
+                text: "",
+                nested: {
+                    preserved: undefined,
+                    nullable: null
+                }
+            },
+            true,
+            true
+        );
+
+        expect(attributes.nullable).toBeNull();
+        expect(attributes.enabled).toBeFalse();
+        expect(attributes.count).toEqual(0);
+        expect(attributes.text).toEqual("");
+        expect(attributes.nested.preserved).toEqual("default");
+        expect(attributes.nested.nullable).toBeNull();
+    });
+
+    it("slider preserves null label defaults through glider attribute copying", function () {
+        var slider = board.create("slider", [[-1, -2], [1, -2], [0, 1, 2]], {
+            name: "a",
+            withLabel: true
+        });
+
+        board.update();
+
+        expect(slider.visProp.suffixlabel).toBeNull();
+        expect(slider.visProp.unitlabel).toBeNull();
+        expect(slider.visProp.postlabel).toBeNull();
+        expect(slider.label.plaintext).toEqual("a = 1.00");
+    });
+
+    it("polygon borders inherit the default stroke color", function () {
+        var polygon = board.create('polygon', [[0, 0], [1, 0], [0, 1]], {
+            borders: {strokeWidth: 2}
+        });
+
+        expect(polygon.borders[0].visProp.strokecolor).toEqual(
+            board.options.elements.strokeColor
+        );
+    });
+
 });
 
 /*
