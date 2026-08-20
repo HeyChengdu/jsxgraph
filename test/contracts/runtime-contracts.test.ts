@@ -67,7 +67,7 @@ describe("TypeScript runtime contracts", () => {
         expect(typeof field.setF).toBe("function");
     });
 
-    it("creates semantic layouts with typed regions and local coordinate systems", () => {
+    it("creates a typed step flow, number line, table, and matrix", () => {
         const currentBoard = JXG.JSXGraph.initBoard(containerId, {
             renderer: "no",
             axis: false,
@@ -77,33 +77,21 @@ describe("TypeScript runtime contracts", () => {
             showNavigation: false
         });
         board = currentBoard;
-        const main = currentBoard.create("mainlayout", [
-            { sections: { demonstration: 0.7, conclusion: 0.3 } }
-        ]);
-        const aside = currentBoard.create("mainasidelayout");
-        const comparison = currentBoard.create("comparisonlayout", [
-            { panels: ["before", "after"] }
-        ]);
         const flow = currentBoard.create("stepflowlayout", [{ steps: ["observe", "explain"] }]);
-        const numberLine = currentBoard.create("localnumberline", [main.body]);
-        const plane = currentBoard.create("localcartesianplane", [main.body]);
-        const polar = currentBoard.create("localpolarplane", [main.body]);
-        const table = currentBoard.create("table", [main.body, [["x", "y"]]]);
+        const numberLine = currentBoard.create("localnumberline", [
+            [-5, 0],
+            [5, 0]
+        ]);
+        const table = currentBoard.create("table", [[["x", "y"]]]);
         const matrix = currentBoard.create("matrix", [
-            main.body,
             [
                 [1, 0],
                 [0, 1]
             ]
         ]);
 
-        expect(main.body.section("demonstration").point(["center", "center"]).length).toBe(2);
-        expect(aside.body.leftMain.point(["center", "center"]).length).toBe(2);
-        expect(comparison.body.panel("before").point(["center", "center"]).length).toBe(2);
         expect(flow.body.step("observe").point(["center", "center"]).length).toBe(2);
         expect(numberLine.point(1).length).toBe(2);
-        expect(plane.point([1, 2]).length).toBe(2);
-        expect(polar.point([1, Math.PI / 2]).length).toBe(2);
         expect(table.cell(0, 0)).toBeDefined();
         expect(matrix.entry(1, 1)).toBeDefined();
     });

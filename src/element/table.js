@@ -7,9 +7,11 @@ import {
     readCellGridVisualAttributes,
     validateCellRows
 } from "./cellGrid.js";
+import { createBoardRegion } from "./layout/layoutRegion.js";
 const DEFAULT_PADDING = 0.18;
 function createTable(board, parents, attributes) {
-    const [region, rawRows] = readTableParents(parents);
+    const rawRows = readTableParents(parents);
+    const region = createBoardRegion(board, 0);
     const rows = validateCellRows("table", rawRows);
     const padding = readNonNegativeNumber(attributes.padding, DEFAULT_PADDING);
     const visual = readCellGridVisualAttributes("table", attributes);
@@ -115,20 +117,12 @@ function createTable(board, parents, attributes) {
     });
 }
 function readTableParents(parents) {
-    if (parents.length !== 2 || !isLayoutRegion(parents[0]) || !Array.isArray(parents[1])) {
+    if (parents.length !== 1 || !Array.isArray(parents[0])) {
         throw new Error(
-            "JSXGraph: table parents must be [LayoutRegion, rows]. Example: board.create('table', [layout.body, [['A', 'B']]])."
+            "JSXGraph: table parents must be [rows]. Example: board.create('table', [[['A', 'B']]])."
         );
     }
-    return [parents[0], parents[1]];
-}
-function isLayoutRegion(value) {
-    return (
-        typeof value === "object" &&
-        value !== null &&
-        "point" in value &&
-        typeof value.point === "function"
-    );
+    return parents[0];
 }
 function readNonNegativeNumber(value, fallback) {
     const number = value ?? fallback;

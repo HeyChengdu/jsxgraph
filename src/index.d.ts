@@ -7543,129 +7543,6 @@ declare namespace JXG {
         section(name: keyof Sections & string): LayoutRegion;
     }
 
-    export interface MainLayoutDefinition<
-        Sections extends SemanticSections = SemanticSections
-    > {
-        readonly sections: Sections;
-    }
-
-    export interface MainLayoutAttributes {
-        gap?: number;
-        padding?: number;
-        footerRatio?: number;
-        headerRatio?: number;
-    }
-
-    /** A responsive header, body and footer layout. */
-    export interface MainLayoutComposition<
-        Sections extends SemanticSections | undefined = undefined
-    > extends Composition {
-        readonly body: Sections extends SemanticSections
-            ? SectionedLayoutRegion<Sections>
-            : LayoutRegion;
-        readonly footer: LayoutRegion;
-        readonly header: LayoutRegion;
-    }
-
-    export interface MainAsideRegionSections {
-        readonly leftMain?: SemanticSections;
-        readonly rightAside?: SemanticSections;
-    }
-
-    export interface MainAsideLayoutDefinition<
-        Sections extends MainAsideRegionSections = MainAsideRegionSections
-    > {
-        readonly sections: Sections;
-    }
-
-    export interface MainAsideLayoutAttributes {
-        asideRatio?: number;
-        gap?: number;
-        padding?: number;
-        footerRatio?: number;
-        headerRatio?: number;
-    }
-
-    export type MainAsideRegionResult<
-        Sections extends MainAsideRegionSections | undefined,
-        Name extends "leftMain" | "rightAside"
-    > = Sections extends MainAsideRegionSections
-        ? Name extends keyof Sections
-            ? Sections[Name] extends SemanticSections
-                ? SectionedLayoutRegion<Sections[Name]>
-                : LayoutRegion
-            : LayoutRegion
-        : LayoutRegion;
-
-    export interface MainAsideBody<
-        Sections extends MainAsideRegionSections | undefined = undefined
-    > extends LayoutRegion {
-        readonly leftMain: MainAsideRegionResult<Sections, "leftMain">;
-        readonly rightAside: MainAsideRegionResult<Sections, "rightAside">;
-    }
-
-    /** A responsive layout with a wide main region and a narrower aside. */
-    export interface MainAsideLayoutComposition<
-        Sections extends MainAsideRegionSections | undefined = undefined
-    > extends Composition {
-        readonly body: MainAsideBody<Sections>;
-        readonly footer: LayoutRegion;
-        readonly header: LayoutRegion;
-    }
-
-    export type PanelSections = SemanticSections;
-
-    export interface ComparisonLayoutDefinition<
-        Panels extends readonly [string, string, ...string[]] = readonly [
-            string,
-            string,
-            ...string[]
-        ],
-        Sections extends PanelSections | undefined = PanelSections | undefined
-    > {
-        readonly panels: Panels;
-        readonly sections?: Sections;
-    }
-
-    export type SectionedComparisonPanel<Sections extends PanelSections> =
-        SectionedLayoutRegion<Sections>;
-
-    export interface ComparisonLayoutAttributes {
-        gap?: number;
-        padding?: number;
-        footerRatio?: number;
-        headerRatio?: number;
-    }
-
-    export type ComparisonPanelResult<Definition extends ComparisonLayoutDefinition> =
-        Definition extends ComparisonLayoutDefinition<
-            readonly [string, string, ...string[]],
-            infer Sections
-        >
-            ? Sections extends PanelSections
-                ? SectionedComparisonPanel<Sections>
-                : LayoutRegion
-            : never;
-
-    export type ComparisonPanelName<Definition extends ComparisonLayoutDefinition> =
-        Definition["panels"][number];
-
-    export interface ComparisonBody<
-        Definition extends ComparisonLayoutDefinition
-    > extends LayoutRegion {
-        panel(name: ComparisonPanelName<Definition>): ComparisonPanelResult<Definition>;
-    }
-
-    /** A responsive set of two or more named, equally sized comparison panels. */
-    export interface ComparisonLayoutComposition<
-        Definition extends ComparisonLayoutDefinition
-    > extends Composition {
-        readonly body: ComparisonBody<Definition>;
-        readonly footer: LayoutRegion;
-        readonly header: LayoutRegion;
-        readonly panelNames: Definition["panels"];
-    }
-
     export type StepSections = SemanticSections;
 
     export interface StepFlowLayoutDefinition<
@@ -7746,41 +7623,6 @@ declare namespace JXG {
         };
     }
 
-    export interface LocalCartesianPlaneAttributes extends GeometryElementAttributes {
-        xRange?: LocalNumericRange;
-        yRange?: LocalNumericRange;
-        xAxis?: LocalNumberLineAttributes;
-        yAxis?: LocalNumberLineAttributes;
-    }
-
-    export interface LocalCartesianPlaneComposition extends Composition {
-        point(value: readonly [LocalCoordinateValue, LocalCoordinateValue]): ResponsivePoint;
-        readonly subs: {
-            xAxis: LocalNumberLineComposition;
-            xTicks: Ticks;
-            yAxis: LocalNumberLineComposition;
-            yTicks: Ticks;
-        };
-    }
-
-    export interface LocalPolarPlaneAttributes extends GeometryElementAttributes {
-        angleStep?: number;
-        circles?: CircleAttributes;
-        radiusRange?: LocalNumericRange;
-        radiusStep?: number;
-        radialAxis?: LocalNumberLineAttributes;
-        rays?: SegmentAttributes;
-    }
-
-    export interface LocalPolarPlaneComposition extends Composition {
-        point(value: readonly [LocalCoordinateValue, LocalCoordinateValue]): ResponsivePoint;
-        readonly subs: {
-            circles: readonly Circle[];
-            radialAxis: LocalNumberLineComposition;
-            rays: readonly Segment[];
-        };
-    }
-
     export type CellContent = string | number | (() => string | number);
     export type CellRows = readonly (readonly CellContent[])[];
 
@@ -7818,41 +7660,10 @@ declare namespace JXG {
         typewriter?: TypewriterProgress;
     }
 
-    type StrictMainLayoutDefinition<Definition extends MainLayoutDefinition> = Definition &
-        Record<Exclude<keyof Definition, "sections">, never>;
-    type StrictMainAsideLayoutDefinition<Definition extends MainAsideLayoutDefinition> =
-        Definition & Record<Exclude<keyof Definition, "sections">, never>;
-    type StrictComparisonLayoutDefinition<Definition extends ComparisonLayoutDefinition> =
-        Definition & Record<Exclude<keyof Definition, "panels" | "sections">, never>;
     type StrictStepFlowLayoutDefinition<Definition extends StepFlowLayoutDefinition> =
         Definition & Record<Exclude<keyof Definition, "steps" | "sections">, never>;
 
     export interface Board {
-        create(
-            elementType: "mainlayout",
-            parents?: [],
-            attributes?: MainLayoutAttributes
-        ): MainLayoutComposition;
-        create<const Definition extends MainLayoutDefinition>(
-            elementType: "mainlayout",
-            parents: [StrictMainLayoutDefinition<Definition>],
-            attributes?: MainLayoutAttributes
-        ): MainLayoutComposition<Definition["sections"]>;
-        create(
-            elementType: "mainasidelayout",
-            parents?: [],
-            attributes?: MainAsideLayoutAttributes
-        ): MainAsideLayoutComposition;
-        create<const Definition extends MainAsideLayoutDefinition>(
-            elementType: "mainasidelayout",
-            parents: [StrictMainAsideLayoutDefinition<Definition>],
-            attributes?: MainAsideLayoutAttributes
-        ): MainAsideLayoutComposition<Definition["sections"]>;
-        create<const Definition extends ComparisonLayoutDefinition>(
-            elementType: "comparisonlayout",
-            parents: [StrictComparisonLayoutDefinition<Definition>],
-            attributes?: ComparisonLayoutAttributes
-        ): ComparisonLayoutComposition<Definition>;
         create<const Definition extends StepFlowLayoutDefinition>(
             elementType: "stepflowlayout",
             parents: [StrictStepFlowLayoutDefinition<Definition>],
@@ -7864,29 +7675,13 @@ declare namespace JXG {
             attributes?: LocalNumberLineAttributes
         ): LocalNumberLineComposition;
         create(
-            elementType: "localcartesianplane",
-            parents:
-                | [LayoutRegion]
-                | [
-                      LocalCoordinatePointParent,
-                      LocalCoordinatePointParent,
-                      LocalCoordinatePointParent
-                  ],
-            attributes?: LocalCartesianPlaneAttributes
-        ): LocalCartesianPlaneComposition;
-        create(
-            elementType: "localpolarplane",
-            parents: [LayoutRegion] | [LocalCoordinatePointParent, LocalCoordinatePointParent],
-            attributes?: LocalPolarPlaneAttributes
-        ): LocalPolarPlaneComposition;
-        create(
             elementType: "table",
-            parents: [LayoutRegion, CellRows],
+            parents: [CellRows],
             attributes?: TableAttributes
         ): TableComposition;
         create(
             elementType: "matrix",
-            parents: [LayoutRegion, CellRows],
+            parents: [CellRows],
             attributes?: MatrixAttributes
         ): MatrixComposition;
     }

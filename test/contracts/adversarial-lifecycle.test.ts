@@ -49,43 +49,21 @@ describe("Adversarial authoring lifecycle contracts", () => {
         container = undefined;
     });
 
-    it("rejects a polar grid resource explosion before creating any board object", () => {
-        const currentBoard = createBoard();
-        const layout = currentBoard.create("mainlayout");
-        const objectIdsBefore = Object.keys(currentBoard.objects);
-
-        expect(() =>
-            currentBoard.create("localpolarplane", [layout.body], {
-                radiusRange: [0, 100],
-                radiusStep: 0.001,
-                angleStep: 0.01
-            })
-        ).toThrowError(/would create 136000 grid elements; maximum is 4096/);
-        expect(Object.keys(currentBoard.objects)).toEqual(objectIdsBefore);
-    });
-
-    it("leaves no partial radial axis when polar step validation fails", () => {
-        const currentBoard = createBoard("svg");
-        const layout = currentBoard.create("mainlayout");
-        const objectIdsBefore = Object.keys(currentBoard.objects);
-
-        expect(() =>
-            currentBoard.create("localpolarplane", [layout.body], {
-                angleStep: Number.POSITIVE_INFINITY
-            })
-        ).toThrowError(/attribute "angleStep" must be a positive finite number/);
-        expect(Object.keys(currentBoard.objects)).toEqual(objectIdsBefore);
-    });
-
     it("rejects non-finite local coordinate ranges without mutating the board", () => {
         const currentBoard = createBoard();
-        const layout = currentBoard.create("mainlayout");
         const objectIdsBefore = Object.keys(currentBoard.objects);
 
         expect(() =>
-            currentBoard.create("localnumberline", [layout.body], {
-                range: [Number.NEGATIVE_INFINITY, 5]
-            })
+            currentBoard.create(
+                "localnumberline",
+                [
+                    [-5, 0],
+                    [5, 0]
+                ],
+                {
+                    range: [Number.NEGATIVE_INFINITY, 5]
+                }
+            )
         ).toThrowError(/attribute "range" must be \[minimum, maximum\]/);
         expect(Object.keys(currentBoard.objects)).toEqual(objectIdsBefore);
     });
@@ -107,14 +85,16 @@ describe("Adversarial authoring lifecycle contracts", () => {
 
     it("does not grow board object or DOM counts across repeated create-remove cycles", () => {
         const currentBoard = createBoard("svg");
-        const layout = currentBoard.create("mainlayout");
         const objectCountBefore = Object.keys(currentBoard.objects).length;
         const domCountBefore = container?.querySelectorAll("*").length;
 
         for (let iteration = 0; iteration < 50; iteration += 1) {
-            const plane = currentBoard.create("localcartesianplane", [layout.body]);
-            const point = currentBoard.create("point", plane.point([iteration % 5, 1]));
-            currentBoard.removeObject(new JXG.Composition({ plane, point }));
+            const numberLine = currentBoard.create("localnumberline", [
+                [-5, 0],
+                [5, 0]
+            ]);
+            const point = currentBoard.create("point", numberLine.point(iteration % 5));
+            currentBoard.removeObject(new JXG.Composition({ numberLine, point }));
         }
 
         expect(Object.keys(currentBoard.objects).length).toBe(objectCountBefore);

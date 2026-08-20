@@ -68,7 +68,14 @@ curve.clearTrace();
 board.sketches[0]?.clearTrace();
 
 board.create("segment", [[0, 0], [1, 1], () => 2]);
-board.create("arrow", [[0, 0], [1, 1]], { straightFirst: false, straightLast: false });
+board.create(
+    "arrow",
+    [
+        [0, 0],
+        [1, 1]
+    ],
+    { straightFirst: false, straightLast: false }
+);
 board.create("segment", [
     [1, 0, 0],
     [1, 1, 1]
@@ -96,15 +103,40 @@ board.create("midpoint", [a, b]);
 board.create("parallel", [line, c]);
 board.create("tangent", [glider]);
 board.create("angle", [a, b, c]);
-board.create("axis", [
-    [0, 0],
-    [1, 0]
-], { firstArrow: true, lastArrow: true });
-board.create("line", [[0, 0], [1, 1]], {
-    shadow: { enabled: true, color: "#000", blend: 0.5, opacity: 0.5, blur: 6, offset: [0, 18] }
-});
-// @ts-expect-error Shadow offsets contain exactly two numeric coordinates.
-board.create("line", [[0, 0], [1, 1]], { shadow: { offset: [0, 1, 2] } });
+board.create(
+    "axis",
+    [
+        [0, 0],
+        [1, 0]
+    ],
+    { firstArrow: true, lastArrow: true }
+);
+board.create(
+    "line",
+    [
+        [0, 0],
+        [1, 1]
+    ],
+    {
+        shadow: {
+            enabled: true,
+            color: "#000",
+            blend: 0.5,
+            opacity: 0.5,
+            blur: 6,
+            offset: [0, 18]
+        }
+    }
+);
+board.create(
+    // @ts-expect-error Shadow offsets contain exactly two numeric coordinates.
+    "line",
+    [
+        [0, 0],
+        [1, 1]
+    ],
+    { shadow: { offset: [0, 1, 2] } }
+);
 board.create("slider", [
     [-2, -1],
     [2, -1],
@@ -122,7 +154,15 @@ board.create(
         snapValueDistance: 0.1
     }
 );
-board.create("slider", [[-2, -1], [2, -1], [-1, 0, 1]], { size: () => 4 });
+board.create(
+    "slider",
+    [
+        [-2, -1],
+        [2, -1],
+        [-1, 0, 1]
+    ],
+    { size: () => 4 }
+);
 board.create("transform", [1, () => 2], { type: "translate" });
 board.create("transform", [line], { type: "reflect" });
 board.create("transform", [Math.PI / 2, a], { type: "rotate" });
@@ -273,14 +313,38 @@ board.create(
         trackball: { enabled: true, outside: true, button: 0, key: "shift" }
     }
 );
-// @ts-expect-error View3D axes use one of the three runtime-supported placements.
-board.create("view3d", [[-6, -3], [8, 8], [[-5, 5], [-5, 5], [-5, 5]]], {
-    axesPosition: "outside"
-});
-// @ts-expect-error View3D navigation keys are limited to the runtime-supported modifiers.
-board.create("view3d", [[-6, -3], [8, 8], [[-5, 5], [-5, 5], [-5, 5]]], {
-    az: { pointer: { key: "alt" } }
-});
+board.create(
+    // @ts-expect-error View3D axes use one of the three runtime-supported placements.
+    "view3d",
+    [
+        [-6, -3],
+        [8, 8],
+        [
+            [-5, 5],
+            [-5, 5],
+            [-5, 5]
+        ]
+    ],
+    {
+        axesPosition: "outside"
+    }
+);
+board.create(
+    // @ts-expect-error View3D navigation keys are limited to the runtime-supported modifiers.
+    "view3d",
+    [
+        [-6, -3],
+        [8, 8],
+        [
+            [-5, 5],
+            [-5, 5],
+            [-5, 5]
+        ]
+    ],
+    {
+        az: { pointer: { key: "alt" } }
+    }
+);
 board.create("implicitcurve", [(x, y) => x * x + y * y - 1], {
     resolution_outer: 1,
     resolution_inner: () => 2,
@@ -368,7 +432,10 @@ view.create("parametricsurface3d", [(u, v) => [u, v, u * v], [-2, 2], [-2, 2]]);
 view.create("polygon3d", [p3a, p3b, p3c]);
 view.create("polyhedron3d", [
     { a: p3a, b: "point-b", c: [0, 1, 0], d: () => [0, 0, 1] },
-    [["a", "b", "c"], [["a", "c", "d"], { fillColor: "#fff" }]]
+    [
+        ["a", "b", "c"],
+        [["a", "c", "d"], { fillColor: "#fff" }]
+    ]
 ]);
 // @ts-expect-error Polyhedron vertices are 3D points, ids, or dynamic 3D coordinates.
 view.create("polyhedron3d", [{ a: [0, 1] }, [["a"]]]);
@@ -585,46 +652,31 @@ board.create("group", [[0, 0]]);
 // @ts-expect-error A grid only accepts axes.
 board.create("grid", [a]);
 
-const mainLayout = board.create("mainlayout", [
-    { sections: { demonstration: 0.7, conclusion: 0.3 } }
-]);
-const asideLayout = board.create("mainasidelayout");
-const comparisonLayout = board.create("comparisonlayout", [{ panels: ["before", "after"] }]);
 const stepFlowLayout = board.create("stepflowlayout", [{ steps: ["observe", "explain"] }]);
-const localNumberLine = board.create("localnumberline", [mainLayout.body]);
-const localPlane = board.create("localcartesianplane", [asideLayout.body.leftMain]);
-const localPolarPlane = board.create("localpolarplane", [asideLayout.body.rightAside]);
-const table = board.create("table", [mainLayout.body, [["x", "y"]]]);
+const localNumberLine = board.create("localnumberline", [
+    [-5, 0],
+    [5, 0]
+]);
+const table = board.create("table", [[["x", "y"]]]);
 const matrix = board.create("matrix", [
-    mainLayout.body,
     [
         [1, 0],
         [0, 1]
     ]
 ]);
 
-const nativeRegion: JXG.LayoutRegion = mainLayout.body;
 const nativeTable: JXG.TableComposition = table;
 const nativeMatrix: JXG.MatrixComposition = matrix;
-const nativePlane: JXG.LocalCartesianPlaneComposition = localPlane;
-void nativeRegion;
 void nativeTable;
 void nativeMatrix;
-void nativePlane;
 
-mainLayout.body.section("demonstration").point(["center", "center"]);
-comparisonLayout.body.panel("before").point(["center", "center"]);
 stepFlowLayout.body.step("observe").point(["center", "center"]);
 localNumberLine.point(1);
-localPlane.point([1, 2]);
-localPolarPlane.point([1, Math.PI / 2]);
 table.cell(0, 0).setAttribute({ visible: true });
 matrix.entry(0, 0).setAttribute({ visible: true });
 board.create("text", [0, 0, "native reveal"], { typewriter: () => 0.5 });
 
-// @ts-expect-error A comparison layout requires at least two panels.
-board.create("comparisonlayout", [{ panels: ["only"] }]);
-// @ts-expect-error A table requires a LayoutRegion as its first parent.
+// @ts-expect-error A table accepts only cell rows.
 board.create("table", [a, [["x"]]]);
-// @ts-expect-error A local coordinate system requires a region or two points.
-board.create("localcartesianplane", [a]);
+// @ts-expect-error A local number line requires a region or two points.
+board.create("localnumberline", [a]);

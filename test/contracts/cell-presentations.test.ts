@@ -54,9 +54,7 @@ describe("Cell presentation runtime contracts", () => {
 
     it("keeps table cell indexing aligned with the supplied rows", () => {
         const currentBoard = createBoard();
-        const layout = currentBoard.create("mainlayout");
         const table = currentBoard.create("table", [
-            layout.body,
             [
                 ["time", "speed"],
                 [1, 2]
@@ -71,10 +69,8 @@ describe("Cell presentation runtime contracts", () => {
 
     it("updates dynamic matrix entries while preserving entry identity", () => {
         const currentBoard = createBoard();
-        const layout = currentBoard.create("mainlayout");
         let value = 2;
         const matrix = currentBoard.create("matrix", [
-            layout.body,
             [
                 [() => value, 0],
                 [0, 1]
@@ -92,8 +88,7 @@ describe("Cell presentation runtime contracts", () => {
 
     it("removes table cells, grid lines, background, and polygon helpers together", () => {
         const currentBoard = createBoard();
-        const layout = currentBoard.create("mainlayout");
-        const table = currentBoard.create("table", [layout.body, [["A", "B"]]]);
+        const table = currentBoard.create("table", [[["A", "B"]]]);
         const childIds = table.objectsList.flatMap(collectObjectIds);
 
         currentBoard.removeObject(table);
@@ -105,12 +100,10 @@ describe("Cell presentation runtime contracts", () => {
 
     it("rejects empty and non-rectangular cell collections with element-specific errors", () => {
         const currentBoard = createBoard();
-        const layout = currentBoard.create("mainlayout");
-
-        expect(() => currentBoard.create("table", [layout.body, []])).toThrowError(
+        expect(() => currentBoard.create("table", [[]])).toThrowError(
             "JSXGraph: table requires a non-empty 2D array."
         );
-        expect(() => currentBoard.create("matrix", [layout.body, [[1, 2], [3]]])).toThrowError(
+        expect(() => currentBoard.create("matrix", [[[1, 2], [3]]])).toThrowError(
             "JSXGraph: matrix requires every row to have 2 cells."
         );
     });

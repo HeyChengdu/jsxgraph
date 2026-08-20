@@ -49,13 +49,8 @@ describe("Dynamic authoring lifecycle contracts", () => {
         container = undefined;
     });
 
-    it("reprojects every teaching layout after repeated board bound changes", () => {
+    it("reprojects a step flow layout after repeated board bound changes", () => {
         const currentBoard = createBoard();
-        const main = currentBoard.create("mainlayout");
-        const aside = currentBoard.create("mainasidelayout");
-        const comparison = currentBoard.create("comparisonlayout", [
-            { panels: ["before", "after"] }
-        ]);
         const flow = currentBoard.create("stepflowlayout", [{ steps: ["observe", "explain"] }]);
         const objectCount = Object.keys(currentBoard.objects).length;
 
@@ -64,13 +59,6 @@ describe("Dynamic authoring lifecycle contracts", () => {
             const halfHeight = 8 + iteration / 20;
             currentBoard.setBoundingBox([-halfWidth, halfHeight, halfWidth, -halfHeight]);
 
-            expect(main.body.point(["center", "center"])[0]()).toBeCloseTo(0, 10);
-            expect(aside.body.leftMain.point(["right", "center"])[0]()).toBeLessThan(
-                aside.body.rightAside.point(["left", "center"])[0]()
-            );
-            expect(
-                comparison.body.panel("before").point(["right", "center"])[0]()
-            ).toBeLessThan(comparison.body.panel("after").point(["left", "center"])[0]());
             expect(flow.body.step("observe").point(["center", "center"])[0]()).toBeLessThan(
                 flow.body.step("explain").point(["center", "center"])[0]()
             );
@@ -81,14 +69,10 @@ describe("Dynamic authoring lifecycle contracts", () => {
 
     it("preserves dynamic presentation identity and resource counts across frequent updates", () => {
         const currentBoard = createBoard();
-        const layout = currentBoard.create("mainasidelayout");
         let value = "0";
         let progress = 0;
-        const table = currentBoard.create("table", [
-            layout.body.leftMain,
-            [["value", () => value]]
-        ]);
-        const matrix = currentBoard.create("matrix", [layout.body.rightAside, [[() => value]]]);
+        const table = currentBoard.create("table", [[["value", () => value]]]);
+        const matrix = currentBoard.create("matrix", [[[() => value]]]);
         const text = currentBoard.create("text", [0, -6, () => `frame ${value}`], {
             typewriter: () => progress
         });
@@ -136,16 +120,18 @@ describe("Dynamic authoring lifecycle contracts", () => {
 
     it("cleans one segment before constructing the next segment on the same board", () => {
         const currentBoard = createBoard();
-        const layout = currentBoard.create("mainlayout");
         const baselineObjects = Object.keys(currentBoard.objects).length;
         const baselineDom = container?.querySelectorAll("*").length;
 
         for (let segment = 0; segment < 30; segment += 1) {
-            const plane = currentBoard.create("localcartesianplane", [layout.body]);
-            const point = currentBoard.create("point", plane.point([segment % 4, 1]));
-            const table = currentBoard.create("table", [layout.body, [["segment", segment]]]);
+            const numberLine = currentBoard.create("localnumberline", [
+                [-5, 0],
+                [5, 0]
+            ]);
+            const point = currentBoard.create("point", numberLine.point(segment % 4));
+            const table = currentBoard.create("table", [[["segment", segment]]]);
             const narration = currentBoard.create("text", [0, -7, `segment ${segment}`]);
-            const scene = new JXG.Composition({ plane, point, table, narration });
+            const scene = new JXG.Composition({ numberLine, point, table, narration });
 
             currentBoard.update();
             currentBoard.removeObject(scene);

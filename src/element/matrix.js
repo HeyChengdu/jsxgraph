@@ -7,11 +7,13 @@ import {
     readCellGridVisualAttributes,
     validateCellRows
 } from "./cellGrid.js";
+import { createBoardRegion } from "./layout/layoutRegion.js";
 const DEFAULT_COLUMN_GAP = 0.35;
 const DEFAULT_PADDING = 0.22;
 const DEFAULT_ROW_GAP = 0.22;
 function createMatrix(board, parents, attributes) {
-    const [region, rawRows] = readMatrixParents(parents);
+    const rawRows = readMatrixParents(parents);
+    const region = createBoardRegion(board, 0);
     const rows = validateCellRows("matrix", rawRows);
     const columnGap = readNonNegativeNumber(attributes, "columnGap", DEFAULT_COLUMN_GAP);
     const padding = readNonNegativeNumber(attributes, "padding", DEFAULT_PADDING);
@@ -112,20 +114,12 @@ function createMatrix(board, parents, attributes) {
     });
 }
 function readMatrixParents(parents) {
-    if (parents.length !== 2 || !isLayoutRegion(parents[0]) || !Array.isArray(parents[1])) {
+    if (parents.length !== 1 || !Array.isArray(parents[0])) {
         throw new Error(
-            "JSXGraph: matrix parents must be [LayoutRegion, rows]. Example: board.create('matrix', [layout.body, [['a', 'b']]])."
+            "JSXGraph: matrix parents must be [rows]. Example: board.create('matrix', [[['a', 'b']]])."
         );
     }
-    return [parents[0], parents[1]];
-}
-function isLayoutRegion(value) {
-    return (
-        typeof value === "object" &&
-        value !== null &&
-        "point" in value &&
-        typeof value.point === "function"
-    );
+    return parents[0];
 }
 function readNonNegativeNumber(attributes, key, fallback) {
     const value = attributes[key] ?? fallback;
