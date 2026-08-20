@@ -1,12 +1,6 @@
 import JXG from "../jxg.js";
-import { projectLayoutRegion } from "./layout/layoutRegion.js";
 const RANGE = [-5, 5];
-const PAD = 0.05;
 const value = (v) => (typeof v === "function" ? v() : v);
-function isRegion(v) {
-    const r = v;
-    return !!r && typeof r.point === "function";
-}
 function isPoint(v) {
     if (Array.isArray(v))
         return (
@@ -52,22 +46,9 @@ function between(a, b, ratio) {
     ];
 }
 function endpoints(parents, attributes) {
-    if (parents.length === 1 && isRegion(parents[0])) {
-        const vertical = attributes.orientation === "vertical";
-        const position = typeof attributes.position === "number" ? attributes.position : 0.5;
-        return vertical
-            ? [
-                  projectLayoutRegion(parents[0], [position, PAD]),
-                  projectLayoutRegion(parents[0], [position, 1 - PAD])
-              ]
-            : [
-                  projectLayoutRegion(parents[0], [PAD, position]),
-                  projectLayoutRegion(parents[0], [1 - PAD, position])
-              ];
-    }
     if (parents.length === 2 && isPoint(parents[0]) && isPoint(parents[1]))
         return [coords(parents[0]), coords(parents[1])];
-    throw new Error("JSXGraph: localnumberline accepts [LayoutRegion] or [point1, point2].");
+    throw new Error("JSXGraph: localnumberline accepts [point1, point2].");
 }
 function childAttributes(attributes) {
     const {

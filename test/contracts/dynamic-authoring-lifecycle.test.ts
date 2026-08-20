@@ -49,24 +49,6 @@ describe("Dynamic authoring lifecycle contracts", () => {
         container = undefined;
     });
 
-    it("reprojects a step flow layout after repeated board bound changes", () => {
-        const currentBoard = createBoard();
-        const flow = currentBoard.create("stepflowlayout", [{ steps: ["observe", "explain"] }]);
-        const objectCount = Object.keys(currentBoard.objects).length;
-
-        for (let iteration = 1; iteration <= 100; iteration += 1) {
-            const halfWidth = 10 + iteration / 10;
-            const halfHeight = 8 + iteration / 20;
-            currentBoard.setBoundingBox([-halfWidth, halfHeight, halfWidth, -halfHeight]);
-
-            expect(flow.body.step("observe").point(["center", "center"])[0]()).toBeLessThan(
-                flow.body.step("explain").point(["center", "center"])[0]()
-            );
-        }
-
-        expect(Object.keys(currentBoard.objects).length).toBe(objectCount);
-    });
-
     it("preserves dynamic presentation identity and resource counts across frequent updates", () => {
         const currentBoard = createBoard();
         let value = "0";

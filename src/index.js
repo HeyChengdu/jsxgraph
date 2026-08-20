@@ -73,7 +73,6 @@ import './element/input.js';
 import './element/button.js';
 import './element/vectorfield.js';
 import './element/smartlabel.js';
-import './element/layout/stepFlowLayout.js';
 import './element/localCoordinateSystems.js';
 import './element/table.js';
 import './element/matrix.js';
