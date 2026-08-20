@@ -67,7 +67,7 @@ describe("TypeScript runtime contracts", () => {
         expect(typeof field.setF).toBe("function");
     });
 
-    it("creates a typed step flow, number line, table, and matrix", () => {
+    it("creates a typed number line, table, and matrix", () => {
         const currentBoard = JXG.JSXGraph.initBoard(containerId, {
             renderer: "no",
             axis: false,
@@ -77,7 +77,6 @@ describe("TypeScript runtime contracts", () => {
             showNavigation: false
         });
         board = currentBoard;
-        const flow = currentBoard.create("stepflowlayout", [{ steps: ["observe", "explain"] }]);
         const numberLine = currentBoard.create("localnumberline", [
             [-5, 0],
             [5, 0]
@@ -90,7 +89,6 @@ describe("TypeScript runtime contracts", () => {
             ]
         ]);
 
-        expect(flow.body.step("observe").point(["center", "center"]).length).toBe(2);
         expect(numberLine.point(1).length).toBe(2);
         expect(table.cell(0, 0)).toBeDefined();
         expect(matrix.entry(1, 1)).toBeDefined();

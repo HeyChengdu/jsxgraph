@@ -7524,81 +7524,6 @@ declare namespace JXG {
 
     export type ResponsiveCoordinate = () => number;
     export type ResponsivePoint = [ResponsiveCoordinate, ResponsiveCoordinate];
-    export type PercentagePosition = `${number}%`;
-    export type HorizontalPosition = "center" | "left" | "right" | PercentagePosition;
-    export type VerticalPosition = "bottom" | "center" | "top" | PercentagePosition;
-    export type RegionPosition = readonly [HorizontalPosition, VerticalPosition];
-
-    /** A responsive rectangular region that projects semantic or percentage anchors to board coordinates. */
-    export interface LayoutRegion {
-        point(position: RegionPosition): ResponsivePoint;
-    }
-
-    export type SemanticSections = Readonly<Record<string, number>>;
-
-    export interface SectionedLayoutRegion<
-        Sections extends SemanticSections
-    > extends LayoutRegion {
-        readonly sectionNames: readonly (keyof Sections & string)[];
-        section(name: keyof Sections & string): LayoutRegion;
-    }
-
-    export type StepSections = SemanticSections;
-
-    export interface StepFlowLayoutDefinition<
-        Steps extends readonly [string, string, ...string[]] = readonly [
-            string,
-            string,
-            ...string[]
-        ],
-        Sections extends StepSections | undefined = StepSections | undefined
-    > {
-        readonly steps: Steps;
-        readonly sections?: Sections;
-    }
-
-    export type SectionedStepFlowStep<Sections extends StepSections> =
-        SectionedLayoutRegion<Sections>;
-
-    export type StepFlowName<Definition extends StepFlowLayoutDefinition> =
-        Definition["steps"][number];
-
-    export type StepFlowResult<Definition extends StepFlowLayoutDefinition> =
-        Definition extends StepFlowLayoutDefinition<
-            readonly [string, string, ...string[]],
-            infer Sections
-        >
-            ? Sections extends StepSections
-                ? SectionedStepFlowStep<Sections>
-                : LayoutRegion
-            : never;
-
-    export interface StepFlowBody<
-        Definition extends StepFlowLayoutDefinition
-    > extends LayoutRegion {
-        between(
-            from: StepFlowName<Definition>,
-            to: StepFlowName<Definition>
-        ): [ResponsivePoint, ResponsivePoint];
-        step(name: StepFlowName<Definition>): StepFlowResult<Definition>;
-    }
-
-    export interface StepFlowLayoutAttributes {
-        gap?: number;
-        footerRatio?: number;
-        headerRatio?: number;
-        padding?: number;
-    }
-
-    /** A responsive sequence of named steps with coordinates for connectors between them. */
-    export interface StepFlowLayoutComposition<
-        Definition extends StepFlowLayoutDefinition
-    > extends Composition {
-        readonly body: StepFlowBody<Definition>;
-        readonly footer: LayoutRegion;
-        readonly header: LayoutRegion;
-        readonly stepNames: Definition["steps"];
-    }
 
     export type LocalCoordinateValue = number | NumberFunction;
     export type LocalCoordinatePointParent =
@@ -7660,18 +7585,10 @@ declare namespace JXG {
         typewriter?: TypewriterProgress;
     }
 
-    type StrictStepFlowLayoutDefinition<Definition extends StepFlowLayoutDefinition> =
-        Definition & Record<Exclude<keyof Definition, "steps" | "sections">, never>;
-
     export interface Board {
-        create<const Definition extends StepFlowLayoutDefinition>(
-            elementType: "stepflowlayout",
-            parents: [StrictStepFlowLayoutDefinition<Definition>],
-            attributes?: StepFlowLayoutAttributes
-        ): StepFlowLayoutComposition<Definition>;
         create(
             elementType: "localnumberline",
-            parents: [LayoutRegion] | [LocalCoordinatePointParent, LocalCoordinatePointParent],
+            parents: [LocalCoordinatePointParent, LocalCoordinatePointParent],
             attributes?: LocalNumberLineAttributes
         ): LocalNumberLineComposition;
         create(

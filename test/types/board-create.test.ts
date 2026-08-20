@@ -652,7 +652,6 @@ board.create("group", [[0, 0]]);
 // @ts-expect-error A grid only accepts axes.
 board.create("grid", [a]);
 
-const stepFlowLayout = board.create("stepflowlayout", [{ steps: ["observe", "explain"] }]);
 const localNumberLine = board.create("localnumberline", [
     [-5, 0],
     [5, 0]
@@ -670,7 +669,6 @@ const nativeMatrix: JXG.MatrixComposition = matrix;
 void nativeTable;
 void nativeMatrix;
 
-stepFlowLayout.body.step("observe").point(["center", "center"]);
 localNumberLine.point(1);
 table.cell(0, 0).setAttribute({ visible: true });
 matrix.entry(0, 0).setAttribute({ visible: true });
@@ -678,5 +676,5 @@ board.create("text", [0, 0, "native reveal"], { typewriter: () => 0.5 });
 
 // @ts-expect-error A table accepts only cell rows.
 board.create("table", [a, [["x"]]]);
-// @ts-expect-error A local number line requires a region or two points.
+// @ts-expect-error A local number line requires two points.
 board.create("localnumberline", [a]);
