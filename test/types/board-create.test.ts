@@ -72,6 +72,29 @@ board.create("point", [0, 0], { face: "triangleUp" });
 const tangent = board.create("tangent", [glider]);
 const polygon = board.create("polygon", [a, b, c]);
 
+const selectedPoint = board.select(a);
+selectedPoint.X().toFixed();
+const selectedByFilter = board.select((element) => element.getName() === "A");
+selectedByFilter.objectsList.length.toFixed();
+const selectedByName = board.select("A");
+if (selectedByName instanceof JXG.GeometryElement) {
+    selectedByName.getName();
+}
+
+const strokeColor = a.getAttribute("strokeColor");
+if (typeof strokeColor === "string") {
+    strokeColor.toUpperCase();
+}
+board.create("point", [0, 0], {
+    highlight: true,
+    gradientCX: () => 0.5,
+    gradientSecondColor: () => "#fff"
+});
+// @ts-expect-error Point highlighting is a boolean attribute.
+board.create("point", [0, 0], { highlight: "yes" });
+// @ts-expect-error Numeric gradient positions cannot return text.
+board.create("point", [0, 0], { gradientCX: () => "center" });
+
 glider.position.toFixed();
 polygon.borders[0].setAttribute({ strokeWidth: 2 });
 curve.bezierDegree.toFixed();

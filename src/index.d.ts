@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/prefer-namespace-keyword */
 //
-// Type definitions for JSXGraph 1.4.x
+// Type declarations ship with JSXGraph and follow the package version.
 // Project: https://jsxgraph.org
 // Definitions by: David Holmes https://github.com/geometryzen
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -22,9 +21,6 @@ declare namespace JXG {
      */
     export const boards: unknown;
 
-    /**
-     *
-     */
     export type CoordType = 1 | 2;
 
     /**
@@ -157,7 +153,6 @@ declare namespace JXG {
          * @param method The type of coordinates used here. Possible values are COORDS_BY_USER and COORDS_BY_SCREEN.
          * @param coordinates An array of affine coordinates the Coords object is set to.
          * @param doRound flag If true or null round the coordinates in usr2screen. This is used in smooth curve plotting. Internet Explorer needs rounded coordinates. If doRound==false we have to round in updatePathString.
-         * @param noevent
          * @returns A reference to this coords object.
          */
         setCoordinates(
@@ -185,25 +180,10 @@ declare namespace JXG {
      * For code snippets like single expressions use snippet.
      */
     export class JessieCode {
-        /**
-         *
-         */
         board: Board;
-        /**
-         *
-         */
         constructor(code?: string, geonext?: boolean);
-        /**
-         *
-         */
         dist(p1: Point, p2: Point): number;
-        /**
-         *
-         */
         getElementId(id: string): GeometryElement;
-        /**
-         *
-         */
         L(e: Line): number;
         /**
          * Parses JessieCode.
@@ -230,8 +210,6 @@ declare namespace JXG {
         ): (...args: number[]) => number;
         /**
          * operator implementation.
-         * @param a
-         * @param b
          */
         sub(a: number | number[] | Point, b: number | number[] | Point): number | number[];
         /**
@@ -269,7 +247,10 @@ declare namespace JXG {
     ): void;
     export function autoDigits(val: unknown): number;
     export function autoHighlight(color: string): string;
-    export function bind(fn: Function, owner: unknown): Function;
+    export function bind<Arguments extends readonly unknown[], Result>(
+        fn: (...args: Arguments) => Result,
+        owner: unknown
+    ): (...args: Arguments) => Result;
     export function capitalize(str: string): string;
     export function clearVisPropOld(el: GeometryElement): GeometryElement;
     export function clone<T>(obj: T): T;
@@ -289,11 +270,11 @@ declare namespace JXG {
         n: number
     ): (k: number) => T;
     export function createFunction(
-        term: string | number | Function,
+        term: string | number | ((...variables: number[]) => number),
         board: Board,
         variableName: string,
         evalGeonext?: boolean
-    ): Function;
+    ): (...variables: number[]) => number;
     export function createHTMLSlider(
         board: Board,
         parents: unknown[],
@@ -306,7 +287,7 @@ declare namespace JXG {
      * If this doesn't exist, too, the output is omitted.
      * @param args An arbitrary number of parameters.
      */
-    export function debug(...args: any[]): void;
+    export function debug(...args: unknown[]): void;
     /**
      * Add something to the debug log.
      * If available a JavaScript debug console is used.
@@ -314,7 +295,7 @@ declare namespace JXG {
      * If this doesn't exist, too, the output is omitted.
      * @param args An arbitrary number of parameters.
      */
-    export function debugInt(...args: any[]): void;
+    export function debugInt(...args: unknown[]): void;
     /**
      * Add something to the debug log.
      * If available a JavaScript debug console is used.
@@ -323,7 +304,7 @@ declare namespace JXG {
      * This method adds a line of the stack trace (if available).
      * @param args An arbitrary number of parameters.
      */
-    export function debugLine(...args: any[]): void;
+    export function debugLine(...args: unknown[]): void;
     /**
      * Add something to the debug log.
      * If available a JavaScript debug console is used.
@@ -332,7 +313,7 @@ declare namespace JXG {
      * This method adds a stack trace (if available).
      * @param args An arbitrary number of parameters.
      */
-    export function debugWST(...args: any[]): void;
+    export function debugWST(...args: unknown[]): void;
     export function deepCopy<U, V>(obj1: U, obj2: V, toLower?: boolean): U | V;
     export function def<T>(v: T | undefined | null, d: T): T;
     /**
@@ -354,8 +335,6 @@ declare namespace JXG {
     export function exists(v: unknown, checkEmptyString?: boolean): boolean;
     /**
      * Copy all properties of the extension object to object.
-     * @param obj
-     * @param extension
      * @param onlyOwn Only consider properties that belong to extension itself, not any inherited properties. Default: false.
      * @param toLower If true the keys are convert to lower case. This is needed for visProp, see JXG#copyAttributes. Default: false.
      */
@@ -371,7 +350,10 @@ declare namespace JXG {
         onlyOwn?: boolean,
         toUpper?: boolean
     ): void;
-    export function filterElements<T>(list: T[], filter: object | Function): T[];
+    export function filterElements<T>(
+        list: readonly T[],
+        filter: Partial<T> | ((element: T) => boolean)
+    ): T[];
     export function getBoardByContainerId(s: string): Board | null;
     export function getCSSTransform(cPos: number[], obj: Element): number[];
     export function getCSSTransformMatrix(obj: unknown): number[];
@@ -399,7 +381,7 @@ declare namespace JXG {
     export function isApple(): boolean;
     export function isArray(v: unknown): boolean;
     export function isFirefoxOS(): boolean;
-    export function isFunction(v: unknown): v is Function;
+    export function isFunction(v: unknown): v is (...args: never[]) => unknown;
     export function isGroup(board: Board, s: string): boolean;
     export function isId(board: Board, s: string): boolean;
     export function isInArray(arr: unknown[], val: unknown): boolean;
@@ -445,10 +427,15 @@ declare namespace JXG {
             attributes: Record<string, unknown>
         ) => GeometryElement | Composition | Array<GeometryElement>
     ): void;
-    export function registerReader(reader: Function, ext: unknown[]): void;
+    export function registerReader(reader: (...args: never[]) => unknown, ext: string[]): void;
     export function removeAllEvents(obj: unknown, type: string, owner: unknown): void;
     export function removeElementFromArray<T>(ar: T[], el: T): T;
-    export function removeEvent(obj: unknown, type: string, fn: Function, owner: unknown): void;
+    export function removeEvent(
+        obj: unknown,
+        type: string,
+        fn: (...args: never[]) => unknown,
+        owner: unknown
+    ): void;
     export function rgb2bw(color: string): string;
     export function rgb2cb(
         color: string,
@@ -482,7 +469,10 @@ declare namespace JXG {
         ab?: number
     ): [r: number, g: number, b: number];
     export function sanitizeHTML(str: string, caja: boolean): string;
-    export function shortcut(object: unknown, fun: string): Function;
+    export function shortcut<Method extends (...args: never[]) => unknown>(
+        object: unknown,
+        fun: string
+    ): Method;
     export function str2Bool(s: string): boolean;
     export function supportsCanvas(): boolean;
     export function supportsPointerEvents(): boolean;
@@ -495,11 +485,11 @@ declare namespace JXG {
      */
     export function supportsVML(): boolean;
     export function swap<T>(arr: T[], i: number, j: number): T[];
-    export function timedChunk(
-        items: unknown[],
-        process: Function,
-        context: unknown,
-        callback: Function
+    export function timedChunk<Item, Context>(
+        items: Item[],
+        process: (this: Context, item: Item) => void,
+        context: Context,
+        callback: () => void
     ): void;
     export function toFixed(num: number, digits: number): string;
     export function toFullscreen(wrap_id: string, jsxgraph_id: string, scale?: unknown): void;
@@ -626,13 +616,6 @@ declare namespace JXG {
          */
         visPropCalc: { [name: string]: unknown };
 
-        /**
-         *
-         * @param board
-         * @param attributes
-         * @param type
-         * @param oclass
-         */
         constructor(
             board: Board,
             attributes: GeometryElementAttributes,
@@ -669,7 +652,10 @@ declare namespace JXG {
          * Get the value of the property key.
          * @param key The name of the property you are looking for.
          */
-        getAttribute(key: string): any;
+        getAttribute<Key extends keyof GeometryElementAttributes>(
+            key: Key
+        ): GeometryElementAttributes[Key];
+        getAttribute(key: string): unknown;
 
         /**
          * Returns the element name.
@@ -699,8 +685,6 @@ declare namespace JXG {
         /**
          * Unregister an event handler.
          * For a list of possible events see documentation of the elements and objects implementing the EventEmitter interface.
-         * @param event
-         * @param handler
          * @returns Reference to the object.
          */
         off(event: string, handler?: (e: Event) => void): this;
@@ -708,8 +692,6 @@ declare namespace JXG {
         /**
          * Register a new event handler.
          * For a list of possible events see documentation of the elements and objects implementing the EventEmitter interface.
-         * @param event
-         * @param handler
          * @param context The context the handler will be called in, default is the element itself.
          * @returns Reference to the object.
          */
@@ -853,9 +835,6 @@ declare namespace JXG {
 
     export type Coordinate = number | string | NumberFunction | Point | Transformation;
 
-    /**
-     *
-     */
     export type EvaluatableAttribute<T> = T | ((element: GeometryElement) => T);
 
     export interface ShadowAttributes {
@@ -868,9 +847,7 @@ declare namespace JXG {
     }
 
     export interface GeometryElementAttributes {
-        /**
-         * ???
-         */
+        /** Applies the same color to the element's stroke and fill where supported. */
         color?: EvaluatableAttribute<string>;
         /**
          * Determines the elements border-style.
@@ -890,9 +867,7 @@ declare namespace JXG {
          */
         draft?: boolean | GeometryElementAttributes;
 
-        /**
-         * ???
-         */
+        /** Moves the SVG node to the top of its layer while the element is dragged. */
         dragToTopOfLayer?: boolean;
 
         /**
@@ -938,7 +913,7 @@ declare namespace JXG {
          *
          * default 0.5
          */
-        gradientCX?: any;
+        gradientCX?: EvaluatableAttribute<number>;
 
         /**
          * From the SVG specification: ‘cx’, ‘cy’ and ‘r’ define the largest (i.e., outermost) circle for the radial gradient.
@@ -947,7 +922,7 @@ declare namespace JXG {
          *
          * default 0.5
          */
-        gradientCY?: any;
+        gradientCY?: EvaluatableAttribute<number>;
 
         /**
          * The gradientEndOffset attribute is a number (ranging from 0 to 1) which indicates where the second
@@ -957,7 +932,7 @@ declare namespace JXG {
          *
          * default 1.0
          */
-        gradientEndOffset?: any;
+        gradientEndOffset?: EvaluatableAttribute<number>;
 
         /**
          * This attribute defines the radius of the start circle of the radial gradient. The gradient will be drawn such
@@ -966,7 +941,7 @@ declare namespace JXG {
          *
          * default 0.0
          */
-        gradientFR?: any;
+        gradientFR?: EvaluatableAttribute<number>;
 
         /**
          * ‘fx’ and ‘fy’ define the focal point for the radial gradient. The gradient will be drawn such that the 0%
@@ -975,7 +950,7 @@ declare namespace JXG {
          *
          * default 0.5
          */
-        gradientFX?: any;
+        gradientFX?: EvaluatableAttribute<number>;
 
         /**
          * y-coordinate of the circle center for the second color in case of gradient 'radial'. (The attribute fy in SVG)
@@ -983,7 +958,7 @@ declare namespace JXG {
          *
          * default 0.5
          */
-        gradientFY?: any;
+        gradientFY?: EvaluatableAttribute<number>;
 
         /**
          * From the SVG specification: ‘cx’, ‘cy’ and ‘r’ define the largest (i.e., outermost) circle for the radial gradient.
@@ -992,21 +967,21 @@ declare namespace JXG {
          *
          * default 0.5
          */
-        gradientR?: any;
+        gradientR?: EvaluatableAttribute<number>;
 
         /**
          * Second color for gradient.
          *
          * default '#ffffff'
          */
-        gradientSecondColor?: any;
+        gradientSecondColor?: EvaluatableAttribute<string>;
 
         /**
          * Opacity of second gradient color. Takes a value between 0 and 1.
          *
          * default 1
          */
-        gradientSecondOpacity?: any;
+        gradientSecondOpacity?: EvaluatableAttribute<number>;
 
         /**
          * The gradientStartOffset attribute is a number (ranging from 0 to 1) which indicates where the first
@@ -1016,11 +991,8 @@ declare namespace JXG {
          *
          * default 0.0
          */
-        gradientStartOffset?: any;
+        gradientStartOffset?: EvaluatableAttribute<number>;
 
-        /**
-         *
-         */
         highlight?: boolean;
 
         /**
@@ -1049,16 +1021,12 @@ declare namespace JXG {
         highlightStrokeWidth?: number;
 
         /**
-         * ???
+         * Marks an internally created text element as a label.
          * @private
-         * By default, an element is not a label. Do not change this.
          */
         isLabel?: boolean;
 
-        /**
-         * ???
-         * Display layer which will contain the element.
-         */
+        /** Display layer that contains the rendered element. */
         layer?: number;
 
         /**
@@ -1075,10 +1043,7 @@ declare namespace JXG {
          */
         precision?: PrecisionOptions;
 
-        /**
-         * ???
-         * Not necessarily unique name for the element.
-         */
+        /** Human-readable, not necessarily unique element name. */
         name?: EvaluatableAttribute<string>;
 
         /**
@@ -1088,15 +1053,10 @@ declare namespace JXG {
          */
         needsRegularUpdate?: boolean;
 
-        /**
-         * ???
-         */
+        /** Applies the same opacity to the element's stroke and fill where supported. */
         opacity?: EvaluatableAttribute<number>;
 
-        /**
-         * ???
-         * A private element will be inaccessible in certain environments, e.g. a graphical user interface.
-         */
+        /** Hides the element from environments such as graphical construction UIs. */
         priv?: boolean;
 
         /**
@@ -1132,9 +1092,7 @@ declare namespace JXG {
          */
         strokeWidth?: EvaluatableAttribute<number | string>;
 
-        /**
-         * ???
-         */
+        /** Legacy renderer-specific style identifier. */
         style?: number | string;
 
         /**
@@ -1221,9 +1179,6 @@ declare namespace JXG {
         repeat?: number;
     }
 
-    /**
-     *
-     */
     export class CoordsElement extends GeometryElement {
         constructor(coordinates: unknown[], isLabel: boolean);
         /**
@@ -1279,16 +1234,10 @@ declare namespace JXG {
         visit(where: PointSpecification[], time?: number, options?: VisitOptions): this;
     }
 
-    /**
-     *
-     */
     export interface CoordsElementAttributes extends GeometryElementAttributes {
         slideObject?: GeometryElement;
     }
 
-    /**
-     *
-     */
     export class Text extends CoordsElement {
         /**
          * @param board The board the new text is drawn on.
@@ -1309,9 +1258,6 @@ declare namespace JXG {
         setTextJessieCode(text: string): void;
     }
 
-    /**
-     *
-     */
     export interface TextAttributes extends GeometryElementAttributes {
         /**
          * Anchor element of the text.
@@ -1362,43 +1308,16 @@ declare namespace JXG {
         fontSize?: number;
         /** CSS unit used by {@link TextAttributes.fontSize}. */
         fontUnit?: "px" | "vw" | "vh" | "vmax" | "vmin" | "rem";
-        /**
-         *
-         */
         highlightCssClass?: string;
         highlightCssDefaultStyle?: string;
         highlightCssStyle?: string;
-        /**
-         *
-         */
         isLabel?: boolean;
-        /**
-         *
-         */
         parse?: boolean;
-        /**
-         *
-         */
         rotate?: number;
-        /**
-         *
-         */
         snapSizeX?: number;
-        /**
-         *
-         */
         snapSizeY?: number;
-        /**
-         *
-         */
         useASCIIMathML?: boolean;
-        /**
-         *
-         */
         useCaja?: boolean;
-        /**
-         *
-         */
         useMathJax?: boolean;
         /** Render TeX content with KaTeX. */
         useKatex?: boolean;
@@ -1406,16 +1325,10 @@ declare namespace JXG {
         katexMacros?: Record<string, string>;
     }
 
-    /**
-     *
-     */
     export interface Button extends Text {
         setAttribute(attributes: ButtonAttributes): this;
     }
 
-    /**
-     *
-     */
     export interface ButtonAttributes extends TextAttributes {
         /**
          * Control the attribute "disabled" of the HTML button.
@@ -1437,9 +1350,6 @@ declare namespace JXG {
         points?: PointOptions;
     }
 
-    /**
-     *
-     */
     export class Chart extends GeometryElement {
         elements: ChartStyleResult[];
     }
@@ -1461,9 +1371,6 @@ declare namespace JXG {
     export type ChartStyleResult = Curve | Polygon[] | Point[] | PieChart | RadarChart;
     export type ChartResult = ChartStyleResult[];
 
-    /**
-     *
-     */
     export interface ChartAttributes extends GeometryElementAttributes {
         center?: PointSpecification;
         chartStyle: "bar" | "line" | "fit" | "spline" | "pie" | "point" | "radar";
@@ -1484,23 +1391,11 @@ declare namespace JXG {
         withLines?: boolean;
     }
 
-    /**
-     *
-     */
     export interface Checkbox extends Text {
-        /**
-         *
-         */
         rendNodeCheckbox: HTMLInputElement;
-        /**
-         *
-         */
         Value(): boolean;
     }
 
-    /**
-     *
-     */
     export interface CheckboxAttributes extends TextAttributes {
         checked?: boolean;
         /**
@@ -1510,17 +1405,8 @@ declare namespace JXG {
         disabled?: boolean;
     }
 
-    /**
-     *
-     */
     export class Circle extends GeometryElement {
-        /**
-         *
-         */
         center: Point;
-        /**
-         *
-         */
         midpoint: Point;
         /**
          * Checks whether (x,y) is near the segment.
@@ -1529,31 +1415,13 @@ declare namespace JXG {
          * @param start: Optional start index for search on data plots.
          */
         hasPoint(x: number, y: number, start?: number): boolean;
-        /**
-         *
-         */
         Radius(): number;
     }
 
-    /**
-     *
-     */
     export interface CircleAttributes extends GeometryElementAttributes {
-        /**
-         *
-         */
         center?: PointAttributes;
-        /**
-         *
-         */
         hasInnerPoints?: boolean;
-        /**
-         *
-         */
         label?: LabelOptions;
-        /**
-         *
-         */
         point?: PointAttributes;
     }
 
@@ -1653,7 +1521,7 @@ declare namespace JXG {
          * Stores a quadtree if it is required.
          * The quadtree is generated in the curve updates and can be used to speed up the hasPoint method.
          */
-        qdt: any;
+        qdt: unknown;
         /**
          * For dynamic dataplots updateCurve can be used to compute new entries for the arrays dataX and dataY.
          * It is used in updateCurve.
@@ -1668,20 +1536,14 @@ declare namespace JXG {
          * Allocate points in the Coords array this.points
          */
         allocatePoints(): void;
-        /**
-         *
-         */
-        checkReal(): any;
-        /**
-         *
-         */
+        checkReal(): boolean;
         generateTerm(
-            varname: unknown,
-            xterm: unknown,
-            yterm: unknown,
-            mi: unknown,
-            ma: unknown
-        ): any;
+            variableName: string,
+            xTerm: CurveTerm | CurveData | readonly AffineCoordinates[],
+            yTerm: CurveTerm | CurveData | AffineCoordinates | undefined,
+            minimum?: number | string | NumberFunction,
+            maximum?: number | string | NumberFunction
+        ): void;
         /**
          * Checks whether (x,y) is near the curve.
          * @param x: Coordinate in x direction, screen coordinates.
@@ -1745,9 +1607,6 @@ declare namespace JXG {
          */
         Z(t: number): number;
     }
-    /**
-     *
-     */
     export interface CurveAttributes extends GeometryElementAttributes {
         curveType?: "none" | "plot" | "parameter" | "functiongraph" | "polar" | "implicit";
         hasInnerPoints?: boolean;
@@ -1791,15 +1650,9 @@ declare namespace JXG {
         useQDT?: boolean;
     }
 
-    /**
-     *
-     */
     export interface Boxplot extends Curve {
         setAttribute(attributes: BoxplotAttributes): this;
     }
-    /**
-     *
-     */
     export interface BoxplotAttributes extends CurveAttributes {
         /**
          * Direction of the boxplot.
@@ -1844,7 +1697,6 @@ declare namespace JXG {
     export class Group extends GeometryElement {
         /**
          * Creates a new instance of Group.
-         * @param board
          * @param id Unique identifier for this object. If null or an empty string is given, an unique id will be generated by Board.
          * @param name Not necessarily unique name, displayed on the board. If null or an empty string is given, an unique name will be generated.
          * @param objects Array of points to add to this group.
@@ -1879,18 +1731,15 @@ declare namespace JXG {
         addPoints(objects: Point[]): this;
         /**
          * Adds a point to the set of rotation points of the group. Dragging at one of these points results into a rotation of the whole group around the rotation center of the group {@see JXG.Group#setRotationCenter}.
-         * @param point
          */
         addRotationPoint(point: Point): this;
         /**
          * Adds a point to the set of the scale points of the group. Dragging at one of these points results into a scaling of the whole group.
-         * @param point
          * @param direction Restricts the directions to be scaled. Possible values are 'x', 'y', 'xy'. Default value is 'xy'.
          */
         addScalePoint(point: Point, direction?: "x" | "y" | "xy"): this;
         /**
          * Adds a point to the set of the translation points of the group. Dragging one of these points results into a translation of the whole group.
-         * @param point
          */
         addTranslationPoint(point: Point): this;
         /**
@@ -1899,44 +1748,36 @@ declare namespace JXG {
         getParents(): string[];
         /**
          * Removes a point from the group.
-         * @param point
          */
         removePoint(point: Point): this;
         /**
          * Removes the rotation property from a point of the group.
-         * @param point
          */
         removeRotationPoint(point: Point): this;
         /**
          * Removes the scaling property from a point of the group.
-         * @param point
          */
         removeScalePoint(point: Point): this;
         /**
          * Removes the translation property from a point of the group.
-         * @param point
          */
         removeTranslationPoint(point: Point): this;
         /**
          * Sets ids of elements to the array this.parents. This is a copy of Element.setParents First, this.parents is cleared. See Group#addParents.
-         * @param parents
          */
         setParents(parents: (string | GeometryElement)[]): this;
         /**
          * Sets the center of rotation for the group. This is either a point or the centroid of the group.
-         * @param object
          */
         setRotationCenter(
             object: Point | "centroid" | [number, number] | (() => [number, number])
         ): this;
         /**
          * Sets the rotation points of the group. Dragging at one of these points results into a rotation of the whole group around the rotation center of the group {@see JXG.Group#setRotationCenter}.
-         * @param objects
          */
         setRotationPoints(objects: Point | Point[]): this;
         /**
          * Sets the center of scaling for the group. This is either a point or the centroid of the group.
-         * @param object
          */
         setScaleCenter(
             object: Point | "centroid" | [number, number] | (() => [number, number])
@@ -1967,9 +1808,6 @@ declare namespace JXG {
     }
     export interface GroupOptions extends GeometryElementAttributes {}
 
-    /**
-     *
-     */
     export class Image extends CoordsElement {
         setAttribute(attributes: ImageAttributes): this;
     }
@@ -2005,9 +1843,6 @@ declare namespace JXG {
 
     export interface Label extends Text {}
 
-    /**
-     *
-     */
     export interface LabelOptions {
         anchorX?: AnchorX;
         anchorY?: AnchorY;
@@ -2102,17 +1937,11 @@ declare namespace JXG {
         line?: LineAttributes;
     }
 
-    /**
-     *
-     */
     export interface Ellipse extends Conic {
         setAttribute(attributes: EllipseAttributes): this;
     }
     export interface EllipseAttributes extends ConicAttributes {}
 
-    /**
-     *
-     */
     export interface Hyperbola extends Conic {
         setAttribute(attributes: HyperbolaAttributes): this;
     }
@@ -2123,9 +1952,6 @@ declare namespace JXG {
     }
     export interface ParabolaAttributes extends ConicAttributes {}
 
-    /**
-     *
-     */
     export interface Sector extends Curve {
         anglePoint: Point;
         arc: Arc;
@@ -2248,9 +2074,6 @@ declare namespace JXG {
         type?: "sector";
     }
 
-    /**
-     *
-     */
     export interface Functiongraph extends Curve {
         setAttribute(attributes: FunctiongraphAttributes): this;
     }
@@ -2258,9 +2081,6 @@ declare namespace JXG {
         label?: LabelOptions;
     }
 
-    /**
-     *
-     */
     export class Point extends CoordsElement {
         constructor(board: Board, coordinates: [number, number], attributes: PointAttributes);
         X(): number;
@@ -2306,9 +2126,6 @@ declare namespace JXG {
         | ">"
         | "triangleright";
 
-    /**
-     *
-     */
     export interface PointAttributes extends CoordsElementAttributes {
         /** Accessibility attributes forwarded to the rendered point. */
         aria?: {
@@ -2327,24 +2144,20 @@ declare namespace JXG {
          * If the distance of the point is less than attractorDistance the point is made to glider of this element.
          * Default Value: empty
          */
-        attractors?: any[];
+        attractors?: Array<GeometryElement | string>;
         /**
          * Unit for attractorDistance and snatchDistance, used for magnetized points and for snapToPoints.
          * Default Value: 'user'
          */
         attractorUnit?: "screen" | "user";
-        /**
-         * ???
-         */
+        /** Applies the same color to the point's stroke and fill. */
         color?: EvaluatableAttribute<string>;
         /**
          * There are different point styles which differ in appearance.
          */
         face?: FaceType;
-        /**
-         * ???
-         */
-        highlight?: any;
+        /** Enables pointer hover highlighting for the point. */
+        highlight?: boolean;
         /**
          * List of elements which are ignored by snapToPoints.
          */
@@ -2357,13 +2170,9 @@ declare namespace JXG {
          * Default: 'auto'
          */
         infoboxDigits?: "auto" | "none" | number;
-        /**
-         * ???
-         */
+        /** Attributes used for the point's generated label. */
         label?: LabelOptions;
-        /**
-         * ???
-         */
+        /** Legacy alias for the point size in user coordinates. */
         radius?: number;
         /**
          * If true, the infobox is shown on mouse over, else not.
@@ -2426,25 +2235,10 @@ declare namespace JXG {
     }
 
     export interface PointOptions {
-        /**
-         *
-         */
         fixed: boolean;
-        /**
-         *
-         */
         highlight?: boolean;
-        /**
-         *
-         */
         snapSizeX: number;
-        /**
-         *
-         */
         snapSizeY: number;
-        /**
-         *
-         */
         snapToGrid: boolean;
     }
 
@@ -2462,9 +2256,6 @@ declare namespace JXG {
         point?: PointOptions;
     }
 
-    /**
-     *
-     */
     export class Polygon extends GeometryElement {
         constructor(board: Board, vertices: unknown[], attributes: PolygonAttributes);
         /** Border line elements in the same order as the polygon vertices. */
@@ -2496,7 +2287,6 @@ declare namespace JXG {
          * Moves an element by the difference of two coordinates.
          * @param method The type of coordinates used here. Possible values are JXG.COORDS_BY_USER and JXG.COORDS_BY_SCREEN.
          * @param coords coordinates in screen/user units
-         * @param oldcoords
          * @returns Reference to this Polygon.
          */
         setPositionDirectly(method: number, coords: unknown[], oldcoords?: unknown[]): this;
@@ -2504,9 +2294,6 @@ declare namespace JXG {
         updateRenderer(): void;
     }
 
-    /**
-     *
-     */
     export interface PolygonAttributes extends GeometryElementAttributes {
         /**
          * Attributes for the polygon border lines.
@@ -2584,13 +2371,7 @@ declare namespace JXG {
     }
     export interface HatchAttributes extends TicksAttributes {}
 
-    /**
-     *
-     */
     export interface Input extends Text {
-        /**
-         *
-         */
         Value(): string;
         setAttribute(attributes: InputAttributes): this;
     }
@@ -2600,9 +2381,6 @@ declare namespace JXG {
         maxlength?: number;
     }
 
-    /**
-     *
-     */
     export interface Integral extends Curve {
         setAttribute(attributes: IntegralAttributes): this;
     }
@@ -2707,9 +2485,6 @@ declare namespace JXG {
          * Possible types: string, number or function.
          */
         postLabel?: string | StringFunction | number | NumberFunction | null;
-        /**
-         *
-         */
         showInfobox?: boolean;
         /**
          * Size of slider point.
@@ -2775,40 +2550,16 @@ declare namespace JXG {
         withTicks?: boolean;
     }
 
-    /**
-     *
-     */
     export interface Slopetriangle extends Line {
         setAttribute(attributes: SlopetriangleAttributes): this;
     }
     export interface SlopetriangleAttributes extends LineAttributes {
-        /**
-         *
-         */
         baseline?: LineAttributes;
-        /**
-         *
-         */
         basepoint?: PointAttributes;
-        /**
-         *
-         */
         borders?: LineAttributes;
-        /**
-         *
-         */
         glider?: GliderAttributes;
-        /**
-         *
-         */
-        label?: any;
-        /**
-         *
-         */
+        label?: LabelOptions;
         tangent?: LineAttributes;
-        /**
-         *
-         */
         toppoint?: PointAttributes;
     }
     export interface SlopetriangleOptions extends LineOptions {
@@ -2820,9 +2571,6 @@ declare namespace JXG {
         topPoint?: PointOptions;
     }
 
-    /**
-     *
-     */
     export interface Stepfunction extends Curve {
         setAttribute(attributes: StepfunctionAttributes): this;
     }
@@ -2864,9 +2612,6 @@ declare namespace JXG {
         Slope(): number;
         setAttribute(attributes: LineAttributes): this;
     }
-    /**
-     *
-     */
     export interface LineAttributes extends GeometryElementAttributes {
         /**
          * Determines whether the line has an arrow at the first defining point.
@@ -2983,13 +2728,7 @@ declare namespace JXG {
                   highlightSize?: number;
                   size?: number;
               };
-        /**
-         *
-         */
         fixed?: boolean;
-        /**
-         *
-         */
         label?: LabelOptions;
         /**
          * Determines whether the line has an arrow at the second defining point.
@@ -3009,21 +2748,9 @@ declare namespace JXG {
          * Default Value: 'butt'
          */
         lineCap?: "butt" | "round" | "square";
-        /**
-         *
-         */
         point1?: PointOptions;
-        /**
-         *
-         */
         point2?: PointOptions;
-        /**
-         *
-         */
         snapSizeX?: number;
-        /**
-         *
-         */
         snapSizeY?: number;
         /**
          * Determines whether the line is drawn beyond the first defining point.
@@ -3033,31 +2760,13 @@ declare namespace JXG {
          * Determines whether the line is drawn beyond the second defining point.
          */
         straightLast?: boolean;
-        /**
-         *
-         */
         ticks?: TicksOptions;
-        /**
-         *
-         */
         touchFirstPoint?: boolean;
-        /**
-         *
-         */
         touchLastPoint?: boolean;
-        /**
-         *
-         */
         margin?: number;
-        /**
-         *
-         */
         withTicks?: boolean;
     }
 
-    /**
-     *
-     */
     export interface Arc extends Curve {
         /**
          * The point defining the arc's angle.
@@ -3096,9 +2805,6 @@ declare namespace JXG {
         size?: number;
     }
 
-    /**
-     *
-     */
     export interface ArcAttributes extends CurveAttributes {
         anglePoint?: PointAttributes;
         center?: PointAttributes;
@@ -3123,9 +2829,6 @@ declare namespace JXG {
         useDirection?: boolean;
     }
 
-    /**
-     *
-     */
     export interface Arrow extends Line {
         setAttribute(attributes: ArrowAttributes): this;
     }
@@ -3135,13 +2838,7 @@ declare namespace JXG {
     }
     export interface ArrowOptions extends GeometryElementOptions {}
 
-    /**
-     *
-     */
     export interface Axis extends Line {
-        /**
-         *
-         */
         defaultTicks: Ticks;
         setAttribute(attributes: AxisAttributes): this;
     }
@@ -3220,13 +2917,7 @@ declare namespace JXG {
     export interface RegularPolygonAttributes extends PolygonAttributes {}
     export interface RegularPolygonOptions extends PolygonOptions {}
 
-    /**
-     *
-     */
     export interface Riemannsum extends Curve {
-        /**
-         *
-         */
         Value(): number;
         setAttribute(attributes: RiemannsumAttributes): this;
     }
@@ -3238,9 +2929,6 @@ declare namespace JXG {
     }
     export interface SectorAttributes extends CurveAttributes {}
 
-    /**
-     *
-     */
     export interface Segment extends Line {
         /**
          * Checks whether (x,y) is near the segment.
@@ -3259,9 +2947,6 @@ declare namespace JXG {
     export interface SemicircleAttributes extends ArcAttributes {}
     export interface SemicircleOptions extends ArcOptions {}
 
-    /**
-     *
-     */
     export class Ticks extends GeometryElement {
         constructor(line: Line, ticks: number | unknown[], attributes: TicksAttributes);
 
@@ -3319,103 +3004,31 @@ declare namespace JXG {
         setAttribute(attributes: TicksAttributes): this;
     }
 
-    /**
-     *
-     */
     export interface TicksAttributes extends GeometryElementAttributes {
-        /**
-         *
-         */
         anchor?: "left" | "middle" | "right";
-        /**
-         *
-         */
         beautifulScientificTickLabels?: boolean;
-        /**
-         *
-         */
         // defaultDistance?: number;
-        /**
-         *
-         */
         drawLabels?: boolean;
-        /**
-         *
-         */
         drawZero?: boolean;
         face?: "|" | "<" | ">";
-        /**
-         *
-         */
         generateLabelText?:
             ((labeled: Coords, center: Coords, value: null | Number | String) => string) | null;
-        /**
-         *
-         */
         generateLabelValue?: ((labeled: Coords, center: Coords) => string) | null;
-        /**
-         *
-         */
         includeBoundaries?: boolean;
-        /**
-         *
-         */
         insertTicks?: boolean;
-        /**
-         *
-         */
         label?: LabelOptions;
-        /**
-         *
-         */
         labels?: string[];
-        /**
-         *
-         */
         majorHeight?: number;
-        /**
-         *
-         */
         maxLabelLength?: number;
-        /**
-         *
-         */
         minTicksDistance?: number;
-        /**
-         *
-         */
         minorHeight?: number;
-        /**
-         *
-         */
         minorTicks?: number;
-        /**
-         *
-         */
         digits?: number;
-        /**
-         *
-         */
         scale?: number;
-        /**
-         *
-         */
         scaleSymbol?: string;
-        /**
-         *
-         */
         tickEndings?: number[];
-        /**
-         *
-         */
         ticksDistance?: number;
-        /**
-         *
-         */
         type?: "line" | "string";
-        /**
-         *
-         */
         useUnicodeMinus?: boolean;
     }
     export interface TicksOptions extends GeometryElementOptions {
@@ -3434,7 +3047,7 @@ declare namespace JXG {
         includeBoundaries?: boolean;
         insertTicks?: boolean;
         label?: LabelOptions;
-        labels?: any[];
+        labels?: readonly TextContent[];
         majorHeight?: number;
         maxLabelLength?: number;
         minorHeight?: number;
@@ -3449,9 +3062,6 @@ declare namespace JXG {
         strokeWidth?: number;
         ticksDistance?: number;
         tickEndings?: [number, number];
-        /**
-         *
-         */
         ticksPerLabel?: number;
         // TODO: linear used in JSXGraph workshop Dec 16, 2020.
         type?: "line" | "linear" | "polar";
@@ -3459,9 +3069,6 @@ declare namespace JXG {
         visible?: "inherit" | boolean;
     }
 
-    /**
-     *
-     */
     export interface Tapemeasure extends Segment {
         setAttribute(attributes: TapemeasureAttributes): this;
     }
@@ -3515,7 +3122,6 @@ declare namespace JXG {
         /**
          * Applies a transformation once to a GeometryElement or an array of elements.
          * If it is a free point, then it can be dragged around later and will overwrite the transformed coordinates.
-         * @param p
          */
         applyOnce(p: GeometryElement | GeometryElement[]): void;
         /**
@@ -3540,7 +3146,6 @@ declare namespace JXG {
         setAttribute(term: TransformationAttributes): this;
         /**
          * Set the transformation matrix for different types of standard transforms.
-         * @param board
          * @param type Transformation type, possible values are 'translate', 'scale', 'reflect', 'rotate', 'shear', 'generic'.
          * @param params Parameters for the various transformation types.
          * @param x Shift vector (number or function) in case of 'translate'.
@@ -3562,16 +3167,10 @@ declare namespace JXG {
          */
         update(): this;
     }
-    /**
-     *
-     */
     export interface TransformationAttributes {
         type: TransformationType;
     }
 
-    /**
-     *
-     */
     export class Turtle extends GeometryElement {
         /**
          * Constructs a new Turtle object.
@@ -3580,9 +3179,6 @@ declare namespace JXG {
          * @param attributes Attributes to change the visual properties of the turtle object All angles are in degrees.
          */
         constructor(board: Board, parents: unknown[], attributes: TurtleAttributes);
-        /**
-         *
-         */
         pos: number[];
         /**
          * Move the turtle backwards.
@@ -3760,9 +3356,6 @@ declare namespace JXG {
      * All angles are in degrees.
      */
     export interface TurtleAttributes extends GeometryElementAttributes {
-        /**
-         *
-         */
         arrow?: ArrowAttributes;
     }
     export interface TurtleOptions extends GeometryElementOptions {
@@ -4109,9 +3702,6 @@ declare namespace JXG {
         bank_slide: Slider;
         /**
          * Constructs a new View3D object.
-         * @param board
-         * @param parents
-         * @param attributes
          */
         constructor(board: Board, parents: unknown[], attributes: View3DAttributes);
         create(
@@ -4272,9 +3862,6 @@ declare namespace JXG {
         stopAzimuth(): void;
     }
 
-    /**
-     *
-     */
     type ElementType =
         | "angle"
         | "arc"
@@ -4396,58 +3983,23 @@ declare namespace JXG {
      */
     type GEONExT = string;
 
-    /**
-     *
-     */
-    type HandlerFunction = () => any;
-
-    /**
-     *
-     */
     type ImageURL = string;
 
-    /**
-     *
-     */
     type BooleanFunction = () => boolean;
 
-    /**
-     *
-     */
     type NumberFunction = () => number;
 
-    /**
-     *
-     */
     type NumberOrFunction = number | NumberFunction;
-    /**
-     *
-     */
     type BorderSpecification = NumberOrFunction;
 
-    /**
-     *
-     */
     type CurveFunction = (x: number) => number;
 
-    /**
-     *
-     */
     type CoordSpecification = NumberOrFunction | GEONExT;
 
-    /**
-     *
-     */
     type PointSpecification = CoordSpecification[] | Point | (() => Point) | GEONExT;
 
-    /**
-     *
-     */
     type StringFunction = () => string;
 
-    /**
-     *
-     */
     type StringOrFunction = string | StringFunction;
 
     type RiemannSumType =
@@ -4480,11 +4032,11 @@ declare namespace JXG {
     }
 
     export type DynamicCoordinate = number | string | NumberFunction;
-    export type AffineCoordinates = readonly [DynamicCoordinate, DynamicCoordinate];
+    export type AffineCoordinates = readonly [x: DynamicCoordinate, y: DynamicCoordinate];
     export type HomogeneousCoordinates = readonly [
-        DynamicCoordinate,
-        DynamicCoordinate,
-        DynamicCoordinate
+        z: DynamicCoordinate,
+        x: DynamicCoordinate,
+        y: DynamicCoordinate
     ];
     export type TransformationList = Transformation | readonly Transformation[];
     export type CoordinateConstraint = () =>
@@ -4492,8 +4044,8 @@ declare namespace JXG {
     export type PointParents =
         | AffineCoordinates
         | HomogeneousCoordinates
-        | readonly [CoordinateConstraint]
-        | readonly [GeometryElement, TransformationList];
+        | readonly [coordinates: CoordinateConstraint]
+        | readonly [source: GeometryElement, transformations: TransformationList];
     export type ConstructiblePoint =
         | Point
         | string
@@ -4502,100 +4054,160 @@ declare namespace JXG {
         | (() => Point | AffineCoordinates | HomogeneousCoordinates);
     export type LineEndpoint = ConstructiblePoint;
     export type LineParents =
-        | readonly [LineEndpoint, LineEndpoint]
+        | readonly [firstPoint: LineEndpoint, secondPoint: LineEndpoint]
         | HomogeneousCoordinates
-        | readonly [() => readonly [Point, Point]]
-        | readonly [() => readonly [number, number, number]]
-        | readonly [Line, TransformationList];
+        | readonly [points: () => readonly [firstPoint: Point, secondPoint: Point]]
+        | readonly [coefficients: () => readonly [c: number, a: number, b: number]]
+        | readonly [source: Line, transformations: TransformationList];
     export type SegmentParents =
-        | readonly [LineEndpoint, LineEndpoint]
-        | readonly [LineEndpoint, LineEndpoint, number | NumberFunction];
+        | readonly [firstPoint: LineEndpoint, secondPoint: LineEndpoint]
+        | readonly [
+              firstPoint: LineEndpoint,
+              secondPoint: LineEndpoint,
+              length: number | NumberFunction
+          ];
     export type TextContent = string | number | (() => string | number);
     export type TextParents =
-        | readonly [DynamicCoordinate, DynamicCoordinate, TextContent]
-        | readonly [DynamicCoordinate, DynamicCoordinate, DynamicCoordinate, TextContent]
-        | readonly [GeometryElement, TransformationList, TextContent];
+        | readonly [x: DynamicCoordinate, y: DynamicCoordinate, content: TextContent]
+        | readonly [
+              z: DynamicCoordinate,
+              x: DynamicCoordinate,
+              y: DynamicCoordinate,
+              content: TextContent
+          ]
+        | readonly [
+              source: GeometryElement,
+              transformations: TransformationList,
+              content: TextContent
+          ];
     export type PolygonParents =
         | ReadonlyArray<Point | AffineCoordinates | (() => AffineCoordinates)>
-        | readonly [Polygon, TransformationList];
+        | readonly [source: Polygon, transformations: TransformationList];
     export type CircleRadius = number | string | NumberFunction | Circle | Line;
     export type CircleParents =
-        | readonly [ConstructiblePoint, ConstructiblePoint | CircleRadius]
-        | readonly [CircleRadius, ConstructiblePoint]
-        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint];
-    export type TransformedCircleParents = readonly [Circle, TransformationList];
-    export type ArcParents =
-        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint]
         | readonly [
-              ConstructiblePoint,
-              ConstructiblePoint,
-              ConstructiblePoint,
-              ConstructiblePoint
+              center: ConstructiblePoint,
+              pointOnCircleOrRadius: ConstructiblePoint | CircleRadius
+          ]
+        | readonly [radius: CircleRadius, center: ConstructiblePoint]
+        | readonly [
+              firstPoint: ConstructiblePoint,
+              secondPoint: ConstructiblePoint,
+              thirdPoint: ConstructiblePoint
+          ];
+    export type TransformedCircleParents = readonly [
+        source: Circle,
+        transformations: TransformationList
+    ];
+    export type ArcParents =
+        | readonly [
+              center: ConstructiblePoint,
+              radiusPoint: ConstructiblePoint,
+              anglePoint: ConstructiblePoint
+          ]
+        | readonly [
+              center: ConstructiblePoint,
+              radiusPoint: ConstructiblePoint,
+              startPoint: ConstructiblePoint,
+              endPoint: ConstructiblePoint
           ];
     export type EllipseBoundary = ConstructiblePoint | number | NumberFunction;
     export type EllipseParents =
-        | readonly [ConstructiblePoint, ConstructiblePoint, EllipseBoundary]
         | readonly [
-              ConstructiblePoint,
-              ConstructiblePoint,
-              EllipseBoundary,
-              number | NumberFunction,
-              number | NumberFunction
+              firstFocus: ConstructiblePoint,
+              secondFocus: ConstructiblePoint,
+              boundary: EllipseBoundary
+          ]
+        | readonly [
+              firstFocus: ConstructiblePoint,
+              secondFocus: ConstructiblePoint,
+              boundary: EllipseBoundary,
+              startParameter: number | NumberFunction,
+              endParameter: number | NumberFunction
           ];
     export type CurveEvaluator = (value: number, suspendedUpdate?: boolean) => number;
     export type FunctiongraphEvaluator = (value: number) => number;
     export type CurveTerm = number | string | CurveEvaluator;
     export type CurveData = readonly (number | NumberFunction)[];
     export type CurveParents =
-        | readonly [CurveData, CurveData]
-        | readonly [CurveTerm, CurveTerm]
-        | readonly [CurveTerm, CurveTerm, number | NumberFunction, number | NumberFunction]
-        | readonly [CurveEvaluator, AffineCoordinates]
+        | readonly [xData: CurveData, yData: CurveData]
+        | readonly [xTerm: CurveTerm, yTerm: CurveTerm]
         | readonly [
-              CurveEvaluator,
-              AffineCoordinates,
-              number | NumberFunction,
-              number | NumberFunction
+              xTerm: CurveTerm,
+              yTerm: CurveTerm,
+              minimum: number | NumberFunction,
+              maximum: number | NumberFunction
           ]
-        | readonly [readonly AffineCoordinates[]]
-        | readonly [Curve, TransformationList];
-    export type FunctiongraphParents =
-        | readonly [string | FunctiongraphEvaluator]
+        | readonly [radius: CurveEvaluator, offset: AffineCoordinates]
         | readonly [
-              string | FunctiongraphEvaluator,
-              number | NumberFunction,
-              number | NumberFunction
+              radius: CurveEvaluator,
+              offset: AffineCoordinates,
+              minimum: number | NumberFunction,
+              maximum: number | NumberFunction
+          ]
+        | readonly [points: readonly AffineCoordinates[]]
+        | readonly [source: Curve, transformations: TransformationList];
+    export type FunctiongraphParents =
+        | readonly [functionTerm: string | FunctiongraphEvaluator]
+        | readonly [
+              functionTerm: string | FunctiongraphEvaluator,
+              minimumX: number | NumberFunction,
+              maximumX: number | NumberFunction
           ];
     export type SplineSample = Point | AffineCoordinates | (() => AffineCoordinates);
     export type SplineParents = readonly SplineSample[] | readonly [CurveData, CurveData];
     export type GliderParents =
-        | readonly [GeometryElement]
-        | readonly [DynamicCoordinate, DynamicCoordinate, GeometryElement];
+        | readonly [slideObject: GeometryElement]
+        | readonly [x: DynamicCoordinate, y: DynamicCoordinate, slideObject: GeometryElement];
     export type IntersectionParents =
-        | readonly [GeometryElement, GeometryElement]
-        | readonly [GeometryElement, GeometryElement, number | NumberFunction]
+        | readonly [firstElement: GeometryElement, secondElement: GeometryElement]
         | readonly [
-              GeometryElement,
-              GeometryElement,
-              number | NumberFunction,
-              number | NumberFunction
+              firstElement: GeometryElement,
+              secondElement: GeometryElement,
+              intersectionIndex: number | NumberFunction
+          ]
+        | readonly [
+              firstElement: GeometryElement,
+              secondElement: GeometryElement,
+              intersectionIndex: number | NumberFunction,
+              dependencyIndex: number | NumberFunction
           ];
     export type MidpointParents =
-        readonly [ConstructiblePoint, ConstructiblePoint] | readonly [Line];
+        | readonly [firstPoint: ConstructiblePoint, secondPoint: ConstructiblePoint]
+        | readonly [line: Line];
     export type TangentObject = Line | Circle | Curve | Turtle;
     export type TangentParents =
-        readonly [Glider] | readonly [Point, TangentObject] | readonly [TangentObject, Point];
+        | readonly [glider: Glider]
+        | readonly [point: Point, tangentObject: TangentObject]
+        | readonly [tangentObject: TangentObject, point: Point];
     export type ParallelParents =
-        | readonly [Line, ConstructiblePoint]
-        | readonly [ConstructiblePoint, Line]
-        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint];
+        | readonly [line: Line, point: ConstructiblePoint]
+        | readonly [point: ConstructiblePoint, line: Line]
+        | readonly [
+              directionStart: ConstructiblePoint,
+              directionEnd: ConstructiblePoint,
+              point: ConstructiblePoint
+          ];
     export type AngleLineDirection = number | AffineCoordinates;
     export type AngleParents =
-        | readonly [ConstructiblePoint, ConstructiblePoint, ConstructiblePoint]
-        | readonly [Line, Line, AngleLineDirection, AngleLineDirection];
+        | readonly [
+              firstPoint: ConstructiblePoint,
+              vertex: ConstructiblePoint,
+              thirdPoint: ConstructiblePoint
+          ]
+        | readonly [
+              firstLine: Line,
+              secondLine: Line,
+              firstDirection: AngleLineDirection,
+              secondDirection: AngleLineDirection
+          ];
     export type AxisParents = LineParents;
-    export type SliderRange = readonly [number, number, number];
-    export type SliderParents = readonly [PointParents, PointParents, SliderRange];
+    export type SliderRange = readonly [minimum: number, value: number, maximum: number];
+    export type SliderParents = readonly [
+        firstEndpoint: PointParents,
+        secondEndpoint: PointParents,
+        range: SliderRange
+    ];
     export type TransformScalar = number | NumberFunction;
     export type TransformLinearParents = readonly [TransformScalar, TransformScalar];
     export type TransformReflectParents =
@@ -4857,40 +4469,51 @@ declare namespace JXG {
      * Consumers may augment this interface when registering additional elements.
      */
     export interface BoardElementRegistry {
+        /** Creates an angle from three points or from two directed lines. */
         angle: BoardElementDefinition<
             [parents: AngleParents, attributes?: AngleAttributes],
             Angle
         >;
+        /** Creates an arc from its center, radius point, and angle point. */
         arc: BoardElementDefinition<[parents: ArcParents, attributes?: ArcAttributes], Arc>;
+        /** Creates a directed line through two endpoints. */
         arrow: BoardElementDefinition<
             [parents: LineParents, attributes?: ArrowAttributes],
             Arrow
         >;
+        /** Creates a directed line through a point parallel to a given line or direction. */
         arrowparallel: BoardElementDefinition<
             [parents: ParallelConstructionParents, attributes?: ArrowAttributes],
             Arrow
         >;
+        /** Creates a coordinate axis from the same endpoint forms accepted by a line. */
         axis: BoardElementDefinition<[parents: AxisParents, attributes?: AxisAttributes], Axis>;
+        /** Creates the angle-bisector line of three points. */
         bisector: BoardElementDefinition<
             [parents: BisectorParents, attributes?: BisectorAttributes],
             Bisector
         >;
+        /** Creates both angle bisectors of two intersecting lines. */
         bisectorlines: BoardElementDefinition<
             [parents: BisectorlinesParents, attributes?: LineAttributes],
             Composition
         >;
+        /** Creates a box plot from five quantiles, optional outliers, position, and width. */
         boxplot: BoardElementDefinition<
             [parents: BoxplotParents, attributes?: BoxplotAttributes],
             Boxplot
         >;
+        /** Creates an HTML button at board coordinates with label text and a click handler. */
         button: BoardElementDefinition<
             [parents: ButtonParents, attributes?: ButtonAttributes],
             Button
         >;
+        /** Creates a cardinal spline through sampled points with configurable tension. */
         cardinalspline: BoardElementDefinition<
             [parents: CardinalsplineParents, attributes?: CardinalsplineAttributes],
             Cardinalspline
         >;
+        /** Creates one or more charts from numeric series or an HTML table reference. */
         chart:
             | BoardElementDefinition<
                   [parents: ChartTableParents, attributes?: ChartAttributes],
@@ -4900,10 +4523,12 @@ declare namespace JXG {
                   [parents: ChartParents, attributes?: ChartAttributes],
                   ChartResult
               >;
+        /** Creates an HTML checkbox at board coordinates with label text. */
         checkbox: BoardElementDefinition<
             [parents: CheckboxParents, attributes?: CheckboxAttributes],
             Checkbox
         >;
+        /** Creates a circle from a center and radius, two points, three points, or a transformed circle. */
         circle:
             | BoardElementDefinition<
                   [parents: CircleParents, attributes?: CircleAttributes],
@@ -4913,132 +4538,166 @@ declare namespace JXG {
                   [parents: TransformedCircleParents, attributes?: CircleAttributes],
                   Ellipse
               >;
+        /** Creates the circumcenter of three points. */
         circumcenter: BoardElementDefinition<
             [parents: TrianglePointParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates the circle through three points. */
         circumcircle: BoardElementDefinition<
             [parents: CircumcircleParents, attributes?: CircumcircleAttributes],
             Circumcircle
         >;
+        /** Creates the circumcircle arc determined by three points. */
         circumcirclearc: BoardElementDefinition<
             [parents: CircumcircleArcParents, attributes?: CircumcircleArcAttributes],
             CircumcircleArc
         >;
+        /** Creates the circumcenter of three points. */
         circumcirclemidpoint: BoardElementDefinition<
             [parents: TrianglePointParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates the circumcircle sector determined by three points. */
         circumcirclesector: BoardElementDefinition<
             [parents: CircumcircleSectorParents, attributes?: CircumcircleSectorAttributes],
             CircumcircleSector
         >;
+        /** Creates evenly spaced comb marks between two points. */
         comb: BoardElementDefinition<[parents: CombParents, attributes?: CombAttributes], Comb>;
+        /** Creates a conic through five points or from six quadratic-form coefficients. */
         conic: BoardElementDefinition<
             [parents: ConicParents, attributes?: ConicAttributes],
             Conic
         >;
+        /** Creates a discrete, parametric, polar, or transformed curve. */
         curve: BoardElementDefinition<
             [parents: CurveParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates the filled Boolean difference of two closed paths. */
         curvedifference: BoardElementDefinition<
             [parents: CurveBooleanParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates the filled Boolean intersection of two closed paths. */
         curveintersection: BoardElementDefinition<
             [parents: CurveBooleanParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates the filled Boolean union of two closed paths. */
         curveunion: BoardElementDefinition<
             [parents: CurveBooleanParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates the numerical derivative graph of a curve. */
         derivative: BoardElementDefinition<
             [parents: readonly [Curve], attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates an ellipse from two foci and a boundary point or major-axis length. */
         ellipse: BoardElementDefinition<
             [parents: EllipseParents, attributes?: EllipseAttributes],
             Ellipse
         >;
+        /** Creates a foreignObject; this is the short alias of foreignobject. */
         fo: BoardElementDefinition<
             [parents: ForeignObjectParents, attributes?: CoordsElementAttributes],
             ForeignObject
         >;
+        /** Creates an SVG foreignObject from HTML content, position, and optional size. */
         foreignobject: BoardElementDefinition<
             [parents: ForeignObjectParents, attributes?: CoordsElementAttributes],
             ForeignObject
         >;
+        /** Creates the graph y = f(x) with optional lower and upper x bounds. */
         functiongraph: BoardElementDefinition<
             [parents: FunctiongraphParents, attributes?: FunctiongraphAttributes],
             Functiongraph
         >;
+        /** Creates a point constrained to another geometry element. */
         glider: BoardElementDefinition<
             [parents: GliderParents, attributes?: GliderAttributes],
             Glider
         >;
+        /** Creates a board grid, optionally tied to one or two axes. */
         grid: BoardElementDefinition<
             [parents?: GridParents, attributes?: GridAttributes],
             Grid
         >;
+        /** Creates a transformation group from geometry elements. */
         group: BoardElementDefinition<
             [parents: GroupParents, attributes?: GroupAttributes],
             Group
         >;
+        /** Creates hatch marks on a line or curve; this is an alias of hatch. */
         hash: BoardElementDefinition<
             [parents: HatchParents, attributes?: HatchAttributes],
             Hatch
         >;
+        /** Creates hatch marks on a line or curve at a given position. */
         hatch: BoardElementDefinition<
             [parents: HatchParents, attributes?: HatchAttributes],
             Hatch
         >;
+        /** Creates the legacy HTML slider from a position and numeric range. */
         htmlslider: BoardElementDefinition<
             [parents: HtmlsliderParents, attributes?: TextAttributes],
             Text
         >;
+        /** Creates a hyperbola from two foci and a boundary point or transverse-axis length. */
         hyperbola: BoardElementDefinition<
             [parents: HyperbolaParents, attributes?: HyperbolaAttributes],
             Hyperbola
         >;
+        /** Creates an image from a source URL, board position, and board size. */
         image: BoardElementDefinition<
             [parents: ImageParents, attributes?: ImageAttributes],
             Image
         >;
+        /** Creates a curve from f(x, y) = 0, optionally within explicit x/y ranges. */
         implicitcurve: BoardElementDefinition<
             [parents: ImplicitcurveParents, attributes?: ImplicitCurveAttributes],
             Curve
         >;
+        /** Creates the incenter of three points. */
         incenter: BoardElementDefinition<
             [parents: TrianglePointParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates the incircle of the triangle formed by three points. */
         incircle: BoardElementDefinition<
             [parents: TrianglePointParents, attributes?: IncircleAttributes],
             Incircle
         >;
+        /** Creates the filled inequality region associated with a line or curve. */
         inequality: BoardElementDefinition<
             [parents: InequalityParents, attributes?: InequalityAttributes],
             Inequality
         >;
+        /** Creates an HTML text input at board coordinates with initial value and label. */
         input: BoardElementDefinition<
             [parents: InputParents, attributes?: InputAttributes],
             Input
         >;
+        /** Creates the filled area under or between curves over an interval. */
         integral: BoardElementDefinition<
             [parents: IntegralParents, attributes?: IntegralAttributes],
             Integral
         >;
+        /** Creates a selected intersection point of two geometry elements. */
         intersection: BoardElementDefinition<
             [parents: IntersectionParents, attributes?: IntersectionAttributes],
             Intersection
         >;
+        /** Creates a chart legend at board coordinates. */
         legend: BoardElementDefinition<
             [parents: AffineCoordinates, attributes?: GeometryElementAttributes],
             Legend
         >;
+        /** Creates an infinite line from two endpoints, homogeneous coefficients, a generator, or a transform. */
         line: BoardElementDefinition<[parents: LineParents, attributes?: LineAttributes], Line>;
+        /** Creates a number line whose values are defined by two local-coordinate anchor points. */
         localnumberline: BoardElementDefinition<
             [
                 parents: [LocalCoordinatePointParent, LocalCoordinatePointParent],
@@ -5046,38 +4705,47 @@ declare namespace JXG {
             ],
             LocalNumberLineComposition
         >;
+        /** Creates the major arc determined by a center and two boundary points. */
         majorarc: BoardElementDefinition<
             [parents: ArcParents, attributes?: ArcAttributes],
             Arc
         >;
+        /** Creates the major sector determined by a center and two boundary points. */
         majorsector: BoardElementDefinition<
             [parents: SectorParents, attributes?: SectorAttributes],
             Sector
         >;
+        /** Creates a matrix composition from rows of cell content. */
         matrix: BoardElementDefinition<
             [parents: [CellRows], attributes?: MatrixAttributes],
             MatrixComposition
         >;
+        /** Creates dynamic measurement text at board coordinates. */
         measurement: BoardElementDefinition<
             [parents: MeasurementParents, attributes?: TextAttributes],
             Text
         >;
+        /** Creates a MetaPost-style spline through sampled points and control options. */
         metapostspline: BoardElementDefinition<
             [parents: MetapostsplineParents, attributes?: MetapostsplineAttributes],
             Metapostspline
         >;
+        /** Creates the midpoint of two points or of a line segment. */
         midpoint: BoardElementDefinition<
             [parents: MidpointParents, attributes?: MidpointAttributes],
             Midpoint
         >;
+        /** Creates the minor arc determined by a center and two boundary points. */
         minorarc: BoardElementDefinition<
             [parents: ArcParents, attributes?: MinorArcAttributes],
             MinorArc
         >;
+        /** Creates the minor sector determined by a center and two boundary points. */
         minorsector: BoardElementDefinition<
             [parents: SectorParents, attributes?: SectorAttributes],
             Sector
         >;
+        /** Reflects a point, line, curve, polygon, or circle across a point or line. */
         mirrorelement:
             | BoardElementDefinition<
                   [parents: readonly [Point, Point], attributes?: MirrorelementAttributes],
@@ -5099,86 +4767,107 @@ declare namespace JXG {
                   [parents: readonly [Circle, Point], attributes?: CircleAttributes],
                   Circle | Ellipse
               >;
+        /** Creates the reflection of one point across another point. */
         mirrorpoint: BoardElementDefinition<
             [parents: readonly [Point, Point], attributes?: PointAttributes],
             Point
         >;
+        /** Creates the non-reflex angle from three points or two directed lines. */
         nonreflexangle: BoardElementDefinition<
             [parents: AngleParents, attributes?: AngleAttributes],
             Angle
         >;
+        /** Creates the normal line at a glider or point on a supported geometry element. */
         normal: BoardElementDefinition<
             [parents: NormalParents, attributes?: NormalAttributes],
             Normal
         >;
+        /** Creates the orthogonal projection of a point onto a line. */
         orthogonalprojection: BoardElementDefinition<
             [parents: OrthogonalProjectionParents, attributes?: OrthogonalprojectionAttributes],
             Orthogonalprojection
         >;
+        /** Creates the other intersection when one known intersection is supplied. */
         otherintersection: BoardElementDefinition<
             [parents: OtherIntersectionParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates a parabola from a focus and a directrix. */
         parabola: BoardElementDefinition<
             [parents: ParabolaParents, attributes?: ParabolaAttributes],
             Parabola
         >;
+        /** Creates a line through a point parallel to a line or two-point direction. */
         parallel: BoardElementDefinition<
             [parents: ParallelParents, attributes?: ParallelAttributes],
             Parallel
         >;
+        /** Creates a parallelogram composition from three vertices. */
         parallelogram: BoardElementDefinition<
             [parents: ParallelogramParents, attributes?: PolygonAttributes],
             Polygon
         >;
+        /** Creates the missing parallelogram vertex from three points. */
         parallelpoint: BoardElementDefinition<
             [parents: ParallelConstructionParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates a line through a point perpendicular to a line. */
         perpendicular: BoardElementDefinition<
             [parents: PerpendicularParents, attributes?: PerpendicularAttributes],
             Perpendicular
         >;
+        /** Creates the perpendicular foot of a point on a line. */
         perpendicularpoint: BoardElementDefinition<
             [parents: PerpendicularPointParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates the perpendicular segment from a point to a line. */
         perpendicularsegment: BoardElementDefinition<
             [parents: PerpendicularParents, attributes?: LineAttributes],
             Segment
         >;
+        /** Creates a curve; this is the plotting alias of curve. */
         plot: BoardElementDefinition<
             [parents: FunctiongraphParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates a free, constrained, homogeneous, or transformed point. */
         point: BoardElementDefinition<
             [parents: PointParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates the polar line of a point with respect to a circle or conic. */
         polar: BoardElementDefinition<
             [parents: PolarlineParents, attributes?: LineAttributes],
             Line
         >;
+        /** Creates the polar line of a point with respect to a circle or conic. */
         polarline: BoardElementDefinition<
             [parents: PolarlineParents, attributes?: LineAttributes],
             Line
         >;
+        /** Creates the pole point of a line with respect to a circle or conic. */
         polepoint: BoardElementDefinition<
             [parents: PolepointParents, attributes?: PointAttributes],
             Point
         >;
+        /** Creates a closed polygon from vertices or by transforming another polygon. */
         polygon: BoardElementDefinition<
             [parents: PolygonParents, attributes?: PolygonAttributes],
             Polygon
         >;
+        /** Creates an open polygonal chain from ordered vertices. */
         polygonalchain: BoardElementDefinition<
             [parents: PolygonalChainParents, attributes?: PolygonAttributes],
             Polygon
         >;
+        /** Creates the radical axis of two circles. */
         radicalaxis: BoardElementDefinition<
             [parents: RadicalaxisParents, attributes?: LineAttributes],
             Line
         >;
+        /** Reflects a geometry element; this is an alias of mirrorelement. */
         reflection:
             | BoardElementDefinition<
                   [parents: readonly [Point, Line], attributes?: PointAttributes],
@@ -5200,83 +4889,104 @@ declare namespace JXG {
                   [parents: readonly [Circle, Line], attributes?: CircleAttributes],
                   Circle | Ellipse
               >;
+        /** Creates the reflex angle from three points or two directed lines. */
         reflexangle: BoardElementDefinition<
             [parents: AngleParents, attributes?: AngleAttributes],
             Angle
         >;
+        /** Creates a regular polygon from an edge and side count, or from explicit vertices. */
         regularpolygon: BoardElementDefinition<
             [parents: RegularPolygonParents<number>, attributes?: PolygonAttributes],
             RegularPolygon
         >;
+        /** Creates Riemann-sum bars for one function or the area between two functions. */
         riemannsum: BoardElementDefinition<
             [parents: RiemannsumParents, attributes?: CurveAttributes],
             Riemannsum
         >;
+        /** Creates a circular sector from three points or two lines and a radius. */
         sector: BoardElementDefinition<
             [parents: SectorParents, attributes?: SectorAttributes],
             Sector
         >;
+        /** Creates a finite line segment from two endpoints, optionally with fixed length. */
         segment: BoardElementDefinition<
             [parents: SegmentParents, attributes?: SegmentAttributes],
             Segment
         >;
+        /** Creates the semicircle whose diameter is defined by two points. */
         semicircle: BoardElementDefinition<
             [parents: SemicircleParents, attributes?: SemicircleAttributes],
             Semicircle
         >;
+        /** Creates an interactive freehand curve from sampled pointer coordinates. */
         sketchcurve: BoardElementDefinition<
             [parents?: readonly [], attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates a numeric slider from two endpoint definitions and a [minimum, value, maximum] range. */
         slider: BoardElementDefinition<
             [parents: SliderParents, attributes?: SliderAttributes],
             Slider
         >;
+        /** Creates a slope field for a scalar differential equation over x/y meshes. */
         slopefield: BoardElementDefinition<
             [parents: SlopeFieldParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates a slope triangle on a tangent, glider, or line-and-point pair. */
         slopetriangle: BoardElementDefinition<
             [parents: SlopetriangleParents, attributes?: SlopetriangleAttributes],
             Slopetriangle
         >;
+        /** Creates a dynamic label attached to a point, line, circle, polygon, or angle. */
         smartlabel: BoardElementDefinition<
             [parents: SmartLabelParents, attributes?: TextAttributes],
             Text
         >;
+        /** Creates a smooth spline through sampled points or paired coordinate arrays. */
         spline: BoardElementDefinition<
             [parents: SplineParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates a step-function graph from paired x and y data. */
         stepfunction: BoardElementDefinition<
             [parents: StepfunctionParents, attributes?: StepfunctionAttributes],
             Stepfunction
         >;
+        /** Creates a table composition from rows of cell content. */
         table: BoardElementDefinition<
             [parents: [CellRows], attributes?: TableAttributes],
             TableComposition
         >;
+        /** Creates a tangent line at a glider or point on a supported geometry element. */
         tangent: BoardElementDefinition<
             [parents: TangentParents, attributes?: TangentAttributes],
             Tangent
         >;
+        /** Creates a selected tangent from an external point to a circle or conic. */
         tangentto: BoardElementDefinition<
             [parents: TangentToParents, attributes?: LineAttributes],
             Line
         >;
+        /** Creates an interactive distance measurement between two point definitions. */
         tapemeasure: BoardElementDefinition<
             [parents: TapemeasureParents, attributes?: TapemeasureAttributes],
             Tapemeasure
         >;
+        /** Creates text from board coordinates, content, or a transformed text element. */
         text: BoardElementDefinition<[parents: TextParents, attributes?: TextAttributes], Text>;
+        /** Creates ticks on a line or curve with an optional fixed distance or positions. */
         ticks: BoardElementDefinition<
             [parents: TicksParents, attributes?: TicksAttributes],
             Ticks
         >;
+        /** Creates the locus traced by a point while a glider moves. */
         tracecurve: BoardElementDefinition<
             [parents: TracecurveParents, attributes?: TracecurveAttributes],
             Tracecurve
         >;
+        /** Creates a translate, scale, rotate, reflect, or general affine transformation. */
         transform:
             | BoardElementDefinition<
                   [
@@ -5309,14 +5019,17 @@ declare namespace JXG {
                   [parents: TransformMatrixParents, attributes: { type: "matrix" }],
                   Transformation
               >;
+        /** Creates a turtle graphics cursor with an optional start position and heading. */
         turtle: BoardElementDefinition<
             [parents?: TurtleParents, attributes?: TurtleAttributes],
             Turtle
         >;
+        /** Creates a vector field over explicit x/y meshes. */
         vectorfield: BoardElementDefinition<
             [parents: VectorFieldParents, attributes?: CurveAttributes],
             Curve
         >;
+        /** Creates a 3D viewport from lower-left position, size, and x/y/z ranges. */
         view3d: BoardElementDefinition<
             [parents: View3DParents, attributes?: View3DAttributes],
             View3D
@@ -5360,9 +5073,6 @@ declare namespace JXG {
         ? ValidRegularPolygonArguments<Arguments>
         : Arguments;
 
-    /**
-     *
-     */
     export class Board {
         /** Sketching state for the two pointer slots supported by JSXGraph. */
         isSketching: boolean[];
@@ -5370,52 +5080,16 @@ declare namespace JXG {
         sketch: Curve | null;
         /** Curves used by pointer sketching. */
         sketches: Array<Curve | null>;
-        /**
-         *
-         * @param event
-         * @param handler
-         * @param context
-         */
         addEvent(event: string, handler: (evt: PointerEvent) => void, context?: {}): {};
-        /**
-         *
-         */
         animationObjects: unknown;
-        /**
-         *
-         */
         attr: BoardAttributes;
-        /**
-         *
-         */
         BOARD_MODE_DRAG: number;
-        /**
-         *
-         */
         BOARD_MODE_MOVE_ORIGIN: number;
-        /**
-         *
-         */
         BOARD_MODE_NONE: number;
-        /**
-         *
-         */
         BOARD_MODE_ZOOM: number;
-        /**
-         *
-         */
         BOARD_QUALITY_HIGH: number;
-        /**
-         *
-         */
         BOARD_QUALITY_LOW: number;
-        /**
-         *
-         */
         canvasHeight: number;
-        /**
-         *
-         */
         canvasWidth: number;
         /**
          * The HTML id of the HTML element containing the board.
@@ -5434,9 +5108,6 @@ declare namespace JXG {
          * If color blindness is not emulated at the moment, it's value is 'none'.
          */
         currentCBDef: "none" | string;
-        /**
-         *
-         */
         defaultAxes: Partial<DefaultAxes>;
         /**
          * An array containing all other boards that are updated after this board has been updated.
@@ -5564,10 +5235,7 @@ declare namespace JXG {
          * An array containing all geometric objects on the board in the order of construction.
          */
         objectsList: Array<GeometryElement | Composition>;
-        /**
-         *
-         */
-        off: Function;
+        off(event: string, handler?: (event: unknown) => void): this;
         /**
          * Coordinates of the boards origin.
          * This a object with the two properties usrCoords and scrCoords.
@@ -5590,21 +5258,12 @@ declare namespace JXG {
          * Default is false.
          */
         reducedUpdate: boolean;
-        /**
-         *
-         */
-        removeEvent: Function;
+        removeEvent(event: string, handler?: (event: unknown) => void): this;
         /**
          * JessieCode
          */
         jc: JessieCode;
-        /**
-         *
-         */
         options: JXGSettings;
-        /**
-         *
-         */
         renderer: {
             dumpToCanvas(elementId: string): void;
             /**
@@ -5629,9 +5288,6 @@ declare namespace JXG {
          * Contains the last time (epoch, msec) since the last touchMove event which was not thrown away or since touchStart because Android's Webkit browser fires too much of them.
          */
         touchMoveLast: number;
-        /**
-         *
-         */
         takeSizeFromFile: boolean;
         /**
          * The number of pixels which represent one unit in user-coordinates in x direction.
@@ -5722,15 +5378,6 @@ declare namespace JXG {
             elementType: ElementType,
             ...args: ValidBoardElementArguments<ElementType, Arguments>
         ): BoardElementResult<ElementType, Arguments>;
-        /**
-         * @param c1
-         * @param c2
-         * @param start_c1
-         * @param stepsize
-         * @param direction
-         * @param time
-         * @param pointlist
-         */
         createRoulette(
             c1: Curve,
             c2: Curve,
@@ -5750,9 +5397,6 @@ declare namespace JXG {
          * @param value true for visible, false for invisible.
          */
         displayInfobox(value: boolean): this;
-        /**
-         *
-         */
         emulateColorblindness(deficiency: "protanopia" | "deuteranopia" | "tritanopia"): this;
         /**
          * After construction of the object the visibility is set and the label is constructed if necessary.
@@ -5817,7 +5461,7 @@ declare namespace JXG {
         removeEventHandlers(): unknown;
         removeFullscreenEventHandlers(): unknown;
         removeGrids(): this;
-        removeHook(id: number | Function): this;
+        removeHook(id: number | ((...args: never[]) => unknown)): this;
         removeMouseEventHandlers(): unknown;
         /**
          * Removes object from board and renderer.
@@ -5841,32 +5485,34 @@ declare namespace JXG {
         removePointerEventHandlers(): unknown;
         removeTouchEventHandlers(): unknown;
 
-        /**
-         * @param width
-         * @param height
-         */
         resizeContainer(
             width: number,
             height: number,
             dontSetCssWidthAndHeight?: boolean,
             dontSetBoundingBox?: boolean
         ): this;
-        select(
-            id: string | unknown | Function,
-            onlyByIdOrName: boolean
-        ): GeometryElement | Composition;
         /**
-         *
+         * Selects an element by id, name, or reference. Object and predicate filters return a
+         * composition containing every matching board element.
          */
+        select(
+            idOrName: string,
+            onlyByIdOrName?: boolean
+        ): GeometryElement | Composition | null;
+        select<Element extends GeometryElement | Composition>(
+            element: Element,
+            onlyByIdOrName?: boolean
+        ): Element;
+        select(
+            filter: Readonly<Record<string, unknown>> | ((element: GeometryElement) => boolean),
+            onlyByIdOrName?: false
+        ): Composition;
         setBoundingBox(
             bbox: [number, number, number, number],
             keepaspectratio?: boolean,
             setZoom?: string
         ): this;
         setId(object: unknown, type: number): string;
-        /**
-         *
-         */
         setZoom(fX: number, fY: number): Board;
         showDependencies(): this;
         showXML(): this;
@@ -5929,21 +5575,16 @@ declare namespace JXG {
         zoomAllPoints(): this;
         /**
          * Reset the bounding box and the zoom level to 100% such that a given set of elements is within the board's viewport.
-         * @param elements
          */
         zoomElements(elements: unknown[]): this;
         /**
          * Zooms into the board by the factors board.attr.zoom.factorX and board.attr.zoom.factorY and applies the zoom.
          * The zoom operation is centered at x, y.
-         * @param x
-         * @param y
          */
         zoomIn(x?: number, y?: number): this;
         /**
          * Zooms out of the board by the factors board.attr.zoom.factorX and board.attr.zoom.factorY and applies the zoom.
          * The zoom operation is centered at x, y.
-         * @param x
-         * @param y
          */
         zoomOut(x?: number, y?: number): this;
     }
@@ -6006,9 +5647,6 @@ declare namespace JXG {
 
         beautifulScientificTickLabels: boolean;
 
-        /**
-         *
-         */
         defaultAxes: Partial<DefaultAxesAttributes>;
 
         /**
@@ -6120,9 +5758,6 @@ declare namespace JXG {
             enabled?: boolean;
         };
 
-        /**
-         *
-         */
         grid: boolean;
 
         /**
@@ -6316,9 +5951,6 @@ declare namespace JXG {
         zoomY: number;
     }
 
-    /**
-     *
-     */
     export interface Graph {
         /**
          * Stores the renderer that is used to draw the boards.
@@ -6537,9 +6169,6 @@ declare namespace JXG {
         parallel: ParallelOptions;
         perpendicular: PerpendicularOptions;
         perpendicularsegment: PerpendicularSegmentOptions;
-        /**
-         *
-         */
         point: PointOptions;
         polygon: PolygonOptions;
         polygonalchain: PolygonalChainOptions;
@@ -6569,15 +6198,9 @@ declare namespace JXG {
         turtle: TurtleOptions;
     }
 
-    /**
-     *
-     */
     const JSXGraph: Graph;
     let Options: JXGOptions;
 
-    /**
-     *
-     */
     export interface Dump {
         toJavaScript(board: Board): string;
         toJessie(board: Board): string;
@@ -6588,14 +6211,9 @@ declare namespace JXG {
      */
     const Dump: Dump;
 
-    /**
-     *
-     */
     export interface Math {
         /**
          * Functional version of binary operator &&
-         * @param a.
-         * @param b.
          * @returns Boolean value of a && b.
          */
         and(a: boolean, b: boolean): boolean;
@@ -6607,76 +6225,59 @@ declare namespace JXG {
         /**
          * Hyperbolic arc-cosine of a number.
          *
-         * @param x
          */
         acosh(x: number): number;
         /**
          * Hyperbolic arcsine of a number.
          *
-         * @param x
          */
         asinh(x: number): number;
         /**
          * Computes the binomial coefficient n over k.
-         * @param n
-         * @param k
          */
         binomial(n: number, k: number): number;
         /**
          * Computes the hyperbolic cosine of x.
-         * @param x
          */
         cosh(x: number): number;
         /**
          * Functional version of binary operator ===
-         * @param a.
-         * @param b.
          * @returns Boolean value of a === b.
          */
         eq(a: number, b: number): boolean;
         /**
          * Error function
          *
-         * @param x
          */
         erf(x: number): number;
         /**
          * Complementary error function
          *
-         * @param x
          */
         erfc(x: number): number;
         /**
          * Inverse error function
          *
-         * @param x
          */
         erfi(x: number): number;
         /**
          * Compute the factorial of a positive integer. If a non-integer value is given, the fraction will be ignored.
-         * @param n
          * @returns n! = n * (n-1) * ... * 2 * 1
          */
         factorial(n: number): number;
         /**
          * Greatest common divisor (gcd) of two numbers.
          *
-         * @param a.
-         * @param b.
          * @returns gcd(a, b) if a and b are numbers, NaN else.
          */
         gcd(a: number, b: number): number;
         /**
          * Functional version of binary operator >=
-         * @param a.
-         * @param b.
          * @returns Boolean value of a >= b.
          */
         geq(a: number, b: number): boolean;
         /**
          * Functional version of binary operator >
-         * @param a.
-         * @param b.
          * @returns Boolean value of a > b.
          */
         gt(a: number, b: number): boolean;
@@ -6687,34 +6288,26 @@ declare namespace JXG {
         /**
          * Least common multiple (lcm) of two numbers.
          *
-         * @param a.
-         * @param b.
          * @returns lcm(a, b) if a and b are numbers, NaN else.
          */
         lcm(a: number, b: number): number;
         /**
          * Functional version of binary operator <=
-         * @param a.
-         * @param b.
          * @returns Boolean value of a <= b.
          */
         leq(a: number, b: number): boolean;
         /**
          * Logarithm to base 10.
-         * @param a.
          * @returns logarithm of a to base 10.
          */
         log10(a: number): number;
         /**
          * Logarithm to base 2.
-         * @param a.
          * @returns logarithm of a to base 2.
          */
         log2(a: number): number;
         /**
          * Functional version of binary operator <
-         * @param a.
-         * @param b.
          * @returns Boolean value of a < b.
          */
         lt(a: number, b: number): boolean;
@@ -6736,54 +6329,40 @@ declare namespace JXG {
         /**
          * The Javascript implementation of the % operator returns the symmetric modulo.
          * mod and "%" are both identical if a >= 0 and m >= 0 but the results differ if a or m < 0.
-         * @param a.
-         * @param m.
          * @returns mathematical modulo a mod m.
          */
         mod(a: number, m: number): number;
         /**
          * Normal distribution function
          *
-         * @param x
          */
         ndtr(x: number): number;
         /**
          * Inverse of normal distribution function
          *
-         * @param x
          */
         ndtri(x: number): number;
         /**
          * Functional version of binary operator !==
-         * @param a.
-         * @param b.
          * @returns Boolean value of a !== b.
          */
         neq(a: number, b: number): boolean;
         /**
          * Functional version of unary operator !
-         * @param a.
-         * @param b.
          * @returns Boolean value of !a.
          */
         not(a: number): boolean;
         /**
          * Functional version of binary operator ||
-         * @param a.
-         * @param b.
          * @returns Boolean value of a || b.
          */
         or(a: boolean, b: boolean): boolean;
         /**
          * Computes base to the power of exponent.
-         * @param base
-         * @param exponent
          */
         pow(base: number, exponent: number): number;
         /**
          * Determine the relative difference between two numbers.
-         * @param a.
-         * @param b.
          * @returns Relative difference between a and b: |a-b| / max(|a|, |b|).
          */
         relDif(a: number, b: number): number;
@@ -6796,8 +6375,6 @@ declare namespace JXG {
         /**
          * A square & multiply algorithm to compute base to the power of exponent.
          *
-         * @param base.
-         * @param exponent.
          * @returns base to the power of exponent.
          */
         squampow(base: number, exponent: number): number;
@@ -6809,8 +6386,6 @@ declare namespace JXG {
         transpose(M: number[][]): number[][];
         /**
          * Functional version of a binary operator xor
-         * @param a.
-         * @param b.
          * @returns Boolean value of a xor b.
          */
         xor(a: boolean, b: boolean): boolean;
@@ -6818,53 +6393,41 @@ declare namespace JXG {
         /* -------------------------------------------------- */
         /**
          * Inner product of two vectors a and b. n is the length of the vectors.
-         * @param a
-         * @param b
          * @param n optional
          * @returns Inner product of a and b.
          */
         innerProduct(a: number[], b: number[], n: number): number;
         /**
          * Cross product of two vectors a and b, both of length three.
-         * @param a
-         * @param b
          * @returns Cross product of a and b.
          */
         crossProduct(a: number[], b: number[]): number;
         /**
          * Euclidean norm of vector a of length n.
-         * @param a
-         * @param n
          * @returns Euclidean norm of a.
          */
         norm(a: number[], n: number): number;
         /**
          * Computes the cotangent of x.
-         * @param x
          */
         cot(x: number): number;
         /**
          * Computes the inverse of cotangent of x.
-         * @param x
          */
         acot(x: number): number;
         /**
          * Compute n-th real root of a real number. n must be strictly positive integer.
          * If n is odd, the real n-th root exists and is negative.
          * For n even, for negative valuees of x NaN is returned.
-         * @param a
-         * @param n
          */
         nthroot(a: number, n: number): number;
         /**
          * Computes cube root of real number.
-         * @param a
          */
         cbrt(a: number): number;
         /**
          * Compute base to the power of the rational exponent m / n.
          * This function first reduces the fraction m/n and then computes JXG.Math.pow(base, m/n).
-         * @param a
          */
         ratpow(base: number, m: number, n: number): number;
 
@@ -6995,9 +6558,6 @@ declare namespace JXG {
         rad(A: Point | number[], B: Point | number[], C: Point | number[]): number;
         /**
          * Calculates the angle defined by the three points A, B, C if you're going from A to C around B counterclockwise.
-         * @param A
-         * @param B
-         * @param C
          * @returns The angle in degrees.
          */
         trueAngle(
@@ -7062,7 +6622,10 @@ declare namespace JXG {
         /**
          * Numerical (symmetric) approximation of derivative.
          */
-        D(f: (x: number) => number, obj?: any): (x: number) => number;
+        D(
+            f: (x: number, suspendedUpdate?: boolean) => number,
+            context?: object
+        ): (x: number, suspendedUpdate?: boolean) => number;
 
         /**
          * Solves a system of linear equations given by A and b using the Gauss-Jordan-elimination.
@@ -7118,11 +6681,6 @@ declare namespace JXG {
         /**
          * Solve initial value problems numerically using Runge-Kutta-methods.
          * See https://en.wikipedia.org/wiki/Runge-Kutta_methods for more information on the algorithm.
-         * @param butcher
-         * @param x0
-         * @param I
-         * @param N
-         * @param f
          * return An array of vectors describing the solution of the o.d.e. on the given interval I.
          */
         rungeKutta(
@@ -7140,13 +6698,11 @@ declare namespace JXG {
     export interface Statistics {
         /**
          * Extracts the maximum value from the array.
-         * @param arr
          * @returns The highest number from the array. It returns NaN if not every element could be interpreted as a number and -Infinity if an empty array is given or no element could be interpreted as a number.
          */
         max(arr: number[]): number;
         /**
          * Extracts the minimum value from the array.
-         * @param arr
          * @returns The lowest number from the array. It returns NaN if not every element could be interpreted as a number and Infinity if an empty array is given or no element could be interpreted as a number.
          */
         min(arr: number[]): number;
