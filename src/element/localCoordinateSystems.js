@@ -62,6 +62,22 @@ function childAttributes(attributes) {
     } = attributes;
     return rest;
 }
+
+/**
+ * @class Create a number line between two points with an independent logical value range.
+ * @pseudo
+ * @name LocalNumberLine
+ * @augments JXG.Composition
+ * @constructor
+ * @type JXG.Composition
+ * @param {JXG.Point|Array,JXG.Point|Array} point1,point2 Two points or coordinate pairs defining the visible segment.
+ * @example
+ * var numberLine = board.create('localnumberline', [[-4, 0], [4, 0]], {
+ *     range: [-10, 10],
+ *     tickDistance: 2
+ * });
+ * var marker = board.create('point', numberLine.point(3));
+ */
 function createLocalNumberLine(board, parents, attributes) {
     const logicalRange = range(attributes.range, RANGE, "localnumberline", "range");
     const [start, end] = endpoints(parents, attributes);

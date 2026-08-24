@@ -9,6 +9,21 @@ import {
 } from "./cellGrid.js";
 import { createBoardRegion } from "./layout/layoutRegion.js";
 const DEFAULT_PADDING = 0.18;
+
+/**
+ * @class Create a responsive table from rows of text or numeric cell content.
+ * @pseudo
+ * @name Table
+ * @augments JXG.Composition
+ * @constructor
+ * @type JXG.Composition
+ * @param {Array} rows A rectangular array of strings, numbers, or functions returning cell content.
+ * @example
+ * var table = board.create('table', [[['Time', 'Speed'], [0, 0], [1, 9.8]]], {
+ *     padding: 0.2,
+ *     useKatex: true
+ * });
+ */
 function createTable(board, parents, attributes) {
     const rawRows = readTableParents(parents);
     const region = createBoardRegion(board, 0);

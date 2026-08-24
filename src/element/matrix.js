@@ -11,6 +11,22 @@ import { createBoardRegion } from "./layout/layoutRegion.js";
 const DEFAULT_COLUMN_GAP = 0.35;
 const DEFAULT_PADDING = 0.22;
 const DEFAULT_ROW_GAP = 0.22;
+
+/**
+ * @class Create a responsive bracketed matrix from rows of text or numeric entries.
+ * @pseudo
+ * @name Matrix
+ * @augments JXG.Composition
+ * @constructor
+ * @type JXG.Composition
+ * @param {Array} rows A rectangular array of strings, numbers, or functions returning matrix entries.
+ * @example
+ * var matrix = board.create('matrix', [[['a', 'b'], ['c', 'd']]], {
+ *     columnGap: 0.4,
+ *     rowGap: 0.25,
+ *     useKatex: true
+ * });
+ */
 function createMatrix(board, parents, attributes) {
     const rawRows = readMatrixParents(parents);
     const region = createBoardRegion(board, 0);
