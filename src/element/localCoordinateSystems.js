@@ -64,6 +64,44 @@ function childAttributes(attributes) {
 }
 
 /**
+ * Logical values represented by the two endpoints.
+ * @name LocalNumberLine#range
+ * @type Array
+ * @default [-5, 5]
+ * @visprop
+ */
+
+/**
+ * Distance between adjacent labeled values.
+ * @name LocalNumberLine#tickDistance
+ * @type Number
+ * @default 1
+ * @visprop
+ */
+
+/**
+ * Attributes forwarded to the generated segment.
+ * @name LocalNumberLine#line
+ * @type Object
+ * @visprop
+ */
+
+/**
+ * Attributes forwarded to the generated ticks.
+ * @name LocalNumberLine#ticks
+ * @type Object
+ * @visprop
+ */
+
+/**
+ * Return responsive board coordinates for a logical value on this number line.
+ * @name LocalNumberLine#point
+ * @function
+ * @param {Number|Function} value Logical value to locate.
+ * @returns {Array} Pair of coordinate functions suitable as point parents.
+ */
+
+/**
  * @class Create a number line between two points with an independent logical value range.
  * @pseudo
  * @name LocalNumberLine

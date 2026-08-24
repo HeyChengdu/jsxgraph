@@ -13,6 +13,54 @@ const DEFAULT_PADDING = 0.22;
 const DEFAULT_ROW_GAP = 0.22;
 
 /**
+ * Horizontal gap between entries in board user coordinates.
+ * @name Matrix#columnGap
+ * @type Number
+ * @default 0.35
+ * @visprop
+ */
+
+/**
+ * Vertical gap between entries in board user coordinates.
+ * @name Matrix#rowGap
+ * @type Number
+ * @default 0.22
+ * @visprop
+ */
+
+/**
+ * Gap between the entries and brackets in board user coordinates.
+ * @name Matrix#padding
+ * @type Number
+ * @default 0.22
+ * @visprop
+ */
+
+/**
+ * Font size shared by generated entry texts.
+ * @name Matrix#fontSize
+ * @type Number
+ * @visprop
+ */
+
+/**
+ * Whether generated entry texts render mathematical content with KaTeX.
+ * @name Matrix#useKatex
+ * @type Boolean
+ * @default false
+ * @visprop
+ */
+
+/**
+ * Return the generated text element at a zero-based row and column.
+ * @name Matrix#entry
+ * @function
+ * @param {Number} row Zero-based row index.
+ * @param {Number} column Zero-based column index.
+ * @returns {JXG.Text} Generated matrix entry text.
+ */
+
+/**
  * @class Create a responsive bracketed matrix from rows of text or numeric entries.
  * @pseudo
  * @name Matrix

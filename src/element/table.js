@@ -11,6 +11,38 @@ import { createBoardRegion } from "./layout/layoutRegion.js";
 const DEFAULT_PADDING = 0.18;
 
 /**
+ * Inner cell padding in board user coordinates.
+ * @name Table#padding
+ * @type Number
+ * @default 0.18
+ * @visprop
+ */
+
+/**
+ * Font size shared by generated cell texts.
+ * @name Table#fontSize
+ * @type Number
+ * @visprop
+ */
+
+/**
+ * Whether generated cell texts render mathematical content with KaTeX.
+ * @name Table#useKatex
+ * @type Boolean
+ * @default false
+ * @visprop
+ */
+
+/**
+ * Return the generated text element at a zero-based row and column.
+ * @name Table#cell
+ * @function
+ * @param {Number} row Zero-based row index.
+ * @param {Number} column Zero-based column index.
+ * @returns {JXG.Text} Generated cell text.
+ */
+
+/**
  * @class Create a responsive table from rows of text or numeric cell content.
  * @pseudo
  * @name Table
