@@ -3,11 +3,22 @@ import JXG from "jsxgraph";
 declare const board: JXG.Board;
 declare const composition: JXG.Composition;
 
+declare module "jsxgraph" {
+    interface BoardElementRegistry {
+        custompoint: JXG.BoardElementDefinition<
+            [parents: JXG.PointParents, attributes?: JXG.PointAttributes],
+            JXG.Point
+        >;
+    }
+}
+
 composition.setAttribute({ visible: true }).update();
 // @ts-expect-error Composition attributes use the same typed visual properties as geometry elements.
 composition.setAttribute({ visible: "yes" });
 
 const a = board.create("point", [0, 0]);
+const customPoint = board.create("custompoint", [1, 1]);
+customPoint.X().toFixed();
 const b = board.create("point", [2, 0]);
 const c = board.create("point", [0, 2]);
 const d = board.create("point", [-1, 1]);
@@ -129,12 +140,12 @@ board.create(
     }
 );
 board.create(
-    // @ts-expect-error Shadow offsets contain exactly two numeric coordinates.
     "line",
     [
         [0, 0],
         [1, 1]
     ],
+    // @ts-expect-error Shadow offsets contain exactly two numeric coordinates.
     { shadow: { offset: [0, 1, 2] } }
 );
 board.create("slider", [
@@ -314,7 +325,6 @@ board.create(
     }
 );
 board.create(
-    // @ts-expect-error View3D axes use one of the three runtime-supported placements.
     "view3d",
     [
         [-6, -3],
@@ -326,11 +336,11 @@ board.create(
         ]
     ],
     {
+        // @ts-expect-error View3D axes use one of the three runtime-supported placements.
         axesPosition: "outside"
     }
 );
 board.create(
-    // @ts-expect-error View3D navigation keys are limited to the runtime-supported modifiers.
     "view3d",
     [
         [-6, -3],
@@ -342,6 +352,7 @@ board.create(
         ]
     ],
     {
+        // @ts-expect-error View3D navigation keys are limited to the runtime-supported modifiers.
         az: { pointer: { key: "alt" } }
     }
 );
@@ -506,9 +517,18 @@ board.create(
     { face: "circle" }
 );
 
-// @ts-expect-error Point parents cannot contain two nested coordinates.
+// @ts-expect-error Board element names come from the extensible registry.
+board.create("rectangle", [
+    [0, 1],
+    [1, 1],
+    [1, 0],
+    [0, 0]
+]);
+
 board.create("point", [
+    // @ts-expect-error Point parents cannot contain two nested coordinates.
     [0, 0],
+    // @ts-expect-error Point parents cannot contain two nested coordinates.
     [1, 1]
 ]);
 // @ts-expect-error A line requires valid endpoints.
@@ -599,17 +619,17 @@ board.create("angle", [
 ]);
 // @ts-expect-error An axis needs a valid line definition.
 board.create("axis", [[0, 0]]);
-// @ts-expect-error A slider range requires minimum, initial and maximum.
 board.create("slider", [
     [-2, 0],
     [2, 0],
+    // @ts-expect-error A slider range requires minimum, initial and maximum.
     [0, 1]
 ]);
 // @ts-expect-error Translation requires two scalars.
 board.create("transform", [1], { type: "translate" });
 board.create(
-    // @ts-expect-error A 3x3 matrix is required for matrix transformation.
     "transform",
+    // @ts-expect-error A 3x3 matrix is required for matrix transformation.
     [
         [1, 0],
         [0, 1]
@@ -628,9 +648,9 @@ board.create("circumcircle", [
 ]);
 // @ts-expect-error A regular polygon has at least three sides.
 board.create("regularpolygon", [[0, 0], [1, 0], 2]);
-// @ts-expect-error A parabola directrix must be a line.
 board.create("parabola", [
     [0, 1],
+    // @ts-expect-error A parabola directrix must be a line.
     [0, 0]
 ]);
 // @ts-expect-error An inequality requires a line or curve.

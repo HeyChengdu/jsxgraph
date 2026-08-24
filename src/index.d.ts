@@ -4846,6 +4846,520 @@ declare namespace JXG {
     export type VectorFieldParents = readonly [VectorFieldFunction, FieldMesh, FieldMesh];
     export type SlopeFieldParents = readonly [ImplicitFunction, FieldMesh, FieldMesh];
 
+    /** Arguments and result associated with one Board.create element form. */
+    export interface BoardElementDefinition<Arguments extends readonly unknown[], Result> {
+        readonly arguments: Arguments;
+        readonly result: Result;
+    }
+
+    /**
+     * Extensible type registry for elements constructible through Board.create.
+     * Consumers may augment this interface when registering additional elements.
+     */
+    export interface BoardElementRegistry {
+        angle: BoardElementDefinition<
+            [parents: AngleParents, attributes?: AngleAttributes],
+            Angle
+        >;
+        arc: BoardElementDefinition<[parents: ArcParents, attributes?: ArcAttributes], Arc>;
+        arrow: BoardElementDefinition<
+            [parents: LineParents, attributes?: ArrowAttributes],
+            Arrow
+        >;
+        arrowparallel: BoardElementDefinition<
+            [parents: ParallelConstructionParents, attributes?: ArrowAttributes],
+            Arrow
+        >;
+        axis: BoardElementDefinition<[parents: AxisParents, attributes?: AxisAttributes], Axis>;
+        bisector: BoardElementDefinition<
+            [parents: BisectorParents, attributes?: BisectorAttributes],
+            Bisector
+        >;
+        bisectorlines: BoardElementDefinition<
+            [parents: BisectorlinesParents, attributes?: LineAttributes],
+            Composition
+        >;
+        boxplot: BoardElementDefinition<
+            [parents: BoxplotParents, attributes?: BoxplotAttributes],
+            Boxplot
+        >;
+        button: BoardElementDefinition<
+            [parents: ButtonParents, attributes?: ButtonAttributes],
+            Button
+        >;
+        cardinalspline: BoardElementDefinition<
+            [parents: CardinalsplineParents, attributes?: CardinalsplineAttributes],
+            Cardinalspline
+        >;
+        chart:
+            | BoardElementDefinition<
+                  [parents: ChartTableParents, attributes?: ChartAttributes],
+                  ChartResult[]
+              >
+            | BoardElementDefinition<
+                  [parents: ChartParents, attributes?: ChartAttributes],
+                  ChartResult
+              >;
+        checkbox: BoardElementDefinition<
+            [parents: CheckboxParents, attributes?: CheckboxAttributes],
+            Checkbox
+        >;
+        circle:
+            | BoardElementDefinition<
+                  [parents: CircleParents, attributes?: CircleAttributes],
+                  Circle
+              >
+            | BoardElementDefinition<
+                  [parents: TransformedCircleParents, attributes?: CircleAttributes],
+                  Ellipse
+              >;
+        circumcenter: BoardElementDefinition<
+            [parents: TrianglePointParents, attributes?: PointAttributes],
+            Point
+        >;
+        circumcircle: BoardElementDefinition<
+            [parents: CircumcircleParents, attributes?: CircumcircleAttributes],
+            Circumcircle
+        >;
+        circumcirclearc: BoardElementDefinition<
+            [parents: CircumcircleArcParents, attributes?: CircumcircleArcAttributes],
+            CircumcircleArc
+        >;
+        circumcirclemidpoint: BoardElementDefinition<
+            [parents: TrianglePointParents, attributes?: PointAttributes],
+            Point
+        >;
+        circumcirclesector: BoardElementDefinition<
+            [parents: CircumcircleSectorParents, attributes?: CircumcircleSectorAttributes],
+            CircumcircleSector
+        >;
+        comb: BoardElementDefinition<[parents: CombParents, attributes?: CombAttributes], Comb>;
+        conic: BoardElementDefinition<
+            [parents: ConicParents, attributes?: ConicAttributes],
+            Conic
+        >;
+        curve: BoardElementDefinition<
+            [parents: CurveParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        curvedifference: BoardElementDefinition<
+            [parents: CurveBooleanParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        curveintersection: BoardElementDefinition<
+            [parents: CurveBooleanParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        curveunion: BoardElementDefinition<
+            [parents: CurveBooleanParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        derivative: BoardElementDefinition<
+            [parents: readonly [Curve], attributes?: CurveAttributes],
+            Curve
+        >;
+        ellipse: BoardElementDefinition<
+            [parents: EllipseParents, attributes?: EllipseAttributes],
+            Ellipse
+        >;
+        fo: BoardElementDefinition<
+            [parents: ForeignObjectParents, attributes?: CoordsElementAttributes],
+            ForeignObject
+        >;
+        foreignobject: BoardElementDefinition<
+            [parents: ForeignObjectParents, attributes?: CoordsElementAttributes],
+            ForeignObject
+        >;
+        functiongraph: BoardElementDefinition<
+            [parents: FunctiongraphParents, attributes?: FunctiongraphAttributes],
+            Functiongraph
+        >;
+        glider: BoardElementDefinition<
+            [parents: GliderParents, attributes?: GliderAttributes],
+            Glider
+        >;
+        grid: BoardElementDefinition<
+            [parents?: GridParents, attributes?: GridAttributes],
+            Grid
+        >;
+        group: BoardElementDefinition<
+            [parents: GroupParents, attributes?: GroupAttributes],
+            Group
+        >;
+        hash: BoardElementDefinition<
+            [parents: HatchParents, attributes?: HatchAttributes],
+            Hatch
+        >;
+        hatch: BoardElementDefinition<
+            [parents: HatchParents, attributes?: HatchAttributes],
+            Hatch
+        >;
+        htmlslider: BoardElementDefinition<
+            [parents: HtmlsliderParents, attributes?: TextAttributes],
+            Text
+        >;
+        hyperbola: BoardElementDefinition<
+            [parents: HyperbolaParents, attributes?: HyperbolaAttributes],
+            Hyperbola
+        >;
+        image: BoardElementDefinition<
+            [parents: ImageParents, attributes?: ImageAttributes],
+            Image
+        >;
+        implicitcurve: BoardElementDefinition<
+            [parents: ImplicitcurveParents, attributes?: ImplicitCurveAttributes],
+            Curve
+        >;
+        incenter: BoardElementDefinition<
+            [parents: TrianglePointParents, attributes?: PointAttributes],
+            Point
+        >;
+        incircle: BoardElementDefinition<
+            [parents: TrianglePointParents, attributes?: IncircleAttributes],
+            Incircle
+        >;
+        inequality: BoardElementDefinition<
+            [parents: InequalityParents, attributes?: InequalityAttributes],
+            Inequality
+        >;
+        input: BoardElementDefinition<
+            [parents: InputParents, attributes?: InputAttributes],
+            Input
+        >;
+        integral: BoardElementDefinition<
+            [parents: IntegralParents, attributes?: IntegralAttributes],
+            Integral
+        >;
+        intersection: BoardElementDefinition<
+            [parents: IntersectionParents, attributes?: IntersectionAttributes],
+            Intersection
+        >;
+        legend: BoardElementDefinition<
+            [parents: AffineCoordinates, attributes?: GeometryElementAttributes],
+            Legend
+        >;
+        line: BoardElementDefinition<[parents: LineParents, attributes?: LineAttributes], Line>;
+        localnumberline: BoardElementDefinition<
+            [
+                parents: [LocalCoordinatePointParent, LocalCoordinatePointParent],
+                attributes?: LocalNumberLineAttributes
+            ],
+            LocalNumberLineComposition
+        >;
+        majorarc: BoardElementDefinition<
+            [parents: ArcParents, attributes?: ArcAttributes],
+            Arc
+        >;
+        majorsector: BoardElementDefinition<
+            [parents: SectorParents, attributes?: SectorAttributes],
+            Sector
+        >;
+        matrix: BoardElementDefinition<
+            [parents: [CellRows], attributes?: MatrixAttributes],
+            MatrixComposition
+        >;
+        measurement: BoardElementDefinition<
+            [parents: MeasurementParents, attributes?: TextAttributes],
+            Text
+        >;
+        metapostspline: BoardElementDefinition<
+            [parents: MetapostsplineParents, attributes?: MetapostsplineAttributes],
+            Metapostspline
+        >;
+        midpoint: BoardElementDefinition<
+            [parents: MidpointParents, attributes?: MidpointAttributes],
+            Midpoint
+        >;
+        minorarc: BoardElementDefinition<
+            [parents: ArcParents, attributes?: MinorArcAttributes],
+            MinorArc
+        >;
+        minorsector: BoardElementDefinition<
+            [parents: SectorParents, attributes?: SectorAttributes],
+            Sector
+        >;
+        mirrorelement:
+            | BoardElementDefinition<
+                  [parents: readonly [Point, Point], attributes?: MirrorelementAttributes],
+                  Mirrorelement
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Line, Point], attributes?: LineAttributes],
+                  Line
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Curve, Point], attributes?: CurveAttributes],
+                  Curve
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Polygon, Point], attributes?: PolygonAttributes],
+                  Polygon
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Circle, Point], attributes?: CircleAttributes],
+                  Circle | Ellipse
+              >;
+        mirrorpoint: BoardElementDefinition<
+            [parents: readonly [Point, Point], attributes?: PointAttributes],
+            Point
+        >;
+        nonreflexangle: BoardElementDefinition<
+            [parents: AngleParents, attributes?: AngleAttributes],
+            Angle
+        >;
+        normal: BoardElementDefinition<
+            [parents: NormalParents, attributes?: NormalAttributes],
+            Normal
+        >;
+        orthogonalprojection: BoardElementDefinition<
+            [parents: OrthogonalProjectionParents, attributes?: OrthogonalprojectionAttributes],
+            Orthogonalprojection
+        >;
+        otherintersection: BoardElementDefinition<
+            [parents: OtherIntersectionParents, attributes?: PointAttributes],
+            Point
+        >;
+        parabola: BoardElementDefinition<
+            [parents: ParabolaParents, attributes?: ParabolaAttributes],
+            Parabola
+        >;
+        parallel: BoardElementDefinition<
+            [parents: ParallelParents, attributes?: ParallelAttributes],
+            Parallel
+        >;
+        parallelogram: BoardElementDefinition<
+            [parents: ParallelogramParents, attributes?: PolygonAttributes],
+            Polygon
+        >;
+        parallelpoint: BoardElementDefinition<
+            [parents: ParallelConstructionParents, attributes?: PointAttributes],
+            Point
+        >;
+        perpendicular: BoardElementDefinition<
+            [parents: PerpendicularParents, attributes?: PerpendicularAttributes],
+            Perpendicular
+        >;
+        perpendicularpoint: BoardElementDefinition<
+            [parents: PerpendicularPointParents, attributes?: PointAttributes],
+            Point
+        >;
+        perpendicularsegment: BoardElementDefinition<
+            [parents: PerpendicularParents, attributes?: LineAttributes],
+            Segment
+        >;
+        plot: BoardElementDefinition<
+            [parents: FunctiongraphParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        point: BoardElementDefinition<
+            [parents: PointParents, attributes?: PointAttributes],
+            Point
+        >;
+        polar: BoardElementDefinition<
+            [parents: PolarlineParents, attributes?: LineAttributes],
+            Line
+        >;
+        polarline: BoardElementDefinition<
+            [parents: PolarlineParents, attributes?: LineAttributes],
+            Line
+        >;
+        polepoint: BoardElementDefinition<
+            [parents: PolepointParents, attributes?: PointAttributes],
+            Point
+        >;
+        polygon: BoardElementDefinition<
+            [parents: PolygonParents, attributes?: PolygonAttributes],
+            Polygon
+        >;
+        polygonalchain: BoardElementDefinition<
+            [parents: PolygonalChainParents, attributes?: PolygonAttributes],
+            Polygon
+        >;
+        radicalaxis: BoardElementDefinition<
+            [parents: RadicalaxisParents, attributes?: LineAttributes],
+            Line
+        >;
+        reflection:
+            | BoardElementDefinition<
+                  [parents: readonly [Point, Line], attributes?: PointAttributes],
+                  Point
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Line, Line], attributes?: LineAttributes],
+                  Line
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Curve, Line], attributes?: CurveAttributes],
+                  Curve
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Polygon, Line], attributes?: PolygonAttributes],
+                  Polygon
+              >
+            | BoardElementDefinition<
+                  [parents: readonly [Circle, Line], attributes?: CircleAttributes],
+                  Circle | Ellipse
+              >;
+        reflexangle: BoardElementDefinition<
+            [parents: AngleParents, attributes?: AngleAttributes],
+            Angle
+        >;
+        regularpolygon: BoardElementDefinition<
+            [parents: RegularPolygonParents<number>, attributes?: PolygonAttributes],
+            RegularPolygon
+        >;
+        riemannsum: BoardElementDefinition<
+            [parents: RiemannsumParents, attributes?: CurveAttributes],
+            Riemannsum
+        >;
+        sector: BoardElementDefinition<
+            [parents: SectorParents, attributes?: SectorAttributes],
+            Sector
+        >;
+        segment: BoardElementDefinition<
+            [parents: SegmentParents, attributes?: SegmentAttributes],
+            Segment
+        >;
+        semicircle: BoardElementDefinition<
+            [parents: SemicircleParents, attributes?: SemicircleAttributes],
+            Semicircle
+        >;
+        sketchcurve: BoardElementDefinition<
+            [parents?: readonly [], attributes?: CurveAttributes],
+            Curve
+        >;
+        slider: BoardElementDefinition<
+            [parents: SliderParents, attributes?: SliderAttributes],
+            Slider
+        >;
+        slopefield: BoardElementDefinition<
+            [parents: SlopeFieldParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        slopetriangle: BoardElementDefinition<
+            [parents: SlopetriangleParents, attributes?: SlopetriangleAttributes],
+            Slopetriangle
+        >;
+        smartlabel: BoardElementDefinition<
+            [parents: SmartLabelParents, attributes?: TextAttributes],
+            Text
+        >;
+        spline: BoardElementDefinition<
+            [parents: SplineParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        stepfunction: BoardElementDefinition<
+            [parents: StepfunctionParents, attributes?: StepfunctionAttributes],
+            Stepfunction
+        >;
+        table: BoardElementDefinition<
+            [parents: [CellRows], attributes?: TableAttributes],
+            TableComposition
+        >;
+        tangent: BoardElementDefinition<
+            [parents: TangentParents, attributes?: TangentAttributes],
+            Tangent
+        >;
+        tangentto: BoardElementDefinition<
+            [parents: TangentToParents, attributes?: LineAttributes],
+            Line
+        >;
+        tapemeasure: BoardElementDefinition<
+            [parents: TapemeasureParents, attributes?: TapemeasureAttributes],
+            Tapemeasure
+        >;
+        text: BoardElementDefinition<[parents: TextParents, attributes?: TextAttributes], Text>;
+        ticks: BoardElementDefinition<
+            [parents: TicksParents, attributes?: TicksAttributes],
+            Ticks
+        >;
+        tracecurve: BoardElementDefinition<
+            [parents: TracecurveParents, attributes?: TracecurveAttributes],
+            Tracecurve
+        >;
+        transform:
+            | BoardElementDefinition<
+                  [
+                      parents: TransformLinearParents,
+                      attributes: { type: "translate" | "scale" | "shear" }
+                  ],
+                  Transformation
+              >
+            | BoardElementDefinition<
+                  [parents: TransformReflectParents, attributes: { type: "reflect" }],
+                  Transformation
+              >
+            | BoardElementDefinition<
+                  [parents: TransformRotateParents, attributes: { type: "rotate" }],
+                  Transformation
+              >
+            | BoardElementDefinition<
+                  [parents: TransformAffineParents, attributes: { type: "affine" }],
+                  Transformation
+              >
+            | BoardElementDefinition<
+                  [parents: TransformAffineMatrixParents, attributes: { type: "affinematrix" }],
+                  Transformation
+              >
+            | BoardElementDefinition<
+                  [parents: TransformGenericParents, attributes: { type: "generic" }],
+                  Transformation
+              >
+            | BoardElementDefinition<
+                  [parents: TransformMatrixParents, attributes: { type: "matrix" }],
+                  Transformation
+              >;
+        turtle: BoardElementDefinition<
+            [parents?: TurtleParents, attributes?: TurtleAttributes],
+            Turtle
+        >;
+        vectorfield: BoardElementDefinition<
+            [parents: VectorFieldParents, attributes?: CurveAttributes],
+            Curve
+        >;
+        view3d: BoardElementDefinition<
+            [parents: View3DParents, attributes?: View3DAttributes],
+            View3D
+        >;
+    }
+
+    export type BoardElementType = keyof BoardElementRegistry;
+
+    type BoardElementArgumentsForDefinition<Definition> =
+        Definition extends BoardElementDefinition<infer Arguments, unknown> ? Arguments : never;
+
+    export type BoardElementArguments<ElementType extends BoardElementType> =
+        BoardElementArgumentsForDefinition<BoardElementRegistry[ElementType]>;
+
+    export type BoardElementResult<
+        ElementType extends BoardElementType,
+        Arguments extends BoardElementArguments<ElementType>
+    > = BoardElementRegistry[ElementType] extends infer Definition
+        ? Definition extends BoardElementDefinition<infer CandidateArguments, infer Result>
+            ? Arguments extends CandidateArguments
+                ? Result
+                : never
+            : never
+        : never;
+
+    type ValidRegularPolygonArguments<Arguments> = Arguments extends readonly [
+        parents: infer Parents,
+        ...rest: readonly unknown[]
+    ]
+        ? Parents extends readonly [unknown, unknown, infer Sides]
+            ? Sides extends 0 | 1 | 2
+                ? never
+                : Arguments
+            : Arguments
+        : Arguments;
+
+    type ValidBoardElementArguments<
+        ElementType extends BoardElementType,
+        Arguments extends BoardElementArguments<ElementType>
+    > = ElementType extends "regularpolygon"
+        ? ValidRegularPolygonArguments<Arguments>
+        : Arguments;
+
     /**
      *
      */
@@ -5199,891 +5713,15 @@ declare namespace JXG {
         clickRightArrow(): this;
         clickUpArrow(): this;
         /**
-         * Creates a new geometric element of type elementType.
-         * @param elementType Type of the element to be constructed given as a string e.g. 'point' or 'circle'.
-         * @param parents
-         * @param attributes
+         * Creates a registered geometric element with element-specific parents, attributes, and result types.
          */
-        /**
-         * @param elementType 'angle'
-         * @param parents [centerPoint, radiusPoint, anglePoint] or [line1, line2, coords1 or direction1, coords2 or direction2]
-         * @param attributes
-         */
-        create(
-            elementType: "angle",
-            parents: AngleParents,
-            attributes?: AngleAttributes
-        ): Angle;
-        /**
-         *
-         * @param elementType 'arc'
-         * @param parents
-         * @param attributes
-         */
-        create(elementType: "arc", parents: ArcParents, attributes?: ArcAttributes): Arc;
-        /**
-         *
-         * @param elementType 'arrow'
-         * @param parents
-         * @param attributes
-         */
-        create(elementType: "arrow", parents: LineParents, attributes?: ArrowAttributes): Arrow;
-        /**
-         *
-         * @param elementType 'axis'
-         * @param parents
-         * @param attributes
-         */
-        create(elementType: "axis", parents: AxisParents, attributes?: AxisAttributes): Axis;
-        /**
-         *
-         * @param elementType 'bisector'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "bisector",
-            parents: BisectorParents,
-            attributes?: BisectorAttributes
-        ): Bisector;
-        /**
-         *
-         * @param elementType 'boxplot'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "boxplot",
-            parents: BoxplotParents,
-            attributes?: BoxplotAttributes
-        ): Boxplot;
-        /**
-         *
-         * @param elementType 'button'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "button",
-            parents: ButtonParents,
-            attributes?: ButtonAttributes
-        ): Button;
-        /**
-         *
-         * @param elementType 'cardinalspline'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "cardinalspline",
-            parents: CardinalsplineParents,
-            attributes?: CardinalsplineAttributes
-        ): Cardinalspline;
-        /**
-         *
-         * @param elementType 'chart'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "chart",
-            parents: ChartTableParents,
-            attributes?: ChartAttributes
-        ): ChartResult[];
-        create(
-            elementType: "chart",
-            parents: ChartParents,
-            attributes?: ChartAttributes
-        ): ChartResult;
-        /**
-         *
-         * @param elementType 'checkbox'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "checkbox",
-            parents: CheckboxParents,
-            attributes?: CheckboxAttributes
-        ): Checkbox;
-        /**
-         *
-         * @param elementType 'circle'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "circle",
-            parents: CircleParents,
-            attributes?: CircleAttributes
-        ): Circle;
-        create(
-            elementType: "circle",
-            parents: TransformedCircleParents,
-            attributes?: CircleAttributes
-        ): Ellipse;
-        /**
-         * @param elementType 'circumcircle'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "circumcircle",
-            parents: CircumcircleParents,
-            attributes?: CircumcircleAttributes
-        ): Circumcircle;
-        /**
-         * @param elementType 'circumcirclearc'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "circumcirclearc",
-            parents: CircumcircleArcParents,
-            attributes?: CircumcircleArcAttributes
-        ): CircumcircleArc;
-        /**
-         * @param elementType 'circumcirclesector'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "circumcirclesector",
-            parents: CircumcircleSectorParents,
-            attributes?: CircumcircleSectorAttributes
-        ): CircumcircleSector;
-        /**
-         *
-         * @param elementType 'comb'
-         * @param parents
-         * @param attributes
-         */
-        create(elementType: "comb", parents: CombParents, attributes?: CombAttributes): Comb;
-        /**
-         *
-         * @param elementType 'conic'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "conic",
-            parents: ConicParents,
-            attributes?: ConicAttributes
-        ): Conic;
-        /**
-         *
-         * @param elementType 'curve'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "curve",
-            parents: CurveParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        /**
-         *
-         * @param elementType 'curvedifference'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "curvedifference",
-            parents: CurveBooleanParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        /**
-         *
-         * @param elementType 'curveintersection'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "curveintersection",
-            parents: CurveBooleanParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        /**
-         *
-         * @param elementType 'curveunion'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "curveunion",
-            parents: CurveBooleanParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        /**
-         *
-         * @param elementType 'ellipse'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "ellipse",
-            parents: EllipseParents,
-            attributes?: EllipseAttributes
-        ): Ellipse;
-        /**
-         *
-         * @param elementType 'functiongraph'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "functiongraph",
-            parents: FunctiongraphParents,
-            attributes?: FunctiongraphAttributes
-        ): Functiongraph;
-        /**
-         *
-         * @param elementType 'glider'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "glider",
-            parents: GliderParents,
-            attributes?: GliderAttributes
-        ): Glider;
-        /**
-         *
-         * @param elementType 'grid'
-         * @param parents
-         * @param attributes
-         */
-        create(elementType: "grid", parents?: GridParents, attributes?: GridAttributes): Grid;
-        /**
-         *
-         * @param elementType 'group'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "group",
-            parents: GroupParents,
-            attributes?: GroupAttributes
-        ): Group;
-        /**
-         *
-         * @param elementType 'hatch'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "hatch" | "hash",
-            parents: HatchParents,
-            attributes?: HatchAttributes
-        ): Hatch;
-        /**
-         *
-         * @param elementType 'hyperbola'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "hyperbola",
-            parents: HyperbolaParents,
-            attributes?: HyperbolaAttributes
-        ): Hyperbola;
-        /**
-         *
-         * @param elementType 'image'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "image",
-            parents: ImageParents,
-            attributes?: ImageAttributes
-        ): Image;
-        create(
-            elementType: "foreignobject" | "fo",
-            parents: ForeignObjectParents,
-            attributes?: CoordsElementAttributes
-        ): ForeignObject;
-        /**
-         *
-         * @param elementType 'inequality'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "inequality",
-            parents: InequalityParents,
-            attributes?: InequalityAttributes
-        ): Inequality;
-        /**
-         *
-         * @param elementType 'input'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "input",
-            parents: InputParents,
-            attributes?: InputAttributes
-        ): Input;
-        /**
-         *
-         * @param elementType 'integral'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "integral",
-            parents: IntegralParents,
-            attributes?: IntegralAttributes
-        ): Integral;
-        /**
-         *
-         * @param elementType 'intersection'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "intersection",
-            parents: IntersectionParents,
-            attributes?: IntersectionAttributes
-        ): Intersection;
-        /**
-         *
-         * @param elementType 'line'
-         * @param parents
-         * @param attributes
-         */
-        create(elementType: "line", parents: LineParents, attributes?: LineAttributes): Line;
-        /**
-         *
-         * @param elementType 'metapostspline'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "metapostspline",
-            parents: MetapostsplineParents,
-            attributes?: MetapostsplineAttributes
-        ): Metapostspline;
-        /**
-         *
-         * @param elementType 'midpoint'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "midpoint",
-            parents: MidpointParents,
-            attributes?: MidpointAttributes
-        ): Midpoint;
-        create(
-            elementType: "parallel",
-            parents: ParallelParents,
-            attributes?: ParallelAttributes
-        ): Parallel;
-        /**
-         *
-         * @param elementType 'minorarc'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "minorarc",
-            parents: ArcParents,
-            attributes?: MinorArcAttributes
-        ): MinorArc;
-        create(elementType: "majorarc", parents: ArcParents, attributes?: ArcAttributes): Arc;
-        create(
-            elementType: "minorsector",
-            parents: SectorParents,
-            attributes?: SectorAttributes
-        ): Sector;
-        create(
-            elementType: "majorsector",
-            parents: SectorParents,
-            attributes?: SectorAttributes
-        ): Sector;
-        /**
-         *
-         * @param elementType 'mirrorelement'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "mirrorelement",
-            parents: readonly [Point, Point],
-            attributes?: MirrorelementAttributes
-        ): Mirrorelement;
-        create(
-            elementType: "mirrorelement",
-            parents: readonly [Line, Point],
-            attributes?: LineAttributes
-        ): Line;
-        create(
-            elementType: "mirrorelement",
-            parents: readonly [Curve, Point],
-            attributes?: CurveAttributes
-        ): Curve;
-        create(
-            elementType: "mirrorelement",
-            parents: readonly [Polygon, Point],
-            attributes?: PolygonAttributes
-        ): Polygon;
-        create(
-            elementType: "mirrorelement",
-            parents: readonly [Circle, Point],
-            attributes?: CircleAttributes
-        ): Circle | Ellipse;
-        /**
-         *
-         * @param elementType 'normal'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "normal",
-            parents: NormalParents,
-            attributes?: NormalAttributes
-        ): Normal;
-        /**
-         *
-         * @param elementType 'parabola'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "parabola",
-            parents: ParabolaParents,
-            attributes?: ParabolaAttributes
-        ): Parabola;
-        /**
-         *
-         * @param elementType 'perpendicular'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "perpendicular",
-            parents: PerpendicularParents,
-            attributes?: PerpendicularAttributes
-        ): Perpendicular;
-        /**
-         *
-         * @param elementType 'plot'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "plot",
-            parents: FunctiongraphParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        /**
-         *
-         * @param elementType 'point'
-         * @param parents [x, y], [z, x, y], and [element, transformation].
-         * @param attributes
-         */
-        create(
-            elementType: "point",
-            parents: PointParents,
-            attributes?: PointAttributes
-        ): Point;
-        /**
-         *
-         * @param elementType 'polygon'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "polygon",
-            parents: PolygonParents,
-            attributes?: PolygonAttributes
-        ): Polygon;
-        /**
-         *
-         * @param elementType 'polygonalchain'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "polygonalchain",
-            parents: PolygonalChainParents,
-            attributes?: PolygonAttributes
-        ): Polygon;
-        create(
-            elementType: "perpendicularpoint",
-            parents: PerpendicularPointParents,
-            attributes?: PointAttributes
-        ): Point;
-        /**
-         *
-         * @param elementType 'regularpolygon'
-         * @param parents
-         * @param attributes
-         */
-        create<const Sides extends number>(
-            elementType: "regularpolygon",
-            parents: RegularPolygonParents<Sides>,
-            attributes?: PolygonAttributes
-        ): RegularPolygon;
-        /**
-         *
-         * @param elementType 'reflection'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "reflection",
-            parents: readonly [Point, Line],
-            attributes?: PointAttributes
-        ): Point;
-        create(
-            elementType: "reflection",
-            parents: readonly [Line, Line],
-            attributes?: LineAttributes
-        ): Line;
-        create(
-            elementType: "reflection",
-            parents: readonly [Curve, Line],
-            attributes?: CurveAttributes
-        ): Curve;
-        create(
-            elementType: "reflection",
-            parents: readonly [Polygon, Line],
-            attributes?: PolygonAttributes
-        ): Polygon;
-        create(
-            elementType: "reflection",
-            parents: readonly [Circle, Line],
-            attributes?: CircleAttributes
-        ): Circle | Ellipse;
-        /**
-         *
-         * @param elementType 'riemannsum'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "riemannsum",
-            parents: RiemannsumParents,
-            attributes?: CurveAttributes
-        ): Riemannsum;
-        /**
-         *
-         * @param elementType 'sector'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "sector",
-            parents: SectorParents,
-            attributes?: SectorAttributes
-        ): Sector;
-        /**
-         *
-         * @param elementType 'semicircle'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "semicircle",
-            parents: SemicircleParents,
-            attributes?: SemicircleAttributes
-        ): Semicircle;
-        /**
-         *
-         * @param elementType 'segment'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "segment",
-            parents: SegmentParents,
-            attributes?: SegmentAttributes
-        ): Segment;
-        /**
-         *
-         * @param elementType 'slider'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "slider",
-            parents: SliderParents,
-            attributes?: SliderAttributes
-        ): Slider;
-        create(
-            elementType: "spline",
-            parents: SplineParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        /**
-         *
-         * @param elementType 'slopetriangle'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "slopetriangle",
-            parents: SlopetriangleParents,
-            attributes?: SlopetriangleAttributes
-        ): Slopetriangle;
-        /**
-         *
-         * @param elementType 'stepfunction'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "stepfunction",
-            parents: StepfunctionParents,
-            attributes?: StepfunctionAttributes
-        ): Stepfunction;
-        /**
-         *
-         * @param elementType 'tangent'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "tangent",
-            parents: TangentParents,
-            attributes?: TangentAttributes
-        ): Tangent;
-        /**
-         *
-         * @param elementType 'tapemeasure'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "tapemeasure",
-            parents: TapemeasureParents,
-            attributes?: TapemeasureAttributes
-        ): Tapemeasure;
-        /**
-         *
-         * @param elementType 'text'
-         * @param parents
-         * @param attributes
-         */
-        create(elementType: "text", parents: TextParents, attributes?: TextAttributes): Text;
-        /**
-         *
-         * @param elementType 'ticks'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "ticks",
-            parents: TicksParents,
-            attributes?: TicksAttributes
-        ): Ticks;
-        /**
-         *
-         * @param elementType 'tracecurve'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "tracecurve",
-            parents: TracecurveParents,
-            attributes?: TracecurveAttributes
-        ): Tracecurve;
-        /**
-         *
-         * @param elementType 'transform'
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "transform",
-            parents: TransformLinearParents,
-            attributes: { type: "translate" | "scale" | "shear" }
-        ): Transformation;
-        create(
-            elementType: "transform",
-            parents: TransformReflectParents,
-            attributes: { type: "reflect" }
-        ): Transformation;
-        create(
-            elementType: "transform",
-            parents: TransformRotateParents,
-            attributes: { type: "rotate" }
-        ): Transformation;
-        create(
-            elementType: "transform",
-            parents: TransformAffineParents,
-            attributes: { type: "affine" }
-        ): Transformation;
-        create(
-            elementType: "transform",
-            parents: TransformAffineMatrixParents,
-            attributes: { type: "affinematrix" }
-        ): Transformation;
-        create(
-            elementType: "transform",
-            parents: TransformGenericParents,
-            attributes: { type: "generic" }
-        ): Transformation;
-        create(
-            elementType: "transform",
-            parents: TransformMatrixParents,
-            attributes: { type: "matrix" }
-        ): Transformation;
-        /**
-         * Constructs a new Turtle object.
-         * @param elementType 'turtle'
-         * @param parents Start position and start direction of the turtle. Possible values are [x, y, angle] [[x, y], angle] [x, y] [[x, y]].
-         * @param attributes Attributes to change the visual properties of the turtle object All angles are in degrees.
-         */
-        create(
-            elementType: "turtle",
-            parents?: TurtleParents,
-            attributes?: TurtleAttributes
-        ): Turtle;
-        /**
-         *
-         * @param elementType
-         * @param parents
-         * @param attributes
-         */
-        create(
-            elementType: "view3d",
-            parents: View3DParents,
-            attributes?: View3DAttributes
-        ): View3D;
-        create(
-            elementType: "implicitcurve",
-            parents: ImplicitcurveParents,
-            attributes?: ImplicitCurveAttributes
-        ): Curve;
-        create(
-            elementType: "nonreflexangle",
-            parents: AngleParents,
-            attributes?: AngleAttributes
-        ): Angle;
-        create(
-            elementType: "reflexangle",
-            parents: AngleParents,
-            attributes?: AngleAttributes
-        ): Angle;
-        create(
-            elementType: "arrowparallel",
-            parents: ParallelConstructionParents,
-            attributes?: ArrowAttributes
-        ): Arrow;
-        create(
-            elementType: "bisectorlines",
-            parents: BisectorlinesParents,
-            attributes?: LineAttributes
-        ): Composition;
-        create(
-            elementType: "circumcenter" | "circumcirclemidpoint",
-            parents: TrianglePointParents,
-            attributes?: PointAttributes
-        ): Point;
-        create(
-            elementType: "incenter",
-            parents: TrianglePointParents,
-            attributes?: PointAttributes
-        ): Point;
-        create(
-            elementType: "incircle",
-            parents: TrianglePointParents,
-            attributes?: IncircleAttributes
-        ): Incircle;
-        create(
-            elementType: "orthogonalprojection",
-            parents: OrthogonalProjectionParents,
-            attributes?: OrthogonalprojectionAttributes
-        ): Orthogonalprojection;
-        create(
-            elementType: "mirrorpoint",
-            parents: readonly [Point, Point],
-            attributes?: PointAttributes
-        ): Point;
-        create(
-            elementType: "parallelpoint",
-            parents: ParallelConstructionParents,
-            attributes?: PointAttributes
-        ): Point;
-        create(
-            elementType: "perpendicularsegment",
-            parents: PerpendicularParents,
-            attributes?: LineAttributes
-        ): Segment;
-        create(
-            elementType: "otherintersection",
-            parents: OtherIntersectionParents,
-            attributes?: PointAttributes
-        ): Point;
-        create(
-            elementType: "parallelogram",
-            parents: ParallelogramParents,
-            attributes?: PolygonAttributes
-        ): Polygon;
-        create(
-            elementType: "polar" | "polarline",
-            parents: PolarlineParents,
-            attributes?: LineAttributes
-        ): Line;
-        create(
-            elementType: "polepoint",
-            parents: PolepointParents,
-            attributes?: PointAttributes
-        ): Point;
-        create(
-            elementType: "radicalaxis",
-            parents: RadicalaxisParents,
-            attributes?: LineAttributes
-        ): Line;
-        create(
-            elementType: "tangentto",
-            parents: TangentToParents,
-            attributes?: LineAttributes
-        ): Line;
-        create(
-            elementType: "derivative",
-            parents: readonly [Curve],
-            attributes?: CurveAttributes
-        ): Curve;
-        create(
-            elementType: "legend",
-            parents: AffineCoordinates,
-            attributes?: GeometryElementAttributes
-        ): Legend;
-        create(
-            elementType: "htmlslider",
-            parents: HtmlsliderParents,
-            attributes?: TextAttributes
-        ): Text;
-        create(
-            elementType: "measurement",
-            parents: MeasurementParents,
-            attributes?: TextAttributes
-        ): Text;
-        create(
-            elementType: "smartlabel",
-            parents: SmartLabelParents,
-            attributes?: TextAttributes
-        ): Text;
-        create(
-            elementType: "vectorfield",
-            parents: VectorFieldParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        create(
-            elementType: "slopefield",
-            parents: SlopeFieldParents,
-            attributes?: CurveAttributes
-        ): Curve;
-        create(
-            elementType: "sketchcurve",
-            parents?: readonly [],
-            attributes?: CurveAttributes
-        ): Curve;
+        create<
+            const ElementType extends BoardElementType,
+            const Arguments extends BoardElementArguments<ElementType>
+        >(
+            elementType: ElementType,
+            ...args: ValidBoardElementArguments<ElementType, Arguments>
+        ): BoardElementResult<ElementType, Arguments>;
         /**
          * @param c1
          * @param c2
@@ -7583,24 +7221,6 @@ declare namespace JXG {
     export interface TextAttributes {
         /** Visible character progress from zero to one. Dynamic functions are evaluated on update. */
         typewriter?: TypewriterProgress;
-    }
-
-    export interface Board {
-        create(
-            elementType: "localnumberline",
-            parents: [LocalCoordinatePointParent, LocalCoordinatePointParent],
-            attributes?: LocalNumberLineAttributes
-        ): LocalNumberLineComposition;
-        create(
-            elementType: "table",
-            parents: [CellRows],
-            attributes?: TableAttributes
-        ): TableComposition;
-        create(
-            elementType: "matrix",
-            parents: [CellRows],
-            attributes?: MatrixAttributes
-        ): MatrixComposition;
     }
 }
 
