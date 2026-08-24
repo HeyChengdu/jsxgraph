@@ -3,6 +3,12 @@ import JXG from "jsxgraph";
 declare const board: JXG.Board;
 declare const composition: JXG.Composition;
 
+JXG.boards.demo?.fullUpdate();
+const pointCreator = JXG.elements.point;
+if (pointCreator) {
+    pointCreator(board, [0, 0], { name: "created-from-registry" });
+}
+
 declare module "jsxgraph" {
     interface BoardElementRegistry {
         custompoint: JXG.BoardElementDefinition<
@@ -74,6 +80,16 @@ const polygon = board.create("polygon", [a, b, c]);
 
 const selectedPoint = board.select(a);
 selectedPoint.X().toFixed();
+const pointFromObjectTable = board.objects[a.id];
+if (pointFromObjectTable instanceof JXG.GeometryElement) {
+    pointFromObjectTable.getName();
+}
+board.animationObjects[a.id]?.getName();
+board.highlightedObjects[a.id]?.getName();
+board.fullscreenListener(new Event("fullscreenchange"));
+board.pointerDownListener(new PointerEvent("pointerdown"), a, false);
+// @ts-expect-error Pointer listeners require DOM PointerEvent objects.
+board.pointerDownListener({ type: "pointerdown" }, a);
 const selectedByFilter = board.select((element) => element.getName() === "A");
 selectedByFilter.objectsList.length.toFixed();
 const selectedByName = board.select("A");

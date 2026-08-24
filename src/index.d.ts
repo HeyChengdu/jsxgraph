@@ -19,7 +19,7 @@ declare namespace JXG {
      * Store a reference to every board in this central list.
      * This will at some point replace JXG.JSXGraph.boards.
      */
-    export const boards: unknown;
+    export const boards: Record<string, Board>;
 
     export type CoordType = 1 | 2;
 
@@ -171,7 +171,7 @@ declare namespace JXG {
     /**
      * Associative array that keeps track of all constructable elements registered via JXG.registerElement.
      */
-    export const elements: { [elementType: string]: unknown };
+    export const elements: Record<string, BoardElementCreator>;
 
     /**
      * A JessieCode object provides an interface to the parser and stores all variables and objects used within a JessieCode script.
@@ -419,14 +419,12 @@ declare namespace JXG {
      * @param element The elements name. This is case-insensitive, existing elements with the same name will be overwritten.
      * @param creator The factory function that creates the GeometryElement.
      */
-    export function registerElement(
-        element: string,
-        creator: (
-            board: Board,
-            parents: unknown[],
-            attributes: Record<string, unknown>
-        ) => GeometryElement | Composition | Array<GeometryElement>
-    ): void;
+    export type BoardElementCreator = (
+        board: Board,
+        parents: unknown[],
+        attributes: Record<string, unknown>
+    ) => GeometryElement | Composition | Array<GeometryElement>;
+    export function registerElement(element: string, creator: BoardElementCreator): void;
     export function registerReader(reader: (...args: never[]) => unknown, ext: string[]): void;
     export function removeAllEvents(obj: unknown, type: string, owner: unknown): void;
     export function removeElementFromArray<T>(ar: T[], el: T): T;
@@ -5081,7 +5079,8 @@ declare namespace JXG {
         /** Curves used by pointer sketching. */
         sketches: Array<Curve | null>;
         addEvent(event: string, handler: (evt: PointerEvent) => void, context?: {}): {};
-        animationObjects: unknown;
+        /** Animated geometry elements indexed by element id. */
+        animationObjects: Record<string, GeometryElement | null>;
         attr: BoardAttributes;
         BOARD_MODE_DRAG: number;
         BOARD_MODE_MOVE_ORIGIN: number;
@@ -5146,7 +5145,7 @@ declare namespace JXG {
         /**
          * Grids keeps track of all grids attached to this board.
          */
-        grids: unknown[];
+        grids: Grid[];
         /**
          * An associative array containing all groups belonging to the board.
          * Key is the id of the group and value is a reference to the object.
@@ -5186,7 +5185,7 @@ declare namespace JXG {
         /**
          * An associative array containing all highlighted elements belonging to the board.
          */
-        highlightedObjects: { [name: string]: unknown };
+        highlightedObjects: Record<string, GeometryElement>;
         /**
          * Information box close to points in which the coordinates of the point are displayed.
          * Uses CSS class .JXGinfobox.
@@ -5230,7 +5229,7 @@ declare namespace JXG {
          * An associative array containing all geometric objects belonging to the board.
          * Key is the id of the object and value is a reference to the object.
          */
-        objects: { [id: string]: unknown };
+        objects: Record<string, GeometryElement | Composition>;
         /**
          * An array containing all geometric objects on the board in the order of construction.
          */
@@ -5403,7 +5402,7 @@ declare namespace JXG {
          * @param obj The object to add.
          */
         finalizeAdding(obj: unknown): unknown;
-        fullscreenListener(evt: unknown): unknown;
+        fullscreenListener(event: Event): void;
         fullUpdate(): this;
         generateId(): string;
         generateName(object: unknown): string;
@@ -5451,10 +5450,14 @@ declare namespace JXG {
          * @returns Reference to the object.
          */
         on(event: string, handler: (evt: PointerEvent) => void, context?: {}): {};
-        pointerDownListener(event: unknown, object: unknown): boolean;
-        pointerMoveListener(event: unknown): boolean;
-        pointerOutListener(event: unknown): boolean;
-        pointerUpListener(event: unknown): boolean;
+        pointerDownListener(
+            event: PointerEvent,
+            object?: GeometryElement,
+            allowDefaultEventHandling?: boolean
+        ): boolean | void;
+        pointerMoveListener(event: PointerEvent): boolean;
+        pointerOutListener(event: PointerEvent): boolean;
+        pointerUpListener(event: PointerEvent): boolean;
         prepareUpdate(): this;
         removeAncestors(element: GeometryElement): this;
         removeChild(board: Board): Board;
