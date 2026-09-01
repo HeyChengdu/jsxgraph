@@ -504,7 +504,10 @@ JXG.JSXGraph = {
         options = Type.deepCopy(Options, theme, true);    // Copy global options
         attr = this._setAttributes(attributes, options);  // Merge user supplied attributes into global options
 
-        dimensions = Env.getDimensions(box, attr.document);
+        dimensions = Type.exists(attr.dimensions) ? {
+            width: attr.dimensions.width,
+            height: attr.dimensions.height
+        } : Env.getDimensions(box, attr.document);
 
         if (attr.unitx || attr.unity) {
             originX = Type.def(attr.originx, 150);

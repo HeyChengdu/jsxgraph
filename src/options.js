@@ -55,6 +55,16 @@ JXG.Options = {
      * Options that are used directly within the board class
      */
     board: {
+        /**
+         * Explicit logical viewport dimensions used during board initialization.
+         * If omitted, JSXGraph measures the HTML container. This is useful for
+         * detached or hidden containers whose DOM dimensions are unavailable.
+         *
+         * @name JXG.Board#dimensions
+         * @type {null|Object}
+         * @default null
+         */
+        dimensions: null,
         /**#@+
          * @visprop
          */

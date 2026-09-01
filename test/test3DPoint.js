@@ -66,7 +66,8 @@ describe("Test 3D points", function () {
     });
 
     it("keeps finite Canvas coordinates after resizing a detached 3D board", function () {
-        var canvasTarget = document.createElement("div"),
+        var canvasHost = document.createElement("div"),
+            canvasTarget = document.createElement("div"),
             canvasBoard,
             canvasView,
             point;
@@ -74,9 +75,11 @@ describe("Test 3D points", function () {
         canvasTarget.id = "jxgbox-point3d-canvas";
         canvasTarget.style.width = "500px";
         canvasTarget.style.height = "500px";
-        document.body.appendChild(canvasTarget);
-
+        canvasHost.style.display = "none";
+        canvasHost.appendChild(canvasTarget);
+        document.body.appendChild(canvasHost);
         canvasBoard = JXG.JSXGraph.initBoard(canvasTarget.id, {
+            dimensions: {width: 1152, height: 627},
             renderer: "canvas",
             axis: false,
             grid: false,
@@ -84,10 +87,6 @@ describe("Test 3D points", function () {
             showCopyright: false,
             showNavigation: false
         });
-        canvasTarget.remove();
-        canvasBoard.unitX = NaN;
-        canvasBoard.unitY = NaN;
-        canvasBoard.resizeContainer(1152, 627, true, true);
         expect(canvasBoard.canvasWidth).toEqual(1152);
         expect(canvasBoard.canvasHeight).toEqual(627);
         expect(Number.isFinite(canvasBoard.unitX)).toBeTrue();
@@ -112,5 +111,6 @@ describe("Test 3D points", function () {
         expect(Number.isFinite(point.element2D.coords.scrCoords[2])).toBeTrue();
 
         JXG.JSXGraph.freeBoard(canvasBoard);
+        canvasHost.remove();
     });
 });

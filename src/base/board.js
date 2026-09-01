@@ -5772,8 +5772,7 @@ JXG.extend(
         resizeContainer: function (canvasWidth, canvasHeight, dontset, dontSetBoundingBox) {
             var box,
                 oldWidth, oldHeight,
-                oX, oY,
-                invalidTransform;
+                oX, oY;
 
             oldWidth = this.canvasWidth;
             oldHeight = this.canvasHeight;
@@ -5801,18 +5800,6 @@ JXG.extend(
                     {width: this.canvasWidth, height: this.canvasHeight}
                 );
             } else {
-                invalidTransform = !Number.isFinite(this.unitX) ||
-                    !Number.isFinite(this.unitY) ||
-                    Math.abs(this.unitX) < Mat.eps ||
-                    Math.abs(this.unitY) < Mat.eps;
-                if (invalidTransform) {
-                    return this.setBoundingBox(
-                        this.attr.boundingbox,
-                        this.keepaspectratio,
-                        'keep',
-                        {width: this.canvasWidth, height: this.canvasHeight}
-                    );
-                }
                 oX = (this.canvasWidth - oldWidth) * 0.5;
                 oY = (this.canvasHeight - oldHeight) * 0.5;
 

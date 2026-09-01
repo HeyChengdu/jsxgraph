@@ -5635,6 +5635,11 @@ declare namespace JXG {
      * Attributes used in board initialization.
      */
     export interface BoardAttributes {
+        /**
+         * Explicit logical viewport dimensions used during initialization.
+         * If omitted, JSXGraph measures the HTML container.
+         */
+        dimensions: { width: number; height: number } | null;
         sketches?: {
             enabled?: boolean;
             0?: SketchCurveAttributes;
