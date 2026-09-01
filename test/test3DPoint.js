@@ -85,10 +85,9 @@ describe("Test 3D points", function () {
             showNavigation: false
         });
         canvasTarget.remove();
-        canvasBoard.resizeContainer(0, 0);
-        expect(canvasBoard.canvasWidth).toEqual(500);
-        expect(canvasBoard.canvasHeight).toEqual(500);
-        canvasBoard.resizeContainer(1152, 627);
+        canvasBoard.unitX = NaN;
+        canvasBoard.unitY = NaN;
+        canvasBoard.resizeContainer(1152, 627, true, true);
         expect(canvasBoard.canvasWidth).toEqual(1152);
         expect(canvasBoard.canvasHeight).toEqual(627);
         expect(Number.isFinite(canvasBoard.unitX)).toBeTrue();

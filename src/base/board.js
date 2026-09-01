@@ -5773,15 +5773,7 @@ JXG.extend(
             var box,
                 oldWidth, oldHeight,
                 oX, oY,
-                newWidth = parseFloat(canvasWidth),
-                newHeight = parseFloat(canvasHeight);
-
-            // A detached or display:none container is commonly reported as 0 x 0 by
-            // ResizeObserver. There is no valid coordinate transform for a zero-sized
-            // board, so keep the last usable viewport until a positive size arrives.
-            if (!(newWidth > 0) || !(newHeight > 0)) {
-                return this;
-            }
+                invalidTransform;
 
             oldWidth = this.canvasWidth;
             oldHeight = this.canvasHeight;
@@ -5792,8 +5784,8 @@ JXG.extend(
 
             // this.canvasWidth = Math.max(parseFloat(canvasWidth), Mat.eps);
             // this.canvasHeight = Math.max(parseFloat(canvasHeight), Mat.eps);
-            this.canvasWidth = newWidth;
-            this.canvasHeight = newHeight;
+            this.canvasWidth = parseFloat(canvasWidth);
+            this.canvasHeight = parseFloat(canvasHeight);
 
             if (!dontset) {
                 this.containerObj.style.width = this.canvasWidth + 'px';
@@ -5809,6 +5801,18 @@ JXG.extend(
                     {width: this.canvasWidth, height: this.canvasHeight}
                 );
             } else {
+                invalidTransform = !Number.isFinite(this.unitX) ||
+                    !Number.isFinite(this.unitY) ||
+                    Math.abs(this.unitX) < Mat.eps ||
+                    Math.abs(this.unitY) < Mat.eps;
+                if (invalidTransform) {
+                    return this.setBoundingBox(
+                        this.attr.boundingbox,
+                        this.keepaspectratio,
+                        'keep',
+                        {width: this.canvasWidth, height: this.canvasHeight}
+                    );
+                }
                 oX = (this.canvasWidth - oldWidth) * 0.5;
                 oY = (this.canvasHeight - oldHeight) * 0.5;
 
