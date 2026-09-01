@@ -64,4 +64,51 @@ describe("Test 3D points", function () {
         expect(p.coords[2]).toEqual(5);
         expect(p.coords[3]).toEqual(6);
     });
+
+    it("keeps finite Canvas coordinates after resizing a detached 3D board", function () {
+        var canvasTarget = document.createElement("div"),
+            canvasBoard,
+            canvasView,
+            point;
+
+        canvasTarget.id = "jxgbox-point3d-canvas";
+        canvasTarget.style.width = "500px";
+        canvasTarget.style.height = "500px";
+        document.body.appendChild(canvasTarget);
+
+        canvasBoard = JXG.JSXGraph.initBoard(canvasTarget.id, {
+            renderer: "canvas",
+            axis: false,
+            grid: false,
+            boundingbox: [-6, 6, 6, -6],
+            showCopyright: false,
+            showNavigation: false
+        });
+        canvasTarget.remove();
+        canvasBoard.resizeContainer(1152, 627);
+        expect(canvasBoard.canvasWidth).toEqual(1152);
+        expect(canvasBoard.canvasHeight).toEqual(627);
+        expect(Number.isFinite(canvasBoard.unitX)).toBeTrue();
+        expect(Number.isFinite(canvasBoard.unitY)).toBeTrue();
+        canvasView = canvasBoard.create(
+            "view3d",
+            [[-5, -5], [10, 10], [[-3, 3], [-3, 3], [-2.6, 2.6]]],
+            {axesPosition: "none", trackball: {enabled: true}}
+        );
+        point = canvasView.create("point3d", [0, 0, 1.3], {
+            name: "N",
+            withLabel: true,
+            visible: false,
+            color: "#e74c3c",
+            size: 5
+        });
+
+        expect(function () {
+            point.setAttribute({visible: true});
+        }).not.toThrow();
+        expect(Number.isFinite(point.element2D.coords.scrCoords[1])).toBeTrue();
+        expect(Number.isFinite(point.element2D.coords.scrCoords[2])).toBeTrue();
+
+        JXG.JSXGraph.freeBoard(canvasBoard);
+    });
 });

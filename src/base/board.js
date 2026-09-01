@@ -5793,7 +5793,12 @@ JXG.extend(
             this.renderer.resize(this.canvasWidth, this.canvasHeight);
 
             if (!dontSetBoundingBox) {
-                this.setBoundingBox(box, this.keepaspectratio, 'keep');
+                this.setBoundingBox(
+                    box,
+                    this.keepaspectratio,
+                    'keep',
+                    {width: this.canvasWidth, height: this.canvasHeight}
+                );
             } else {
                 oX = (this.canvasWidth - oldWidth) * 0.5;
                 oY = (this.canvasHeight - oldHeight) * 0.5;
@@ -6427,15 +6432,17 @@ JXG.extend(
          * @param {String} [setZoom='reset'] Reset, keep or update the zoom level of the board. 'reset'
          * sets {@link JXG.Board#zoomX} and {@link JXG.Board#zoomY} to the start values (or 1.0).
          * 'update' adapts these values accoring to the new bounding box and 'keep' does nothing.
+         * @param {Object} [dimensions] Internal canvas dimensions supplied by resizeContainer. If omitted,
+         * the current DOM container dimensions are used.
          * @returns {JXG.Board} Reference to the board
          */
-        setBoundingBox: function (bbox, keepaspectratio, setZoom) {
+        setBoundingBox: function (bbox, keepaspectratio, setZoom, dimensions) {
             var h, w, ux, uy,
                 offX = 0,
                 offY = 0,
                 zoom_ratio = 1,
                 ratio, dx, dy, prev_w, prev_h,
-                dim = Env.getDimensions(this.containerObj, this.document);
+                dim = dimensions || Env.getDimensions(this.containerObj, this.document);
 
             if (!Type.isArray(bbox)) {
                 return this;
