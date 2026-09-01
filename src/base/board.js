@@ -5772,7 +5772,16 @@ JXG.extend(
         resizeContainer: function (canvasWidth, canvasHeight, dontset, dontSetBoundingBox) {
             var box,
                 oldWidth, oldHeight,
-                oX, oY;
+                oX, oY,
+                newWidth = parseFloat(canvasWidth),
+                newHeight = parseFloat(canvasHeight);
+
+            // A detached or display:none container is commonly reported as 0 x 0 by
+            // ResizeObserver. There is no valid coordinate transform for a zero-sized
+            // board, so keep the last usable viewport until a positive size arrives.
+            if (!(newWidth > 0) || !(newHeight > 0)) {
+                return this;
+            }
 
             oldWidth = this.canvasWidth;
             oldHeight = this.canvasHeight;
@@ -5783,8 +5792,8 @@ JXG.extend(
 
             // this.canvasWidth = Math.max(parseFloat(canvasWidth), Mat.eps);
             // this.canvasHeight = Math.max(parseFloat(canvasHeight), Mat.eps);
-            this.canvasWidth = parseFloat(canvasWidth);
-            this.canvasHeight = parseFloat(canvasHeight);
+            this.canvasWidth = newWidth;
+            this.canvasHeight = newHeight;
 
             if (!dontset) {
                 this.containerObj.style.width = this.canvasWidth + 'px';
