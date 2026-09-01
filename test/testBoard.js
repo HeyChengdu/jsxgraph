@@ -98,5 +98,33 @@ describe("Test board handling", function() {
         container.remove();
     });
 
+    it("normalizes interval-pair bounding boxes before calculating the board transform", function() {
+        var testBoard = JXG.JSXGraph.initBoard('jxgbox', {
+            renderer: 'svg',
+            boundingbox: [-6, 6, -6, 6],
+            dimensions: {width: 1152, height: 627},
+            keepaspectratio: true,
+            resize: {enabled: false},
+            showCopyright: false,
+            showNavigation: false
+        });
+
+        expect(testBoard.attr.boundingbox).toEqual([-6, 6, 6, -6]);
+        expect(Number.isFinite(testBoard.unitX)).toBe(true);
+        expect(Number.isFinite(testBoard.unitY)).toBe(true);
+        JXG.JSXGraph.freeBoard(testBoard);
+    });
+
+    it("rejects bounding boxes that cannot describe finite intervals", function() {
+        expect(function() {
+            JXG.JSXGraph.initBoard('jxgbox', {
+                renderer: 'svg',
+                boundingbox: [0, 0, 0, 0],
+                dimensions: {width: 100, height: 100},
+                resize: {enabled: false}
+            });
+        }).toThrowError(/Invalid boundingbox/);
+    });
+
 
 });

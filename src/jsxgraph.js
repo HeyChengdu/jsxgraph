@@ -252,6 +252,50 @@ JXG.JSXGraph = {
     },
 
     /**
+     * Convert supported bounding box tuple conventions to JSXGraph's canonical
+     * [left, top, right, bottom] representation.
+     *
+     * @param {Array} bbox Bounding box tuple
+     * @returns {Array} Canonical bounding box tuple
+     * @private
+     */
+    _normalizeBoundingBox: function (bbox) {
+        var canonical, intervalPairs,
+            isFiniteNumber = function (value) {
+                return typeof value === "number" && isFinite(value);
+            },
+            isCanonical = function (value) {
+                return value.length === 4 &&
+                    value.every(isFiniteNumber) &&
+                    value[0] < value[2] &&
+                    value[3] < value[1];
+            };
+
+        canonical = Type.isArray(bbox) ? bbox.slice() : [];
+        if (isCanonical(canonical)) {
+            return canonical;
+        }
+
+        // Also accept the common interval-pair convention
+        // [xMin, xMax, yMin, yMax] when canonical interpretation is invalid.
+        if (canonical.length === 4 &&
+            canonical.every(isFiniteNumber) &&
+            canonical[0] < canonical[1] &&
+            canonical[2] < canonical[3]) {
+            intervalPairs = [canonical[0], canonical[3], canonical[1], canonical[2]];
+            if (isCanonical(intervalPairs)) {
+                return intervalPairs;
+            }
+        }
+
+        throw new Error(
+            "JSXGraph: Invalid boundingbox " + JSON.stringify(bbox) +
+            ". Expected [left, top, right, bottom] or [xMin, xMax, yMin, yMax] " +
+            "with non-zero finite intervals."
+        );
+    },
+
+    /**
      * Remove the two corresponding ARIA divs when freeing a board
      *
      * @param {JXG.Board} board
@@ -515,7 +559,8 @@ JXG.JSXGraph = {
             unitX = Type.def(attr.unitx, 50);
             unitY = Type.def(attr.unity, 50);
         } else {
-            bbox = attr.boundingbox;
+            bbox = this._normalizeBoundingBox(attr.boundingbox);
+            attr.boundingbox = bbox;
             if (bbox[0] < attr.maxboundingbox[0]) {
                 bbox[0] = attr.maxboundingbox[0];
             }
