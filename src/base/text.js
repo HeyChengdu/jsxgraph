@@ -227,6 +227,10 @@ JXG.extend(
 
             this.orgText = text;
 
+            if (Type.isString(text) && Type.isFunction(this.board.attr.textresolver)) {
+                text = this.board.attr.textresolver(text);
+            }
+
             if (Type.isFunction(text)) {
                 /**
                  * Dynamically created function to update the content
@@ -240,6 +244,9 @@ JXG.extend(
                  */
                 this.updateText = function () {
                     resolvedText = text().toString(); // Evaluate function
+                    if (Type.isFunction(this.board.attr.textresolver)) {
+                        resolvedText = this.board.attr.textresolver(resolvedText);
+                    }
                     if (ev_p && !ev_um && !ev_uk) {
                         this.plaintext = this.replaceSub(
                             this.replaceSup(

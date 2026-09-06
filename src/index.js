@@ -28,6 +28,7 @@ import './reader/file.js';
 import './parser/geonext.js';
 import './base/board.js';
 import './options.js';
+import './themes/adaptive.js';
 import './jsxgraph.js';
 import './base/element.js';
 import './base/coords.js';

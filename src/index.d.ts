@@ -22,6 +22,7 @@ declare namespace JXG {
     export const boards: Record<string, Board>;
 
     export type CoordType = 1 | 2;
+    export type ColorThemeName = "light" | "dark";
 
     /**
      * Screen coordinates in pixel relative to the upper left corner of the div element.
@@ -5404,6 +5405,8 @@ declare namespace JXG {
         finalizeAdding(obj: unknown): unknown;
         fullscreenListener(event: Event): void;
         fullUpdate(): this;
+        /** Switch between adaptive Tailwind-token light and dark color themes. */
+        setTheme(theme: ColorThemeName): this;
         generateId(): string;
         generateName(object: unknown): string;
         gestureChangeListener(evt: unknown): boolean;
@@ -5647,6 +5650,14 @@ declare namespace JXG {
          * default false
          */
         axis: boolean;
+
+        /** Adaptive color theme. Existing theme names remain supported. */
+        theme?: "default" | ColorThemeName | (string & {});
+        /**
+         * Optional host-provided resolver for source text displayed by JXG.Text.
+         * Unmatched content should be returned unchanged by the resolver.
+         */
+        textResolver?: (source: string) => string;
 
         beautifulScientificTickLabels: boolean;
 

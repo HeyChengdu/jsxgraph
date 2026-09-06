@@ -795,6 +795,7 @@ JXG.Board = function (container, renderer, id,
 Type.copyMethodMap(JXG.Board, {
     update: 'update',
     fullUpdate: 'fullUpdate',
+    setTheme: 'setTheme',
     on: 'on',
     off: 'off',
     trigger: 'trigger',
@@ -6279,6 +6280,26 @@ JXG.extend(
             this.needsFullUpdate = true;
             this.update();
             this.needsFullUpdate = false;
+            return this;
+        },
+
+        /**
+         * Switches between the adaptive light and dark color themes.
+         * Existing explicit CSS colors remain unchanged; Tailwind color tokens are resolved lazily.
+         * @param {String} theme Either "light" or "dark".
+         * @returns {JXG.Board} Reference to the board.
+         */
+        setTheme: function (theme) {
+            if (theme !== "light" && theme !== "dark") {
+                throw new Error('JSXGraph: setTheme() expects "light" or "dark".');
+            }
+            if (this.attr.theme !== "light" && this.attr.theme !== "dark") {
+                throw new Error('JSXGraph: setTheme() is only available for boards initialized with theme "light" or "dark".');
+            }
+            if (this.attr.theme !== theme) {
+                this.attr.theme = theme;
+                this.fullUpdate();
+            }
             return this;
         },
 

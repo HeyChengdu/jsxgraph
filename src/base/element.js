@@ -1658,17 +1658,17 @@ JXG.extend(
                 if (this.visProp.islabel === true && Type.exists(this.visProp.anchor)) {
                     // 3D: supply the 3D element
                     if (this.visProp.anchor.visProp.element3d !== null) {
-                        return val(this.visProp.anchor.visProp.element3d);
+                        val = val(this.visProp.anchor.visProp.element3d);
+                    } else {
+                        val = val(this.visProp.anchor);
                     }
-                    // 2D: supply the 2D element
-                    return val(this.visProp.anchor);
+                } else if (JXG.exists(this.visProp.element3d)) {
+                    // For 2D elements representing 3D elements, return the 3D element.
+                    val = val(this.visProp.element3d);
+                } else {
+                    // In all other cases, return the element itself
+                    val = val(this);
                 }
-                // For 2D elements representing 3D elements, return the 3D element.
-                if (JXG.exists(this.visProp.element3d)) {
-                    return val(this.visProp.element3d);
-                }
-                // In all other cases, return the element itself
-                return val(this);
             }
             // val is not of type function
 
@@ -1701,6 +1701,10 @@ JXG.extend(
                         break;
                     }
                 }
+            }
+
+            if (JXG.isFunction(JXG.resolveThemeColor)) {
+                val = JXG.resolveThemeColor(val, this.board.attr.theme, key);
             }
 
             return val;
