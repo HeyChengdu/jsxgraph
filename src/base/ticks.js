@@ -40,6 +40,7 @@
  */
 
 import JXG from "../jxg.js";
+import { writtenTickCount } from '../utils/writePath.js';
 import Mat from "../math/math.js";
 import Geometry from "../math/geometry.js";
 import Numerics from "../math/numerics.js";
@@ -1577,7 +1578,10 @@ JXG.extend(
                     visible = this.visPropCalc.visible;
                 }
 
-                label.prepareUpdate().updateVisibility(visible).updateRenderer();
+                // Reveal the existing label only when its corresponding tick is drawn.
+                label._writeTicks = this;
+                label._writeTickIndex = i;
+                label.prepareUpdate().updateVisibility(visible && i < writtenTickCount(this)).updateRenderer();
 
                 label.distanceX = this.evalVisProp('label.offset')[0];
                 label.distanceY = this.evalVisProp('label.offset')[1];

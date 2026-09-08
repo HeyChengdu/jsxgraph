@@ -50,6 +50,7 @@ import Numerics from "../math/numerics.js";
 import Plot from "../math/plot.js";
 import QDT from "../math/qdt.js";
 import Type from "../utils/type.js";
+import { writeVector } from '../utils/writePath.js';
 
 /**
  * Curves are the common object for function graphs, parametric curves, polar curves, and data plots.
@@ -154,6 +155,7 @@ Type.copyMethodMap(JXG.Curve, {
 JXG.extend(
     JXG.Curve.prototype,
     /** @lends JXG.Curve.prototype */ {
+        _write: writeVector,
         /**
          * Gives the default value of the left bound for the curve.
          * May be overwritten in {@link JXG.Curve#generateTerm}.

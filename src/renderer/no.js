@@ -75,6 +75,7 @@ JXG.NoRenderer = function () {
 JXG.extend(
     JXG.NoRenderer.prototype,
     /** @lends JXG.NoRenderer.prototype */ {
+        getVisualBounds: function () { return []; },
 
         // All methods are already documented in JXG.AbstractRenderer
 

@@ -41,6 +41,8 @@ import Options from "../options.js";
 import EventEmitter from "../utils/event.js";
 import Color from "../utils/color.js";
 import Type from "../utils/type.js";
+import { emphasize, cancelAttention } from '../utils/attention.js';
+import { fade, cancelFade } from '../utils/fade.js';
 
 /**
  * Constructs a new GeometryElement object.
@@ -1506,6 +1508,11 @@ JXG.extend(
                             }
                             break;
                         case "visible":
+                            if (value === false || value === 'false') {
+                                this._writeState?.handle?.cancel();
+                                cancelAttention(this);
+                                cancelFade(this);
+                            }
                             if (value === 'false') {
                                 this.visProp.visible = false;
                             } else if (value === 'true') {
@@ -1772,6 +1779,9 @@ JXG.extend(
          * the renderer, to remove the element completely you should use {@link JXG.Board#removeObject}.
          */
         remove: function () {
+            this._writeState?.handle?.cancel();
+            cancelAttention(this);
+            cancelFade(this);
             // this.board.renderer.remove(this.board.renderer.getElementById(this.id));
             this.board.renderer.remove(this.rendNode);
 
@@ -1879,6 +1889,33 @@ JXG.extend(
             }
 
             return this;
+        },
+
+        /** Delegate progressive drawing to the element's supported capability. */
+        write: function (duration, options) {
+            if (typeof this._write !== 'function') {
+                throw new Error('JSXGraph: write() is not supported by this element.');
+            }
+            const job = this._write(duration, options);
+            const handle = this.board.animationScheduler.schedule(job);
+            job.bind(handle);
+            return this;
+        },
+
+        /** Temporarily scale and tint the rendered object without changing geometry. */
+        indicate: function (duration) {
+            return emphasize(this, 'indicate', duration);
+        },
+
+        /** Reveal with transient opacity; duration is milliseconds. */
+        fadeIn: function (duration) { return fade(this, true, duration); },
+
+        /** Hide after fading without removing mathematical dependencies. */
+        fadeOut: function (duration) { return fade(this, false, duration); },
+
+        /** 按当前可见边界绘出临时矩形框；默认 1000 毫秒，返回当前元素。 */
+        circumscribe: function (duration) {
+            return emphasize(this, 'circumscribe', duration);
         },
 
         /**

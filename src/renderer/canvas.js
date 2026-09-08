@@ -43,6 +43,12 @@ import Coords from "../base/coords.js";
 import Mat from "../math/math.js";
 import Geometry from "../math/geometry.js";
 import Numerics from "../math/numerics.js";
+import Options from '../options.js';
+import { domVisualBounds, unionBounds, visualFamily } from './visualBounds.js';
+import { captureLayer, tintLayer } from './canvasLayer.js';
+import { partialLine } from './partialPath.js';
+import { curveCommands, ellipseCommands, pointCommands, writtenCommands, canvasPath } from './pathDrawing.js';
+import { strokeProgress, fillProgress, writtenTickCount } from '../utils/writePath.js';
 // import $__canvas from 'canvas.js'
 
 /**
@@ -100,6 +106,23 @@ JXG.CanvasRenderer.prototype = new AbstractRenderer();
 JXG.extend(
     JXG.CanvasRenderer.prototype,
     /** @lends JXG.CanvasRenderer.prototype */ {
+        captureVisualLayer: function (element, render) {
+            return captureLayer(this, element, render);
+        },
+
+        tintVisualLayer: function (layer, color, opacity) {
+            return tintLayer(this, layer, color, opacity);
+        },
+
+        /** Measure visible native drawings; unchanged commands reuse their raster bounds. */
+        getVisualBounds: function (element, partName = null) {
+            if (element.rendNode) return domVisualBounds(element, partName);
+            const boxes = visualFamily(element)
+                .flatMap(target => target.rendNode ? domVisualBounds(target) : this.captureVisualLayer(target,
+                    () => target.prepareUpdate().updateRenderer()).boxes);
+            return boxes.length ? [unionBounds(boxes)] : [];
+        },
+
         /* **************************
          *   private methods only used
          *   in this renderer. Should
@@ -159,6 +182,7 @@ JXG.extend(
 
             context.save();
             if (this._setColor(el, 'fill')) {
+                context.globalAlpha *= fillProgress(el);
                 context.fill('evenodd');
             }
             context.restore();
@@ -463,156 +487,16 @@ JXG.extend(
 
         // documented in AbstractRenderer
         drawPoint: function (el) {
-            var f = el.evalVisProp('face'),
-                size = el.evalVisProp('size'),
-                scr = el.coords.scrCoords,
-                sqrt32 = size * Math.sqrt(3) * 0.5,
-                s05 = size * 0.5,
-                stroke05 = parseFloat(el.evalVisProp('strokewidth')) / 2.0,
-                context = this.context;
-
-            if (!el.visPropCalc.visible) {
-                return;
-            }
-
-            switch (f) {
-                case "cross": // x
-                case "x":
-                    context.beginPath();
-                    context.moveTo(scr[1] - size, scr[2] - size);
-                    context.lineTo(scr[1] + size, scr[2] + size);
-                    context.moveTo(scr[1] + size, scr[2] - size);
-                    context.lineTo(scr[1] - size, scr[2] + size);
-                    context.lineCap = 'round';
-                    context.lineJoin = 'round';
-                    context.closePath();
-                    this._stroke(el);
-                    break;
-                case "circle": // dot
-                case "o":
-                    context.beginPath();
-                    context.arc(scr[1], scr[2], size + 1 + stroke05, 0, 2 * Math.PI, false);
-                    context.closePath();
-                    this._fill(el);
-                    this._stroke(el);
-                    break;
-                case "square": // rectangle
-                case "[]":
-                    if (size <= 0) {
-                        break;
-                    }
-
-                    context.save();
-                    if (this._setColor(el, "stroke", 'fill')) {
-                        context.fillRect(
-                            scr[1] - size - stroke05,
-                            scr[2] - size - stroke05,
-                            size * 2 + 3 * stroke05,
-                            size * 2 + 3 * stroke05
-                        );
-                    }
-                    context.restore();
-                    context.save();
-                    this._setColor(el, 'fill');
-                    context.fillRect(
-                        scr[1] - size + stroke05,
-                        scr[2] - size + stroke05,
-                        size * 2 - stroke05,
-                        size * 2 - stroke05
-                    );
-                    context.restore();
-                    break;
-                case "plus": // +
-                case "+":
-                    context.beginPath();
-                    context.moveTo(scr[1] - size, scr[2]);
-                    context.lineTo(scr[1] + size, scr[2]);
-                    context.moveTo(scr[1], scr[2] - size);
-                    context.lineTo(scr[1], scr[2] + size);
-                    context.lineCap = 'round';
-                    context.lineJoin = 'round';
-                    context.closePath();
-                    this._stroke(el);
-                    break;
-                case "divide":
-                case "|":
-                    context.beginPath();
-                    context.moveTo(scr[1], scr[2] - size);
-                    context.lineTo(scr[1], scr[2] + size);
-                    context.lineCap = 'round';
-                    context.lineJoin = 'round';
-                    context.closePath();
-                    this._stroke(el);
-                    break;
-                case "minus":
-                case "-":
-                    context.beginPath();
-                    context.moveTo(scr[1] - size, scr[2]);
-                    context.lineTo(scr[1] + size, scr[2]);
-                    context.lineCap = 'round';
-                    context.lineJoin = 'round';
-                    context.closePath();
-                    this._stroke(el);
-                    break;
-                /* eslint-disable no-fallthrough */
-                case "diamond2":
-                case "<<>>":
-                    size *= 1.41;
-                case "diamond": // <>
-                case "<>":
-                    context.beginPath();
-                    context.moveTo(scr[1] - size, scr[2]);
-                    context.lineTo(scr[1], scr[2] + size);
-                    context.lineTo(scr[1] + size, scr[2]);
-                    context.lineTo(scr[1], scr[2] - size);
-                    context.closePath();
-                    this._fill(el);
-                    this._stroke(el);
-                    break;
-                /* eslint-enable no-fallthrough */
-                case "triangleup":
-                case "A":
-                case "a":
-                case "^":
-                    context.beginPath();
-                    context.moveTo(scr[1], scr[2] - size);
-                    context.lineTo(scr[1] - sqrt32, scr[2] + s05);
-                    context.lineTo(scr[1] + sqrt32, scr[2] + s05);
-                    context.closePath();
-                    this._fill(el);
-                    this._stroke(el);
-                    break;
-                case "triangledown":
-                case "v":
-                    context.beginPath();
-                    context.moveTo(scr[1], scr[2] + size);
-                    context.lineTo(scr[1] - sqrt32, scr[2] - s05);
-                    context.lineTo(scr[1] + sqrt32, scr[2] - s05);
-                    context.closePath();
-                    this._fill(el);
-                    this._stroke(el);
-                    break;
-                case "triangleleft":
-                case "<":
-                    context.beginPath();
-                    context.moveTo(scr[1] - size, scr[2]);
-                    context.lineTo(scr[1] + s05, scr[2] - sqrt32);
-                    context.lineTo(scr[1] + s05, scr[2] + sqrt32);
-                    context.closePath();
-                    this._fill(el);
-                    this._stroke(el);
-                    break;
-                case "triangleright":
-                case ">":
-                    context.beginPath();
-                    context.moveTo(scr[1] + size, scr[2]);
-                    context.lineTo(scr[1] - s05, scr[2] - sqrt32);
-                    context.lineTo(scr[1] - s05, scr[2] + sqrt32);
-                    context.closePath();
-                    this._fill(el);
-                    this._stroke(el);
-                    break;
-            }
+            if (!el.visPropCalc.visible) return;
+            let size = el.evalVisProp('size');
+            if (el.evalVisProp('sizeunit') === 'user') size *= Math.sqrt(Math.abs(el.board.unitX * el.board.unitY));
+            if (el.evalVisProp('zoom')) size *= Math.sqrt(el.board.zoomX * el.board.zoomY);
+            const face = Options.normalizePointFace(el.evalVisProp('face'));
+            const scr = el.coords.scrCoords;
+            if (!Number.isFinite(scr[1] + scr[2])) return;
+            canvasPath(this.context, writtenCommands(el, pointCommands(scr[1], scr[2], size, face)));
+            this._fill(el);
+            if (strokeProgress(el) > 0) this._stroke(el);
         },
 
         // documented in AbstractRenderer
@@ -631,6 +515,7 @@ JXG.extend(
          * @private
          */
         drawArrows: function (el, scr1, scr2, hl, a) {
+            if (fillProgress(el) <= 0) return;
             var x1, y1, x2, y2,
                 w, w0,
                 arrowHead, arrowTail,
@@ -681,7 +566,7 @@ JXG.extend(
                     }
                 }
 
-                w0 = el.evalVisProp(hl + 'strokewidth');
+                w0 = el.evalVisProp(hl + 'strokewidth') * fillProgress(el);
 
                 if (ev_fa) {
                     size = a.sizeFirst;
@@ -995,9 +880,13 @@ JXG.extend(
             this.getPositionArrowHead(el, c1, c2, arrowData);
 
             this.context.beginPath();
-            this.context.moveTo(c1.scrCoords[1], c1.scrCoords[2]);
-            this.context.lineTo(c2.scrCoords[1], c2.scrCoords[2]);
-            this._stroke(el);
+            const path = partialLine(c1.scrCoords[1], c1.scrCoords[2], c2.scrCoords[1], c2.scrCoords[2],
+                strokeProgress(el));
+            this.context.moveTo(path[0], path[1]);
+            if (path.length === 4) {
+                this.context.lineTo(path[2], path[3]);
+                this._stroke(el);
+            }
 
             if (
                 arrowData.evFirst /* && obj.sFirst > 0*/ ||
@@ -1025,7 +914,7 @@ JXG.extend(
                 c,
                 x,
                 y,
-                len = ticks.ticks.length,
+                len = writtenTickCount(ticks),
                 len2,
                 j,
                 context = this.context;
@@ -1091,34 +980,13 @@ JXG.extend(
 
         // documented in AbstractRenderer
         drawEllipse: function (el) {
-            var m1 = el.center.coords.scrCoords[1],
-                m2 = el.center.coords.scrCoords[2],
-                sX = el.board.unitX,
-                sY = el.board.unitY,
-                rX = 2 * el.Radius(),
-                rY = 2 * el.Radius(),
-                aWidth = rX * sX,
-                aHeight = rY * sY,
-                aX = m1 - aWidth / 2,
-                aY = m2 - aHeight / 2,
-                hB = (aWidth / 2) * 0.5522848,
-                vB = (aHeight / 2) * 0.5522848,
-                eX = aX + aWidth,
-                eY = aY + aHeight,
-                mX = aX + aWidth / 2,
-                mY = aY + aHeight / 2,
-                context = this.context;
-
-            if (rX > 0.0 && rY > 0.0 && !isNaN(m1 + m2)) {
-                context.beginPath();
-                context.moveTo(aX, mY);
-                context.bezierCurveTo(aX, mY - vB, mX - hB, aY, mX, aY);
-                context.bezierCurveTo(mX + hB, aY, eX, mY - vB, eX, mY);
-                context.bezierCurveTo(eX, mY + vB, mX + hB, eY, mX, eY);
-                context.bezierCurveTo(mX - hB, eY, aX, mY + vB, aX, mY);
-                context.closePath();
+            const x = el.center.coords.scrCoords[1], y = el.center.coords.scrCoords[2];
+            const radius = el.Radius();
+            if (radius > 0 && Number.isFinite(x + y)) {
+                canvasPath(this.context, writtenCommands(el, ellipseCommands(x, y,
+                    radius * el.board.unitX, radius * el.board.unitY)));
                 this._fill(el);
-                this._stroke(el);
+                if (strokeProgress(el) > 0) this._stroke(el);
             }
         },
 
@@ -1365,6 +1233,12 @@ JXG.extend(
 
         // documented in AbstractRenderer
         updatePathStringPrim: function (el) {
+            if (el._writeState?.kind === 'path') {
+                canvasPath(this.context, writtenCommands(el, curveCommands(el)));
+                this._fill(el);
+                if (strokeProgress(el) > 0) this._stroke(el);
+                return;
+            }
             var i,
                 scr,
                 scr1,

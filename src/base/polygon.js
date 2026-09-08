@@ -38,6 +38,7 @@ import Coords from "./coords.js";
 import Statistics from "../math/statistics.js";
 import Geometry from "../math/geometry.js";
 import Type from "../utils/type.js";
+import { writeVector } from '../utils/writePath.js';
 import GeometryElement from "./element.js";
 
 /**
@@ -172,6 +173,7 @@ Type.copyMethodMap(JXG.Polygon, {
 JXG.extend(
     JXG.Polygon.prototype,
     /** @lends JXG.Polygon.prototype */ {
+        _write: writeVector,
         /**
          * Wrapper for JXG.Math.Geometry.pnpoly.
          *

@@ -74,6 +74,7 @@ JXG.Options = {
          * @see JXG.CoordsElement#visit
          */
         animationDelay: 35,
+        writeInterval: 100,
 
         /**
          * Show default axis.

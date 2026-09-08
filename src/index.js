@@ -77,7 +77,6 @@ import './element/smartlabel.js';
 import './element/localCoordinateSystems.js';
 import './element/table.js';
 import './element/matrix.js';
-import './element/typewriterText.js';
 import './base/foreignobject.js';
 import './options3d.js';
 import './3d/view3d.js';

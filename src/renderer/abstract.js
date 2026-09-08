@@ -47,6 +47,9 @@
  */
 
 import JXG from "../jxg.js";
+import { domVisualBounds } from './visualBounds.js';
+import { pointCommands, writtenCommands, svgPath } from './pathDrawing.js';
+import { strokeProgress, fillProgress } from '../utils/writePath.js';
 import Options from "../options.js";
 import Coords from "../base/coords.js";
 import Const from "../base/constants.js";
@@ -54,6 +57,8 @@ import Mat from "../math/math.js";
 import Geometry from "../math/geometry.js";
 import Type from "../utils/type.js";
 import Env from "../utils/env.js";
+import { renderWrittenText, updateWrittenFormula } from "../utils/writeText.js";
+import { formulaOptions } from '../utils/formulaParts.js';
 
 /**
  * <p>This class defines the interface to the graphics part of JSXGraph. This class is an abstract class, it
@@ -193,6 +198,10 @@ JXG.AbstractRenderer = function () {
 JXG.extend(
     JXG.AbstractRenderer.prototype,
     /** @lends JXG.AbstractRenderer.prototype */ {
+        /** 当前已挂载渲染表面的 Board 像素边界；公式同名部分逐处返回。 */
+        getVisualBounds: function (element, partName = null) {
+            return domVisualBounds(element, partName);
+        },
 
         /* ********* Private methods *********** */
 
@@ -322,7 +331,9 @@ JXG.extend(
                 face = Options.normalizePointFace(el.evalVisProp('face'));
 
             // Determine how the point looks like
-            if (face === 'o') {
+            if (this.type === 'svg') {
+                prim = 'path';
+            } else if (face === 'o') {
                 prim = 'ellipse';
             } else if (face === "[]") {
                 prim = 'rect';
@@ -370,7 +381,10 @@ JXG.extend(
                 size *= !el.board || !zoom ? 1.0 : Math.sqrt(el.board.zoomX * el.board.zoomY);
                 s1 = size === 0 ? 0 : size + 1;
 
-                if (face === 'o') {
+                if (this.type === 'svg') {
+                    this.updatePathPrim(el.rendNode, svgPath(writtenCommands(el,
+                        pointCommands(el.coords.scrCoords[1], el.coords.scrCoords[2], size, face))), el.board);
+                } else if (face === 'o') {
                     // circle
                     this.updateEllipsePrim(
                         el.rendNode,
@@ -444,7 +458,7 @@ JXG.extend(
          */
         drawLine: function (el) {
             el.rendNode = this.appendChildPrim(
-                this.createPrim("line", el.id),
+                this.createPrim(this.type === 'svg' ? 'path' : 'line', el.id),
                 el.evalVisProp('layer')
             );
             this.appendNodesToElement(el, 'lines');
@@ -663,8 +677,8 @@ JXG.extend(
                 evLast: ev_la,
                 typeFirst: typeFirst,
                 typeLast: typeLast,
-                offFirst: offFirst,
-                offLast: offLast,
+                offFirst: offFirst * fillProgress(el),
+                offLast: offLast * fillProgress(el),
                 sizeFirst: sizeFirst,
                 sizeLast: sizeLast,
                 showFirst: 1, // Show arrow head. 0 if the distance is too small
@@ -700,7 +714,7 @@ JXG.extend(
             c1 = new Coords(Const.COORDS_BY_USER, el.point1.coords.usrCoords, el.board);
             c2 = new Coords(Const.COORDS_BY_USER, el.point2.coords.usrCoords, el.board);
             margin = el.evalVisProp('margin');
-            if (!el.evalVisProp('clip')) {
+            if (!el.evalVisProp('clip') && !el._writeState) {
                 margin += 4096;
             }
             Geometry.calcStraight(el, c1, c2, margin);
@@ -714,7 +728,8 @@ JXG.extend(
                 c1.scrCoords[2],
                 c2.scrCoords[1],
                 c2.scrCoords[2],
-                el.board
+                el.board,
+                strokeProgress(el)
             );
 
             return this;
@@ -878,7 +893,7 @@ JXG.extend(
             if (a.evFirst) {
                 this._setArrowWidth(
                     el.rendNodeTriangleStart,
-                    a.showFirst * a.strokeWidth,
+                    a.showFirst * a.strokeWidth * fillProgress(el),
                     el.rendNode,
                     a.sizeFirst
                 );
@@ -886,7 +901,7 @@ JXG.extend(
             if (a.evLast) {
                 this._setArrowWidth(
                     el.rendNodeTriangleEnd,
-                    a.showLast * a.strokeWidth,
+                    a.showLast * a.strokeWidth * fillProgress(el),
                     el.rendNode,
                     a.sizeLast
                 );
@@ -949,7 +964,7 @@ JXG.extend(
          */
         drawEllipse: function (el) {
             el.rendNode = this.appendChildPrim(
-                this.createPrim("ellipse", el.id),
+                this.createPrim(this.type === 'svg' ? 'path' : 'ellipse', el.id),
                 el.evalVisProp('layer')
             );
             this.appendNodesToElement(el, 'ellipse');
@@ -979,7 +994,8 @@ JXG.extend(
                     el.center.coords.scrCoords[1],
                     el.center.coords.scrCoords[2],
                     radius * el.board.unitX,
-                    radius * el.board.unitY
+                    radius * el.board.unitY,
+                    el
                 );
             }
             this.setLineCap(el);
@@ -1179,7 +1195,7 @@ JXG.extend(
          * @see JXG.AbstractRenderer#updateTextStyle
          */
         updateText: function (el) {
-            var content = el.plaintext,
+            var content = renderWrittenText(el),
                 v, c,
                 parentNode, node,
                 // scale, vshift,
@@ -1341,14 +1357,14 @@ JXG.extend(
 
                                 if (node) {
                                     /* eslint-disable no-undef */
-                                    katex.render(content, node, {
-                                        macros: el.evalVisProp('katexmacros'),
-                                        throwOnError: false
-                                    });
+                                    if (!el.board.formulaRenderer) {
+                                        throw new Error('JSXGraph: useKatex requires a Board formulaRenderer.');
+                                    }
+                                    el.board.formulaRenderer(content, node, formulaOptions(el));
                                     /* eslint-enable no-undef */
                                 }
                             } catch (e) {
-                                JXG.debug("KaTeX not loaded (yet)");
+                                throw e;
                             }
                         } else if (el.evalVisProp('useasciimathml')) {
                             // This is not a constructor.
@@ -1375,6 +1391,7 @@ JXG.extend(
                         el.rendNode.style['transform-origin'] = to_h + ' ' + to_v;
                     }
                     this.transformRect(el, el.transformations);
+                    updateWrittenFormula(el);
 
                     if (el.visProp.islabel && Type.exists(el.visProp.anchor) &&
                         el.evalVisProp('clip') === 'inherit') {
@@ -1703,7 +1720,7 @@ JXG.extend(
          * @param {Number} p2y The second point's y coordinate.
          * @param {JXG.Board} board
          */
-        updateLinePrim: function (node, p1x, p1y, p2x, p2y, board) { /* stub */ },
+        updateLinePrim: function (node, p1x, p1y, p2x, p2y, board, progress = 1) { /* stub */ },
 
         /**
          * Updates a path element. This is an abstract method which has to be implemented in all renderers that use

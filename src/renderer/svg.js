@@ -41,6 +41,9 @@ import Type from "../utils/type.js";
 import Color from "../utils/color.js";
 import Base64 from "../utils/base64.js";
 import Numerics from "../math/numerics.js";
+import { partialLine } from './partialPath.js';
+import { curveCommands, ellipseCommands, writtenCommands, svgPath } from './pathDrawing.js';
+import { fillProgress, writtenTickCount } from '../utils/writePath.js';
 
 /**
  * Uses SVG to implement the rendering methods defined in {@link JXG.AbstractRenderer}.
@@ -628,7 +631,7 @@ JXG.extend(
                 x,
                 y,
                 tickStr = "",
-                len = ticks.ticks.length,
+                len = writtenTickCount(ticks),
                 len2,
                 str,
                 isReal = true;
@@ -1036,7 +1039,11 @@ JXG.extend(
         },
 
         // Already documented in JXG.AbstractRenderer
-        updateEllipsePrim: function (node, x, y, rx, ry) {
+        updateEllipsePrim: function (node, x, y, rx, ry, el) {
+            if (el) {
+                this.updatePathPrim(node, svgPath(writtenCommands(el, ellipseCommands(x, y, Math.abs(rx), Math.abs(ry)))), el.board);
+                return;
+            }
             var huge = 1000000;
 
             huge = 200000; // IE
@@ -1054,7 +1061,7 @@ JXG.extend(
         },
 
         // Already documented in JXG.AbstractRenderer
-        updateLinePrim: function (node, p1x, p1y, p2x, p2y) {
+        updateLinePrim: function (node, p1x, p1y, p2x, p2y, board, progress = 1) {
             var huge = 1000000;
 
             huge = 200000; //IE
@@ -1066,10 +1073,9 @@ JXG.extend(
                 p2x = Math.abs(p2x) < huge ? p2x : (huge * p2x) / Math.abs(p2x);
                 p2y = Math.abs(p2y) < huge ? p2y : (huge * p2y) / Math.abs(p2y);
 
-                node.setAttributeNS(null, "x1", p1x);
-                node.setAttributeNS(null, "y1", p1y);
-                node.setAttributeNS(null, "x2", p2x);
-                node.setAttributeNS(null, "y2", p2y);
+                const path = partialLine(p1x, p1y, p2x, p2y, progress);
+                node.setAttributeNS(null, 'd', 'M ' + path[0] + ' ' + path[1] +
+                    (path.length === 4 ? ' L ' + path[2] + ' ' + path[3] : ''));
             }
         },
 
@@ -1134,6 +1140,9 @@ JXG.extend(
 
         // Already documented in JXG.AbstractRenderer
         updatePathStringPrim: function (el) {
+            if (el._writeState?.kind === 'path') {
+                return svgPath(writtenCommands(el, curveCommands(el)));
+            }
             var i,
                 scr, scx, scy,
                 len,
@@ -1530,6 +1539,7 @@ JXG.extend(
 
         // documented in JXG.AbstractRenderer
         setObjectFillColor: function (el, color, opacity, rendNode) {
+            opacity *= fillProgress(el);
             var node, c, rgbo, oo,
                 rgba = color,
                 o = opacity,

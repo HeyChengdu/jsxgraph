@@ -731,7 +731,7 @@ void nativeMatrix;
 localNumberLine.point(1);
 table.cell(0, 0).setAttribute({ visible: true });
 matrix.entry(0, 0).setAttribute({ visible: true });
-board.create("text", [0, 0, "native reveal"], { typewriter: () => 0.5 });
+board.create("text", [0, 0, "native reveal"], { visible: false }).write(500);
 
 // @ts-expect-error A table accepts only cell rows.
 board.create("table", [a, [["x"]]]);

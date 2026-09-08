@@ -45,6 +45,7 @@ import Const from "./constants.js";
 import Mat from "../math/math.js";
 import GeonextParser from "../parser/geonext.js";
 import Type from "../utils/type.js";
+import { writeVector } from '../utils/writePath.js';
 
 /**
  * A circle consists of all points with a given distance from one point. This point is called center, the distance is called radius.
@@ -205,6 +206,7 @@ Type.copyMethodMap(JXG.Circle, {
 JXG.extend(
     JXG.Circle.prototype,
     /** @lends JXG.Circle.prototype */ {
+        _write: writeVector,
         /**
          * Checks whether (x,y) is near the circle line or inside of the ellipse
          * (in case JXG.Options.conic#hasInnerPoints is true).

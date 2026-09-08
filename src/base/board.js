@@ -53,6 +53,9 @@ import Type from '../utils/type.js';
 import EventEmitter from '../utils/event.js';
 import Env from '../utils/env.js';
 import Composition from './composition.js';
+import { createAnimationScheduler } from '../utils/animationScheduler.js';
+import { updateAttention, resetAttentionPresentation, renderAttentionCanvas } from '../utils/attention.js';
+import { updateFade, resetFadePresentation, renderFadeCanvas } from '../utils/fade.js';
 
 /**
  * Constructs a new Board object.
@@ -215,6 +218,9 @@ JXG.Board = function (container, renderer, id,
      * @type Object
      */
     this.attr = attributes;
+    this.animationScheduler = attributes.animationscheduler || createAnimationScheduler(this);
+    this.formulaRenderer = attributes.formularenderer;
+    this.externalAnimationScheduler = !!attributes.animationscheduler;
 
     if (this.attr.theme !== 'default' && Type.exists(JXG.themes[this.attr.theme])) {
         Type.mergeAttr(this.options, JXG.themes[this.attr.theme], true);
@@ -5905,14 +5911,15 @@ JXG.extend(
                         }
                     }
                 } else {
-                    pEl.needsUpdate = pEl.needsRegularUpdate || this.needsFullUpdate;
+                    // Explicit invalidation survives frame preparation, including presentation jobs.
+                    pEl.needsUpdate = pEl.needsUpdate || pEl.needsRegularUpdate || this.needsFullUpdate;
                 }
             }
 
             for (el in this.groups) {
                 if (this.groups.hasOwnProperty(el)) {
                     pEl = this.groups[el];
-                    pEl.needsUpdate = pEl.needsRegularUpdate || this.needsFullUpdate;
+                    pEl.needsUpdate = pEl.needsUpdate || pEl.needsRegularUpdate || this.needsFullUpdate;
                 }
             }
 
@@ -5967,7 +5974,7 @@ JXG.extend(
          * Runs through all elements and calls their update() method.
          * @returns {JXG.Board} Reference to the board
          */
-        updateRenderer: function () {
+        updateRenderer: function (deferPresentation = false) {
             var el,
                 len = this.objectsList.length,
                 autoPositionLabelList = [],
@@ -6019,6 +6026,7 @@ JXG.extend(
                 }
                 */
             }
+            if (!deferPresentation) { updateAttention(this); updateFade(this); }
             return this;
         },
 
@@ -6106,7 +6114,8 @@ JXG.extend(
                     objects_sorted[el].visPropCalc.visible &&
                     objects_sorted[el].type !== Const.OBJECT_TYPE_FACE3D // For these, updateRenderer is triggered in polyhedron3d.updateRenderer
                 ) {
-                    objects_sorted[el].prepareUpdate().updateRenderer();
+                    const target = objects_sorted[el];
+                    renderFadeCanvas(target, () => renderAttentionCanvas(target, () => target.prepareUpdate().updateRenderer()));
                 }
             }
 
@@ -6217,6 +6226,8 @@ JXG.extend(
                 return this;
             }
             this.inUpdate = true;
+            resetAttentionPresentation(this);
+            resetFadePresentation(this);
 
             try {
                 if (
@@ -6236,7 +6247,7 @@ JXG.extend(
                 this.prepareUpdate(drag).updateElements(drag).updateConditions();
 
                 this.renderer.suspendRedraw(this);
-                this.updateRenderer();
+                this.updateRenderer(true);
                 this.renderer.unsuspendRedraw();
                 this.triggerEventHandlers(['update'], []);
 
@@ -6246,6 +6257,10 @@ JXG.extend(
                     storeActiveEl.focus(); // Restore focus element
                 }
 
+                // 布局测量只能在渲染表面重新挂载后进行。
+                updateAttention(this);
+                updateFade(this);
+
                 // To resolve dependencies between boards
                 // for (var board in JXG.boards) {
                 len = this.dependentBoards.length;
@@ -6253,6 +6268,8 @@ JXG.extend(
                     b = this.dependentBoards[i];
                     if (Type.exists(b) && b !== this) {
                         b.updateQuality = this.updateQuality;
+                        resetAttentionPresentation(b);
+                        resetFadePresentation(b);
                         b.prepareUpdate().updateElements().updateConditions();
                         b.renderer.suspendRedraw(this);
                         b.updateRenderer();
@@ -6895,6 +6912,9 @@ JXG.extend(
          * @returns {JXG.Board} Reference to the board
          */
         addAnimation: function (element) {
+            if (this.externalAnimationScheduler) {
+                throw new Error('JSXGraph: this legacy animation is not supported by the external scheduler.');
+            }
             var that = this;
 
             this.animationObjects[element.id] = element;

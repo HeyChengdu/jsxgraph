@@ -45,6 +45,7 @@ import Geometry from "../math/geometry.js";
 import Const from "./constants.js";
 import GeometryElement from "./element.js";
 import Type from "../utils/type.js";
+import { writeVector } from '../utils/writePath.js';
 import CoordsElement from "./coordselement.js";
 
 /**
@@ -86,6 +87,7 @@ Type.copyPrototypeMethods(JXG.Point, CoordsElement, 'coordsConstructor');
 JXG.extend(
     JXG.Point.prototype,
     /** @lends JXG.Point.prototype */ {
+        _write: writeVector,
         /**
          * Checks whether (x,y) is near the point.
          * @param {Number} x Coordinate in x direction, screen coordinates.

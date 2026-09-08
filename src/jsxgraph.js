@@ -751,6 +751,7 @@ JXG.JSXGraph = {
         }
 
         this._removeARIANodes(board);
+        board.animationScheduler.dispose();
         board.removeEventHandlers();
         board.suspendUpdate();
 

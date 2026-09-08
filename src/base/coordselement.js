@@ -1838,6 +1838,9 @@ JXG.extend(
          *
          */
         startAnimation: function (direction, stepCount, delay, maxRounds) {
+            if (this.board.externalAnimationScheduler) {
+                throw new Error('JSXGraph: glider animation is not supported by the external scheduler.');
+            }
             var dir = Type.evaluate(direction),
                 sc = Type.evaluate(stepCount),
                 that = this;

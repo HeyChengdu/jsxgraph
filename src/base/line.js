@@ -54,6 +54,7 @@ import Const from "./constants.js";
 import Coords from "./coords.js";
 import GeometryElement from "./element.js";
 import Type from "../utils/type.js";
+import { writeVector } from '../utils/writePath.js';
 
 /**
  * The Line class is a basic class for all kind of line objects, e.g. line, arrow, and axis. It is usually defined by two points and can
@@ -162,6 +163,7 @@ Type.copyMethodMap(JXG.Line, {
 JXG.extend(
     JXG.Line.prototype,
     /** @lends JXG.Line.prototype */ {
+        _write: writeVector,
         /**
          * Checks whether (x,y) is near the line.
          * @param {Number} x Coordinate in x direction, screen coordinates.

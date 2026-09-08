@@ -33,7 +33,9 @@
 /*jslint nomen: true, plusplus: true*/
 
 import JXG from "../jxg.js";
+import { fade } from '../utils/fade.js';
 import Type from "../utils/type.js";
+import { writeComposition, emphasizeComposition } from '../utils/compositionAnimation.js';
 
 /**
  * A composition is a simple container that manages none or more {@link JXG.GeometryElement}s.
@@ -177,6 +179,18 @@ Type.copyMethodMap(JXG.Composition, {
 JXG.extend(
     JXG.Composition.prototype,
     /** @lends JXG.Composition.prototype */ {
+        /** Present unique explicit members using the existing Board animation clock. */
+        write: function (duration, options) {
+            return writeComposition(this, duration, options);
+        },
+        indicate: function (duration) {
+            return emphasizeComposition(this, 'indicate', duration);
+        },
+        fadeIn: function (duration) { return fade(this, true, duration); },
+        fadeOut: function (duration) { return fade(this, false, duration); },
+        circumscribe: function (duration) {
+            return emphasizeComposition(this, 'circumscribe', duration);
+        },
         /**
          * Adds an element to the composition container.
          * @param {String} what Descriptive name for the element, e.g. <em>startpoint</em> or <em>area</em>. This is used to

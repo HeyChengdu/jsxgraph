@@ -107,23 +107,4 @@ describe("Cell presentation runtime contracts", () => {
             "JSXGraph: matrix requires every row to have 2 cells."
         );
     });
-
-    it("reveals Unicode text by code point and validates the stable anchor contract", () => {
-        const currentBoard = createBoard();
-        let progress = 0.6;
-        const text = currentBoard.create("text", [0, 0, "速度🚀变化"], {
-            typewriter: () => progress
-        });
-
-        expect(text.plaintext).toBe("速度🚀");
-        progress = 1;
-        currentBoard.update();
-        expect(text.plaintext).toBe("速度🚀变化");
-        expect(() =>
-            currentBoard.create("text", [0, 0, "invalid"], {
-                anchorX: "middle",
-                typewriter: 0.5
-            })
-        ).toThrowError(/typewriter requires anchorX: 'left'/);
-    });
 });

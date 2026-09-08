@@ -38,6 +38,16 @@ declare namespace JXG {
      * A composition is a simple container that manages none or more GeometryElements.
      */
     export class Composition {
+        /** Write unique members simultaneously, or in insertion order; duration is total milliseconds. */
+        write(duration?: number, options?: { sequential?: boolean }): this;
+        /** Emphasize the currently visible unique members as a single presentation. */
+        indicate(duration?: number): this;
+        /** Draw one temporary frame around the visible members' union. */
+        circumscribe(duration?: number): this;
+        /** Reveal unique members; duration is milliseconds, default 1000. */
+        fadeIn(duration?: number): this;
+        /** Hide unique members after fading, without removing them. */
+        fadeOut(duration?: number): this;
         /** Elements indexed by their JSXGraph id or composition key. */
         elements: { [key: string]: GeometryElement | Composition };
         /** Alias of {@link elements}. */
@@ -505,6 +515,16 @@ declare namespace JXG {
      * This is the basic class for geometry elements like points, circles and lines.
      */
     export class GeometryElement {
+        /** Reveal with transient opacity; duration is milliseconds, default 1000. */
+        fadeIn(duration?: number): this;
+        /** Hide after fading, without deleting geometry or dependencies. */
+        fadeOut(duration?: number): this;
+        /** Progressive drawing for supported elements; duration is in milliseconds. */
+        write(duration?: number, options?: { callback?: () => void }): this;
+        /** 对象自身临时放大至 1.2 倍并变色后恢复，不修改几何或原始样式，毫秒时长默认 1000。 */
+        indicate(duration?: number): this;
+        /** 在真实边界外临时画框，毫秒时长默认 1000。 */
+        circumscribe(duration?: number): this;
         /**
          * Reference to the board associated with the element.
          */
@@ -1237,7 +1257,16 @@ declare namespace JXG {
         slideObject?: GeometryElement;
     }
 
+    export interface TextParts {
+        indicate(duration?: number): this;
+        circumscribe(duration?: number): this;
+    }
+
     export class Text extends CoordsElement {
+        /** 按稳定语义名称选择所有同名 KaTeX 部分。 */
+        parts(name: string): TextParts;
+        /** HTML 文字逐字显示；公式完整排版后从左向右揭示。时长为毫秒，公式默认 1000ms。 */
+        write(duration?: number, options?: { callback?: () => void }): this;
         /**
          * @param board The board the new text is drawn on.
          * @param coordinates The user coordinates of the text.
@@ -5073,6 +5102,8 @@ declare namespace JXG {
         : Arguments;
 
     export class Board {
+        readonly animationScheduler: AnimationScheduler;
+        readonly formulaRenderer?: (source: string, target: HTMLElement, options: object) => void;
         /** Sketching state for the two pointer slots supported by JSXGraph. */
         isSketching: boolean[];
         /** Alias for the primary sketch curve. */
@@ -5265,6 +5296,8 @@ declare namespace JXG {
         jc: JessieCode;
         options: JXGSettings;
         renderer: {
+            /** Renderer 当前绘制空间的边界，单位为 Board 逻辑像素；未渲染时返回空数组。 */
+            getVisualBounds(element: GeometryElement, partName?: string | null): Array<[number, number, number, number]>;
             dumpToCanvas(elementId: string): void;
             /**
              * Convert SVG construction to base64 encoded SVG data URL.
@@ -5638,6 +5671,10 @@ declare namespace JXG {
      * Attributes used in board initialization.
      */
     export interface BoardAttributes {
+        animationScheduler?: AnimationScheduler;
+        /** Explicit KaTeX-compatible rendering dependency; no global lookup. */
+        formulaRenderer?: (source: string, target: HTMLElement, options: object) => void;
+        writeInterval?: number;
         sketches?: {
             enabled?: boolean;
             0?: SketchCurveAttributes;
@@ -6786,11 +6823,17 @@ declare namespace JXG {
         entry(row: number, column: number): Text;
     }
 
-    export type TypewriterProgress = number | NumberFunction;
-
-    export interface TextAttributes {
-        /** Visible character progress from zero to one. Dynamic functions are evaluated on update. */
-        typewriter?: TypewriterProgress;
+    export interface AnimationJob {
+        readonly duration: number;
+        start(): void;
+        update(progress: number): void;
+        finish(): void;
+        cancel(): void;
+    }
+    export interface AnimationHandle { cancel(): void; }
+    export interface AnimationScheduler {
+        schedule(job: AnimationJob): AnimationHandle;
+        dispose(): void;
     }
 }
 

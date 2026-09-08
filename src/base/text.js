@@ -55,6 +55,10 @@ import Env from "../utils/env.js";
 import Type from "../utils/type.js";
 import Mat from "../math/math.js";
 import CoordsElement from "./coordselement.js";
+import { writeText } from "../utils/writeText.js";
+import { writtenTickCount } from "../utils/writePath.js";
+import { formulaParts } from '../utils/formulaParts.js';
+import { cancelAttention } from '../utils/attention.js';
 
 var priv = {
     /**
@@ -379,6 +383,9 @@ JXG.extend(
          * @private
          */
         _setText: function (text) {
+            cancelAttention(this);
+            this._writeState?.handle?.cancel();
+            this._writeState = null;
             this._createFctUpdateText(text);
 
             // First evaluation of the string.
@@ -429,6 +436,16 @@ JXG.extend(
          */
         setText: function (text) {
             return this._setText(text);
+        },
+
+        /** 文字逐字显示，公式完整排版后从左向右揭示；时长为毫秒，返回当前元素。 */
+        _write: function (duration, options) {
+            return writeText(this, duration, options);
+        },
+
+        /** 选取所有同名 KaTeX 语义部分，不改变公式排版。 */
+        parts: function (name) {
+            return formulaParts(this, name);
         },
 
         /**
@@ -653,6 +670,10 @@ JXG.extend(
 
             this.updateCoords(fromParent);
             this.updateText();
+            if (this._writeState && this._writeState.content !== String(this.plaintext)) {
+                this._writeState.handle?.cancel();
+                this._writeState = null;
+            }
 
             if (this.evalVisProp('display') === 'internal') {
                 if (Type.isString(this.plaintext)) {
@@ -698,6 +719,10 @@ JXG.extend(
          * @private
          */
         updateRenderer: function () {
+            // Canvas may paint this label before its owning ticks in the same frame.
+            if (this._writeTicks && this._writeTickIndex >= writtenTickCount(this._writeTicks)) {
+                this.visPropCalc.visible = false;
+            }
             if (
                 //this.board.updateQuality === this.board.BOARD_QUALITY_HIGH &&
                 this.evalVisProp('autoposition')

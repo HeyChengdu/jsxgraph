@@ -1,11 +1,14 @@
 import JXG from "../jxg.js";
 
 export function ownGeneratedLine(line) {
-    return new JXG.Composition({
+    const owner = new JXG.Composition({
         line,
         startPoint: line.point1,
         endPoint: line.point2
     });
+    // Ownership includes construction points; presentation includes only the line.
+    owner._animationMembers = [line];
+    return owner;
 }
 
 export function readCellGridVisualAttributes(elementType, attributes) {
