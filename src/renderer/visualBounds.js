@@ -1,6 +1,6 @@
 /**
  * [INPUT]: Native element-owned borders, ticks, labels and rendered DOM/pixels
- * [OUTPUT]: Deduplicated visible families and renderer-space visual bounds
+ * [OUTPUT]: Deduplicated visible families and renderer-space visual bounds, including formula overflow
  * [POS]: Shared renderer ownership boundary consumed by attention and fade
  * [PROTOCOL]: Update this header on change, then check AGENTS.md
  */
@@ -20,6 +20,34 @@ export function visualFamily(element) {
   }
   visit(element);
   return [...members];
+}
+
+// 语义 span 的行盒不一定包含分式、上下标等溢出的排版内容。
+// 合并实际非退化布局盒，排除零宽撑高节点，并沿用子树内的 CSS 裁剪。
+function formulaVisualRect(root, view) {
+  const boxes = [];
+  function visit(node, clip) {
+    const style = view.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden' ||
+        style.visibility === 'collapse' || style.opacity === '0') return;
+    const rect = node.getBoundingClientRect();
+    const left = Math.max(rect.left, clip[0]);
+    const top = Math.max(rect.top, clip[1]);
+    const right = Math.min(rect.right, clip[2]);
+    const bottom = Math.min(rect.bottom, clip[3]);
+    if (right > left && bottom > top) boxes.push([left, top, right - left, bottom - top]);
+    const clipsX = /^(hidden|clip|scroll|auto)$/.test(style.overflowX || style.overflow);
+    const clipsY = /^(hidden|clip|scroll|auto)$/.test(style.overflowY || style.overflow);
+    const childClip = [
+      clipsX ? left : clip[0], clipsY ? top : clip[1],
+      clipsX ? right : clip[2], clipsY ? bottom : clip[3],
+    ];
+    for (const child of node.children) visit(child, childClip);
+  }
+  visit(root, [-Infinity, -Infinity, Infinity, Infinity]);
+  if (!boxes.length) return root.getBoundingClientRect();
+  const [left, top, width, height] = unionBounds(boxes);
+  return { left, top, width, height };
 }
 
 /** Measure rendered DOM or raster results; never fall back to mathematical bounds. */
@@ -49,7 +77,9 @@ export function domVisualBounds(element, partName = null) {
       );
     })
     .map(node => {
-      const rect = node.getBoundingClientRect();
+      const rect = partName === null
+        ? node.getBoundingClientRect()
+        : formulaVisualRect(node, board.containerObj.ownerDocument.defaultView);
       const svg = node.namespaceURI === 'http://www.w3.org/2000/svg';
       const computed =
         board.containerObj.ownerDocument.defaultView.getComputedStyle(node);
