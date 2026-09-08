@@ -43,6 +43,7 @@ import Statistics from "../math/statistics.js";
 import Coords from "./coords.js";
 import Const from "./constants.js";
 import Type from "../utils/type.js";
+import { moveTo, moveAlong, startGlider, cancelStateAnimations } from '../utils/stateAnimation.js';
 
 /**
  * An element containing coords is a basic geometric element.
@@ -1838,29 +1839,7 @@ JXG.extend(
          *
          */
         startAnimation: function (direction, stepCount, delay, maxRounds) {
-            if (this.board.externalAnimationScheduler) {
-                throw new Error('JSXGraph: glider animation is not supported by the external scheduler.');
-            }
-            var dir = Type.evaluate(direction),
-                sc = Type.evaluate(stepCount),
-                that = this;
-
-            delay = Type.evaluate(delay) || 250;
-            maxRounds = Type.evaluate(maxRounds);
-            maxRounds = (maxRounds !== 'undefined') ? maxRounds : -1;
-
-            if (this.type === Const.OBJECT_TYPE_GLIDER && !Type.exists(this.intervalCode) && maxRounds !== 0) {
-                this.roundsCount = 0;
-                this.intervalCode = window.setInterval(function () {
-                    that._anim(dir, sc, maxRounds);
-                }, delay);
-
-                if (!Type.exists(this.intervalCount)) {
-                    this.intervalCount = 0;
-
-                }
-            }
-            return this;
+            return startGlider(this, direction, stepCount, delay, maxRounds);
         },
 
         /**
@@ -1871,11 +1850,7 @@ JXG.extend(
          * @returns {JXG.CoordsElement} Reference to itself.
          */
         stopAnimation: function () {
-            if (Type.exists(this.intervalCode)) {
-                window.clearInterval(this.intervalCode);
-                delete this.intervalCode;
-            }
-
+            cancelStateAnimations(this, 'position');
             return this;
         },
 
@@ -1899,84 +1874,9 @@ JXG.extend(
          * @see JXG.GeometryElement#animate
          */
         moveAlong: function (path, time, options) {
-            options = options || {};
-
-            var i,
-                neville,
-                interpath = [],
-                p = [],
-                delay = this.board.attr.animationdelay,
-                steps = time / delay,
-                len,
-                pos,
-                part,
-                makeFakeFunction = function (i, j) {
-                    return function () {
-                        return path[i][j];
-                    };
-                };
-
-            if (Type.isArray(path)) {
-                len = path.length;
-                for (i = 0; i < len; i++) {
-                    if (Type.isPoint(path[i])) {
-                        p[i] = path[i];
-                    } else {
-                        p[i] = {
-                            elementClass: Const.OBJECT_CLASS_POINT,
-                            X: makeFakeFunction(i, 0),
-                            Y: makeFakeFunction(i, 1)
-                        };
-                    }
-                }
-
-                time = time || 0;
-                if (time === 0) {
-                    this.setPosition(Const.COORDS_BY_USER, [
-                        p[p.length - 1].X(),
-                        p[p.length - 1].Y()
-                    ]);
-                    return this.board.update(this);
-                }
-
-                if (!Type.exists(options.interpolate) || options.interpolate) {
-                    neville = Numerics.Neville(p);
-                    for (i = 0; i < steps; i++) {
-                        interpath[i] = [];
-                        interpath[i][0] = neville[0](((steps - i) / steps) * neville[3]());
-                        interpath[i][1] = neville[1](((steps - i) / steps) * neville[3]());
-                    }
-                } else {
-                    len = path.length - 1;
-                    for (i = 0; i < steps; ++i) {
-                        pos = Math.floor((i / steps) * len);
-                        part = (i / steps) * len - pos;
-
-                        interpath[i] = [];
-                        interpath[i][0] = (1.0 - part) * p[pos].X() + part * p[pos + 1].X();
-                        interpath[i][1] = (1.0 - part) * p[pos].Y() + part * p[pos + 1].Y();
-                    }
-                    interpath.push([p[len].X(), p[len].Y()]);
-                    interpath.reverse();
-                    /*
-                    for (i = 0; i < steps; i++) {
-                        interpath[i] = [];
-                        interpath[i][0] = path[Math.floor((steps - i) / steps * (path.length - 1))][0];
-                        interpath[i][1] = path[Math.floor((steps - i) / steps * (path.length - 1))][1];
-                    }
-                    */
-                }
-
-                this.animationPath = interpath;
-            } else if (Type.isFunction(path)) {
-                this.animationPath = path;
-                this.animationStart = new Date().getTime();
-            }
-
-            this.animationCallback = options.callback;
-            this.board.addAnimation(this);
-
-            return this;
+            const result = moveAlong(this, path, time, options);
+            return Type.isArray(path) && (!Type.exists(time) || time === 0)
+                ? this.board.update(this) : result;
         },
 
         /**
@@ -2045,72 +1945,12 @@ JXG.extend(
          *</script><pre>
          */
         moveTo: function (where, time, options) {
-            options = options || {};
-            where = new Coords(Const.COORDS_BY_USER, where, this.board);
-
-            var i,
-                delay = this.board.attr.animationdelay,
-                steps = Math.ceil(time / delay),
-                coords = [],
-                X = this.coords.usrCoords[1],
-                Y = this.coords.usrCoords[2],
-                dX = where.usrCoords[1] - X,
-                dY = where.usrCoords[2] - Y,
-                /** @ignore */
-                stepFun = function (i) {
-                    var x = i / steps;  // absolute progress of the animatin
-
-                    if (options.effect) {
-                        if (options.effect === "<>") {
-                            return Math.pow(Math.sin((x * Math.PI) / 2), 2);
-                        }
-                        if (options.effect === "<") {   // cubic ease in
-                            return x * x * x;
-                        }
-                        if (options.effect === ">") {   // cubic ease out
-                            return 1 - Math.pow(1 - x, 3);
-                        }
-                        if (options.effect === "==" || options.effect === "--") {
-                            return i / steps;       // linear
-                        }
-                        // throw new Error("Callback moveTo(): valid effects are '==', '--', '<>', '>', and '<', given is '" + options.effect + "'.");
-                        JXG.warn("Callback moveTo(): valid effects are '==', '--', '<>', '>', and '<', given is '" + options.effect + "'. Set it to '--'");
-                        options.effect = '--';
-                    }
-                    return i / steps;  // default
-                };
-
-            if (
-                !Type.exists(time) ||
-                time === 0 ||
-                Math.abs(where.usrCoords[0] - this.coords.usrCoords[0]) > Mat.eps
-            ) {
-                this.setPosition(Const.COORDS_BY_USER, where.usrCoords);
+            if (this.coords.usrCoords[0] === 0 || (Type.isArray(where) && where.length === 3 && where[0] === 0)) {
+                this.setPosition(Const.COORDS_BY_USER, where);
                 return this.board.update(this);
             }
-
-            // In case there is no callback and we are already at the endpoint we can stop here
-            if (
-                !Type.exists(options.callback) &&
-                Math.abs(dX) < Mat.eps &&
-                Math.abs(dY) < Mat.eps
-            ) {
-                return this;
-            }
-
-            for (i = steps; i >= 0; i--) {
-                coords[steps - i] = [
-                    where.usrCoords[0],
-                    X + dX * stepFun(i),
-                    Y + dY * stepFun(i)
-                ];
-            }
-
-            this.animationPath = coords;
-            this.animationCallback = options.callback;
-            this.board.addAnimation(this);
-
-            return this;
+            const result = moveTo(this, where, time, options);
+            return !Type.exists(time) || time === 0 ? this.board.update(this) : result;
         },
 
         /**
@@ -2170,67 +2010,7 @@ JXG.extend(
          *
          */
         visit: function (where, time, options) {
-            where = new Coords(Const.COORDS_BY_USER, where, this.board);
-
-            var i,
-                j,
-                steps,
-                delay = this.board.attr.animationdelay,
-                coords = [],
-                X = this.coords.usrCoords[1],
-                Y = this.coords.usrCoords[2],
-                dX = where.usrCoords[1] - X,
-                dY = where.usrCoords[2] - Y,
-                /** @ignore */
-                stepFun = function (i) {
-                    var x = i < steps / 2 ? (2 * i) / steps : (2 * (steps - i)) / steps;
-
-                    if (options.effect) {
-                        if (options.effect === "<>") {        // slow at beginning and end
-                            return Math.pow(Math.sin((x * Math.PI) / 2), 2);
-                        }
-                        if (options.effect === "<") {   // cubic ease in
-                            return x * x * x;
-                        }
-                        if (options.effect === ">") {   // cubic ease out
-                            return 1 - Math.pow(1 - x, 3);
-                        }
-                        if (options.effect === "==" || options.effect === "--") {
-                            return x;       // linear
-                        }
-                        // throw new Error("Callback visit(): valid effects are '==', '--', '<>', '>', and '<', given is '" + options.effect + "'.");
-                        JXG.warn("Callback visit(): valid effects are '==', '--', '<>', '>', and '<', given is '" + options.effect + "'. Set it to '--'");
-                        options.effect = '--';
-                    }
-                    return x;
-                };
-
-            // support legacy interface where the third parameter was the number of repeats
-            if (Type.isNumber(options)) {
-                options = { repeat: options };
-            } else {
-                options = options || {};
-                if (!Type.exists(options.repeat)) {
-                    options.repeat = 1;
-                }
-            }
-
-            steps = Math.ceil(time / (delay * options.repeat));
-
-            for (j = 0; j < options.repeat; j++) {
-                for (i = steps; i >= 0; i--) {
-                    coords[j * (steps + 1) + steps - i] = [
-                        where.usrCoords[0],
-                        X + dX * stepFun(i),
-                        Y + dY * stepFun(i)
-                    ];
-                }
-            }
-            this.animationPath = coords;
-            this.animationCallback = options.callback;
-            this.board.addAnimation(this);
-
-            return this;
+            return moveTo(this, where, time, typeof options === "number" ? { repeat: options } : options, true);
         },
 
         /**
@@ -2396,79 +2176,6 @@ JXG.extend(
             });
         },
 
-        /**
-         * Animates a glider. Is called by the browser after startAnimation is called.
-         * @param {Number} direction The direction the glider is animated.
-         * @param {Number} stepCount The number of steps in which the parent element is divided.
-         * Must be at least 1.
-         * @param {Number} [maxRounds=-1] The number of rounds the glider will be animated. The glider will run infinitely if
-         * maxRounds is negative or equal to Infinity.
-         * @see JXG.CoordsElement#startAnimation
-         * @see JXG.CoordsElement#stopAnimation
-         * @private
-         * @returns {JXG.CoordsElement} Reference to itself.
-         */
-        _anim: function (direction, stepCount, maxRounds) {
-            var dX, dY, alpha, startPoint, newX, radius, sp1c, sp2c, res;
-
-            this.intervalCount += 1;
-            if (this.intervalCount > stepCount) {
-                this.intervalCount = 0;
-
-                this.roundsCount += 1;
-                if (maxRounds > 0 && this.roundsCount >= maxRounds) {
-                    this.roundsCount = 0;
-                    return this.stopAnimation();
-                }
-            }
-
-            if (this.slideObject.elementClass === Const.OBJECT_CLASS_LINE) {
-                sp1c = this.slideObject.point1.coords.scrCoords;
-                sp2c = this.slideObject.point2.coords.scrCoords;
-
-                dX = Math.round(((sp2c[1] - sp1c[1]) * this.intervalCount) / stepCount);
-                dY = Math.round(((sp2c[2] - sp1c[2]) * this.intervalCount) / stepCount);
-                if (direction > 0) {
-                    startPoint = this.slideObject.point1;
-                } else {
-                    startPoint = this.slideObject.point2;
-                    dX *= -1;
-                    dY *= -1;
-                }
-
-                this.coords.setCoordinates(Const.COORDS_BY_SCREEN, [
-                    startPoint.coords.scrCoords[1] + dX,
-                    startPoint.coords.scrCoords[2] + dY
-                ]);
-            } else if (this.slideObject.elementClass === Const.OBJECT_CLASS_CURVE) {
-                if (direction > 0) {
-                    newX = (this.slideObject.maxX() - this.slideObject.minX()) * this.intervalCount / stepCount + this.slideObject.minX();
-                } else {
-                    newX = -(this.slideObject.maxX() - this.slideObject.minX()) * this.intervalCount / stepCount + this.slideObject.maxX();
-                }
-                this.coords.setCoordinates(Const.COORDS_BY_USER, [this.slideObject.X(newX), this.slideObject.Y(newX)]);
-
-                res = Geometry.projectPointToCurve(this, this.slideObject, this.board);
-                this.coords = res[0];
-                this.position = res[1];
-            } else if (this.slideObject.elementClass === Const.OBJECT_CLASS_CIRCLE) {
-                alpha = 2 * Math.PI;
-                if (direction < 0) {
-                    alpha *= this.intervalCount / stepCount;
-                } else {
-                    alpha *= (stepCount - this.intervalCount) / stepCount;
-                }
-                radius = this.slideObject.Radius();
-
-                this.coords.setCoordinates(Const.COORDS_BY_USER, [
-                    this.slideObject.center.coords.usrCoords[1] + radius * Math.cos(alpha),
-                    this.slideObject.center.coords.usrCoords[2] + radius * Math.sin(alpha)
-                ]);
-            }
-
-            this.board.update(this);
-            return this;
-        },
 
         // documented in GeometryElement
         getTextAnchor: function () {

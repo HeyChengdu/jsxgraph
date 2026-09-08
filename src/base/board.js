@@ -54,6 +54,8 @@ import EventEmitter from '../utils/event.js';
 import Env from '../utils/env.js';
 import Composition from './composition.js';
 import { createAnimationScheduler } from '../utils/animationScheduler.js';
+import { createAnimationController } from '../utils/animationController.js';
+import { addLegacyAnimation, advanceLegacyAnimations } from '../utils/legacyAnimation.js';
 import { updateAttention, resetAttentionPresentation, renderAttentionCanvas } from '../utils/attention.js';
 import { updateFade, resetFadePresentation, renderFadeCanvas } from '../utils/fade.js';
 
@@ -218,7 +220,7 @@ JXG.Board = function (container, renderer, id,
      * @type Object
      */
     this.attr = attributes;
-    this.animationScheduler = attributes.animationscheduler || createAnimationScheduler(this);
+    this.animationScheduler = createAnimationController(attributes.animationscheduler || createAnimationScheduler(this));
     this.formulaRenderer = attributes.formularenderer;
     this.externalAnimationScheduler = !!attributes.animationscheduler;
 
@@ -339,10 +341,7 @@ JXG.Board = function (container, renderer, id,
      */
     this.groups = {};
 
-    /**
-     * Stores all the objects that are currently running an animation.
-     * @type Object
-     */
+    /** Public legacy queue; advancement is adapted to animationScheduler. */
     this.animationObjects = {};
 
     /**
@@ -6905,140 +6904,19 @@ JXG.extend(
             return this;
         },
 
-        /**
-         * Adds an animation. Animations are controlled by the boards, so the boards need to be aware of the
-         * animated elements. This function tells the board about new elements to animate.
-         * @param {JXG.GeometryElement} element The element which is to be animated.
-         * @returns {JXG.Board} Reference to the board
-         */
+        /** Cancel current animations without disposing the Board clock. */
         addAnimation: function (element) {
-            if (this.externalAnimationScheduler) {
-                throw new Error('JSXGraph: this legacy animation is not supported by the external scheduler.');
-            }
-            var that = this;
-
-            this.animationObjects[element.id] = element;
-
-            if (!this.animationIntervalCode) {
-                this.animationIntervalCode = window.setInterval(function () {
-                    that.animate();
-                }, element.board.attr.animationdelay);
-            }
-
-            return this;
+            return addLegacyAnimation(this, element);
         },
 
-        /**
-         * Cancels all running animations.
-         * @returns {JXG.Board} Reference to the board
-         */
-        stopAllAnimation: function () {
-            var el;
-
-            for (el in this.animationObjects) {
-                if (
-                    this.animationObjects.hasOwnProperty(el) &&
-                    Type.exists(this.animationObjects[el])
-                ) {
-                    this.animationObjects[el] = null;
-                    delete this.animationObjects[el];
-                }
-            }
-
-            window.clearInterval(this.animationIntervalCode);
-            delete this.animationIntervalCode;
-
-            return this;
-        },
-
-        /**
-         * General purpose animation function. This currently only supports moving points from one place to another. This
-         * is faster than managing the animation per point, especially if there is more than one animated point at the same time.
-         * @returns {JXG.Board} Reference to the board
-         */
+        /** Advance the legacy queue once; no independent timer is created. */
         animate: function () {
-            var props,
-                el,
-                o,
-                newCoords,
-                r,
-                p,
-                c,
-                cbtmp,
-                count = 0,
-                obj = null;
+            return advanceLegacyAnimations(this);
+        },
 
-            for (el in this.animationObjects) {
-                if (
-                    this.animationObjects.hasOwnProperty(el) &&
-                    Type.exists(this.animationObjects[el])
-                ) {
-                    count += 1;
-                    o = this.animationObjects[el];
-
-                    if (o.animationPath) {
-                        if (Type.isFunction(o.animationPath)) {
-                            newCoords = o.animationPath(
-                                new Date().getTime() - o.animationStart
-                            );
-                        } else {
-                            newCoords = o.animationPath.pop();
-                        }
-
-                        if (
-                            !Type.exists(newCoords) ||
-                            (!Type.isArray(newCoords) && isNaN(newCoords))
-                        ) {
-                            delete o.animationPath;
-                        } else {
-                            o.setPositionDirectly(Const.COORDS_BY_USER, newCoords);
-                            o.fullUpdate();
-                            obj = o;
-                        }
-                    }
-                    if (o.animationData) {
-                        c = 0;
-
-                        for (r in o.animationData) {
-                            if (o.animationData.hasOwnProperty(r)) {
-                                p = o.animationData[r].pop();
-
-                                if (!Type.exists(p)) {
-                                    delete o.animationData[p];
-                                } else {
-                                    c += 1;
-                                    props = {};
-                                    props[r] = p;
-                                    o.setAttribute(props);
-                                }
-                            }
-                        }
-
-                        if (c === 0) {
-                            delete o.animationData;
-                        }
-                    }
-
-                    if (!Type.exists(o.animationData) && !Type.exists(o.animationPath)) {
-                        this.animationObjects[el] = null;
-                        delete this.animationObjects[el];
-
-                        if (Type.exists(o.animationCallback)) {
-                            cbtmp = o.animationCallback;
-                            o.animationCallback = null;
-                            cbtmp();
-                        }
-                    }
-                }
-            }
-
-            if (count === 0) {
-                window.clearInterval(this.animationIntervalCode);
-                delete this.animationIntervalCode;
-            } else {
-                this.update(obj);
-            }
-
+        /** Cancel current animations without disposing the Board clock. */
+        stopAllAnimation: function () {
+            this.animationScheduler.cancelAll();
             return this;
         },
 
@@ -8498,7 +8376,7 @@ JXG.extend(
                         },
                         beta = Math.PI / 18,
                         beta9 = beta * 9,
-                        interval = null;
+                        animationHandle = null;
 
                     this.rolling = function () {
                         var h, g, hp, gp, z;
@@ -8549,14 +8427,27 @@ JXG.extend(
                     };
 
                     this.start = function () {
+                        if (brd.externalAnimationScheduler) {
+                            throw new Error('JSXGraph: unbounded roulette must be driven explicitly by the host.');
+                        }
                         if (time > 0) {
-                            interval = window.setInterval(this.rolling, time);
+                            this.stop();
+                            const step = () => {
+                                animationHandle = brd.animationScheduler.schedule({
+                                    duration: time,
+                                    start() {},
+                                    update() {},
+                                    finish: () => { this.rolling(); step(); },
+                                    cancel() {},
+                                });
+                            };
+                            step();
                         }
                         return this;
                     };
 
                     this.stop = function () {
-                        window.clearInterval(interval);
+                        animationHandle?.cancel();
                         return this;
                     };
                     return this;

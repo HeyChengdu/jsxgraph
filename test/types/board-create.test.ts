@@ -84,7 +84,13 @@ const pointFromObjectTable = board.objects[a.id];
 if (pointFromObjectTable instanceof JXG.GeometryElement) {
     pointFromObjectTable.getName();
 }
+board.animationScheduler.cancelAll();
 board.animationObjects[a.id]?.getName();
+board.addAnimation(a).animate();
+a.moveTo([1, 2], 100, { effect: '<' });
+a.moveAlong(t => [t / 100, 0], 1000);
+a.visit([1, 2], 100, 2);
+a.animate({ strokeWidth: 4, strokeColor: 'blue-600' }, 100);
 board.highlightedObjects[a.id]?.getName();
 board.fullscreenListener(new Event("fullscreenchange"));
 board.pointerDownListener(new PointerEvent("pointerdown"), a, false);

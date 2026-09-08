@@ -515,6 +515,15 @@ declare namespace JXG {
      * This is the basic class for geometry elements like points, circles and lines.
      */
     export class GeometryElement {
+        /** Animate supported author attributes through the Board scheduler (milliseconds). */
+        animate(attributes: {
+            strokeColor?: string;
+            fillColor?: string;
+            size?: number | string;
+            strokeWidth?: number | string;
+            strokeOpacity?: number | string;
+            fillOpacity?: number | string;
+        }, time?: number, options?: { callback?(): void }): this;
         /** Reveal with transient opacity; duration is milliseconds, default 1000. */
         fadeIn(duration?: number): this;
         /** Hide after fading, without deleting geometry or dependencies. */
@@ -1174,7 +1183,7 @@ declare namespace JXG {
          * Animation effects like speed fade in and out.
          * possible values are '<>' for speed increase on start and slow down at the end (default) and '--' for constant speed during the whole animation.
          */
-        effect?: "<>" | "--";
+        effect?: "<>" | "--" | "==" | "<" | ">";
     }
 
     /**
@@ -1190,7 +1199,7 @@ declare namespace JXG {
          * possible values are '<>' for speed increase on start and slow down at the end (default) and '--' for constant speed during the whole animation.
          * Default is '<>'.
          */
-        effect?: "<>" | "--";
+        effect?: "<>" | "--" | "==" | "<" | ">";
         /**
          * How often this animation should be repeated.
          * Default is 1.
@@ -1219,7 +1228,7 @@ declare namespace JXG {
          * @param options Optional settings for the animation.
          * @returns Reference to itself.
          */
-        moveAlong(path: PointSpecification[], time: number, options?: MoveAlongOptions): this;
+        moveAlong(path: PointSpecification[] | ((elapsedMilliseconds: number) => number[] | number), time?: number, options?: MoveAlongOptions): this;
         /**
          * Starts an animated point movement towards the given coordinates where.
          * The animation is done after time milliseconds.
@@ -1235,11 +1244,11 @@ declare namespace JXG {
          * @param direction: The direction the glider is animated. Can be +1 or -1.
          * @param stepCount: The number of steps.
          */
-        startAnimation(direction: number, stepCount: number): void;
+        startAnimation(direction: number, stepCount: number, delay?: number, maxRounds?: number): this;
         /**
          * Stop animation.
          */
-        stopAnimation(): void;
+        stopAnimation(): this;
 
         /**
          * Starts an animated point movement towards the given coordinates where.
@@ -1250,7 +1259,7 @@ declare namespace JXG {
          * @param options Optional settings for the animation.
          * @returns Reference to itself.
          */
-        visit(where: PointSpecification[], time?: number, options?: VisitOptions): this;
+        visit(where: PointSpecification | PointSpecification[], time?: number, options?: VisitOptions | number): this;
     }
 
     export interface CoordsElementAttributes extends GeometryElementAttributes {
@@ -5102,7 +5111,9 @@ declare namespace JXG {
         : Arguments;
 
     export class Board {
-        readonly animationScheduler: AnimationScheduler;
+        readonly animationScheduler: AnimationController;
+        /** Legacy queue adapted to the Board animation scheduler. */
+        animationObjects: Record<string, GeometryElement | null>;
         readonly formulaRenderer?: (source: string, target: HTMLElement, options: object) => void;
         /** Sketching state for the two pointer slots supported by JSXGraph. */
         isSketching: boolean[];
@@ -5112,7 +5123,6 @@ declare namespace JXG {
         sketches: Array<Curve | null>;
         addEvent(event: string, handler: (evt: PointerEvent) => void, context?: {}): {};
         /** Animated geometry elements indexed by element id. */
-        animationObjects: Record<string, GeometryElement | null>;
         attr: BoardAttributes;
         BOARD_MODE_DRAG: number;
         BOARD_MODE_MOVE_ORIGIN: number;
@@ -5343,19 +5353,13 @@ declare namespace JXG {
          */
         zoomY: number;
         /**
-         * Adds an animation.
-         * Animations are controlled by the boards, so the boards need to be aware of the animated elements.
-         * This function tells the board about new elements to animate.
-         * @param element The element which is to be animated.
-         * @returns Reference to the board.
-         */
-        addAnimation(element: GeometryElement): Board;
-        /**
          * Adds a dependent board to this board.
          * @param board A reference to board which will be updated after an update of this board occurred.
          * @returns Reference to the board.
          */
         addChild(board: Board): Board;
+        addAnimation(element: GeometryElement): Board;
+        animate(): this;
         addConditions(str: string): unknown;
         addEventHandlers(): unknown;
         addFullscreenEventHandlers(): unknown;
@@ -5375,12 +5379,6 @@ declare namespace JXG {
         addMouseEventHandlers(): unknown;
         addPointerEventHandlers(): unknown;
         addTouchEventHandlers(appleGestures: boolean): unknown;
-        /**
-         * General purpose animation function.
-         * This currently only supports moving points from one place to another.
-         * This is faster than managing the animation per point, especially if there is more than one animated point at the same time.
-         */
-        animate(): this;
         /**
          * Apply update on all objects with the new zoom-factors.
          * Clears all traces.
@@ -5419,7 +5417,8 @@ declare namespace JXG {
             direction: number,
             time: number,
             pointlist: Point[]
-        ): unknown;
+        ): Roulette;
+        setAttribute(attributes: Partial<BoardAttributes>): this;
         /**
          * Remove highlighting of all elements.
          */
@@ -6834,6 +6833,15 @@ declare namespace JXG {
     export interface AnimationScheduler {
         schedule(job: AnimationJob): AnimationHandle;
         dispose(): void;
+    }
+    export interface AnimationController extends AnimationScheduler {
+        /** Cancel current jobs while keeping the scheduler available for subsequent work. */
+        cancelAll(): void;
+    }
+    export interface Roulette {
+        rolling(): void;
+        start(): this;
+        stop(): this;
     }
 }
 

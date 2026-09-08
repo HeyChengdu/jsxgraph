@@ -41,6 +41,8 @@ import Options from "../options.js";
 import EventEmitter from "../utils/event.js";
 import Color from "../utils/color.js";
 import Type from "../utils/type.js";
+import { animateAttributes, cancelStateAnimations } from '../utils/stateAnimation.js';
+import { removeLegacyAnimation } from '../utils/legacyAnimation.js';
 import { emphasize, cancelAttention } from '../utils/attention.js';
 import { fade, cancelFade } from '../utils/fade.js';
 
@@ -836,84 +838,7 @@ JXG.extend(
          * @returns {JXG.GeometryElement} A reference to the object
          */
         animate: function (hash, time, options) {
-            options = options || {};
-            var r,
-                p,
-                i,
-                delay = this.board.attr.animationdelay,
-                steps = Math.ceil(time / delay),
-                self = this,
-                animateColor = function (startRGB, endRGB, property) {
-                    var hsv1, hsv2, sh, ss, sv;
-                    hsv1 = Color.rgb2hsv(startRGB);
-                    hsv2 = Color.rgb2hsv(endRGB);
-
-                    sh = (hsv2[0] - hsv1[0]) / steps;
-                    ss = (hsv2[1] - hsv1[1]) / steps;
-                    sv = (hsv2[2] - hsv1[2]) / steps;
-                    self.animationData[property] = [];
-
-                    for (i = 0; i < steps; i++) {
-                        self.animationData[property][steps - i - 1] = Color.hsv2rgb(
-                            hsv1[0] + (i + 1) * sh,
-                            hsv1[1] + (i + 1) * ss,
-                            hsv1[2] + (i + 1) * sv
-                        );
-                    }
-                },
-                animateFloat = function (start, end, property, round) {
-                    var tmp, s;
-
-                    start = parseFloat(start);
-                    end = parseFloat(end);
-
-                    // we can't animate without having valid numbers.
-                    // And parseFloat returns NaN if the given string doesn't contain
-                    // a valid float number.
-                    if (isNaN(start) || isNaN(end)) {
-                        return;
-                    }
-
-                    s = (end - start) / steps;
-                    self.animationData[property] = [];
-
-                    for (i = 0; i < steps; i++) {
-                        tmp = start + (i + 1) * s;
-                        self.animationData[property][steps - i - 1] = round
-                            ? Math.floor(tmp)
-                            : tmp;
-                    }
-                };
-
-            this.animationData = {};
-
-            for (r in hash) {
-                if (hash.hasOwnProperty(r)) {
-                    p = r.toLowerCase();
-
-                    switch (p) {
-                        case "strokecolor":
-                        case "fillcolor":
-                            animateColor(this.visProp[p], hash[r], p);
-                            break;
-                        case "size":
-                            if (!Type.isPoint(this)) {
-                                break;
-                            }
-                            animateFloat(this.visProp[p], hash[r], p, true);
-                            break;
-                        case "strokeopacity":
-                        case "strokewidth":
-                        case "fillopacity":
-                            animateFloat(this.visProp[p], hash[r], p, false);
-                            break;
-                    }
-                }
-            }
-
-            this.animationCallback = options.callback;
-            this.board.addAnimation(this);
-            return this;
+            return animateAttributes(this, hash, time, options);
         },
 
         /**
@@ -1779,6 +1704,8 @@ JXG.extend(
          * the renderer, to remove the element completely you should use {@link JXG.Board#removeObject}.
          */
         remove: function () {
+            cancelStateAnimations(this);
+            removeLegacyAnimation(this);
             this._writeState?.handle?.cancel();
             cancelAttention(this);
             cancelFade(this);
