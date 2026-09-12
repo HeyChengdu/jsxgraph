@@ -461,9 +461,25 @@ const view = board.create("view3d", [
 view.az_slide.Value().toFixed();
 view.el_slide.Value().toFixed();
 view.bank_slide.Value().toFixed();
+view.setView(Math.PI, Math.PI / 2).setView(0, 0.5, 8);
+// @ts-expect-error 视角参数必须是数值，不能把字符串作为角度。
+view.setView("front", 0);
 const p3a = view.create("point3d", [0, 0, 0]);
+// 三维点的投影标签沿用原生二维标签选项。
+view.create("point3d", [0, 0, 0], {
+    withLabel: true,
+    name: "A",
+    label: { fontSize: 23, offset: [8, 8], anchorX: "left" }
+});
+// @ts-expect-error 标签字号不能是布尔值。
+view.create("point3d", [0, 0, 0], { label: { fontSize: true } });
 const p3b = view.create("point3d", [[1, 0, 0]]);
 const p3c = view.create("point3d", [0, 1, 0]);
+p3a.distance(p3b).toFixed(2);
+// @ts-expect-error 三维点距离接受 Point3D，不接受二维点或裸坐标。
+p3a.distance(a);
+// @ts-expect-error 裸坐标不是 Point3D。
+p3a.distance([1, 0, 0]);
 view.create("transform3d", [() => Math.PI / 2, [1, 0, 0], p3a], {
     type: "rotate"
 });
@@ -477,6 +493,11 @@ const plane3 = view.create("plane3d", [p3a, [1, 0, 0], [0, 1, 0]]);
 const sphere3 = view.create("sphere3d", [p3a, p3b]);
 view.create("circle3d", [p3a, [0, 0, 1], 2]);
 view.create("curve3d", [(u) => Math.cos(u), (u) => Math.sin(u), (u) => u, [0, 1]]);
+view.create("curve3d", [[0, 1, 1], [0, 0, 1], [0, 0, 0]]);
+const curveCoordinates = [[0, 1], [0, 1], [0, 0]] as const;
+view.create("curve3d", curveCoordinates);
+// @ts-expect-error 三维曲线的分量数组不能包含字符串。
+view.create("curve3d", [[0, 1], [0, 1], [0, "1"]]);
 view.create("functiongraph3d", [(x, y) => x + y, [-2, 2], [-2, 2]]);
 view.create("functiongraph3d", [(x, y) => x + y, [-2, 2], [-2, 2]], {
     type: "colormap",

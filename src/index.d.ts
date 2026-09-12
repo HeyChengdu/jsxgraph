@@ -1269,9 +1269,13 @@ declare namespace JXG {
     export interface TextParts {
         indicate(duration?: number): this;
         circumscribe(duration?: number): this;
+        /** 在两个唯一公式局部之间绘制关系提示；非空标签与正数毫秒时长均必填。 */
+        relate(target: TextParts, options: { duration: number; label: string }): this;
     }
 
     export class Text extends CoordsElement {
+        /** renderer 已提交的逻辑像素尺寸，布局与锚点共用。 */
+        size: [number, number];
         /** 按稳定语义名称选择所有同名 KaTeX 部分。 */
         parts(name: string): TextParts;
         /** HTML 文字逐字显示；公式完整排版后从左向右揭示。时长为毫秒，公式默认 1000ms。 */
@@ -3434,6 +3438,7 @@ declare namespace JXG {
 
     export interface Point3DAttributes extends GeometryElementAttributes {
         size?: number;
+        label?: LabelOptions;
     }
 
     export interface Point3D extends Transformable3D {
@@ -3441,6 +3446,7 @@ declare namespace JXG {
         X(): number;
         Y(): number;
         Z(): number;
+        distance(point: Point3D): number;
     }
 
     export interface Polygon3DAttributes extends GeometryElementAttributes {}
@@ -3578,6 +3584,7 @@ declare namespace JXG {
     export type Curve3DVectorEvaluator = (u: number) => readonly [number, number, number];
     export type Curve3DParents =
         | readonly [Curve3DVectorEvaluator, Range3D]
+        | readonly [readonly number[], readonly number[], readonly number[]]
         | readonly [Curve3DEvaluator, Curve3DEvaluator, Curve3DEvaluator, Range3D]
         | readonly [readonly Vector3[]]
         | readonly [Curve3D, TransformationList];
@@ -3737,6 +3744,7 @@ declare namespace JXG {
         az_slide: Slider;
         el_slide: Slider;
         bank_slide: Slider;
+        setView(azimuth: number, elevation: number, radius?: number): this;
         /**
          * Constructs a new View3D object.
          */
@@ -5484,6 +5492,8 @@ declare namespace JXG {
          * @param context [{}] The context the handler will be called in, default is the element itself.
          * @returns Reference to the object.
          */
+        /** HTML 文字提交并测量后、视觉位置提交前的同步布局阶段。 */
+        on(event: 'layout', handler: () => void, context?: unknown): this;
         on(event: string, handler: (evt: PointerEvent) => void, context?: {}): {};
         pointerDownListener(
             event: PointerEvent,

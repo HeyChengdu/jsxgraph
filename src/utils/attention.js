@@ -223,6 +223,15 @@ export function emphasize(element, kind, duration = 1000, partName = null, selec
     node: null,
     handle: null,
   };
+  scheduleAttention(state, duration, previous =>
+    previous.target === state.target && previous.partName === partName && !previous.render
+  );
+  return element;
+}
+
+/** 临时呈现共用调度和清理，具体效果只提供绘制与重入判定。 */
+export function scheduleAttention(state, duration, replaces) {
+  const board = state.element.board;
   const cleanup = () => {
     restore(state);
     state.node?.remove();
@@ -232,7 +241,7 @@ export function emphasize(element, kind, duration = 1000, partName = null, selec
     duration,
     start() {
       for (const previous of board._attention ?? [])
-        if (previous.target === state.target && previous.partName === partName)
+        if (replaces(previous))
           previous.handle?.cancel();
       board._attention ??= new Set();
       board._attention.add(state);
@@ -243,7 +252,6 @@ export function emphasize(element, kind, duration = 1000, partName = null, selec
     finish: cleanup,
     cancel: cleanup,
   });
-  return element;
 }
 
 export function cancelAttention(element, partName) {
@@ -270,6 +278,10 @@ export function updateAttention(board) {
       continue;
     }
     if (board.renderer.type === 'no') continue;
+    if (state.render) {
+      state.render(state);
+      continue;
+    }
     if (state.kind === 'indicate') {
       if (board.renderer.type !== 'canvas' || renderedMembers(state).some(member => member.rendNode))
         indicateDOM(state);

@@ -1194,19 +1194,122 @@ JXG.extend(
          * @see JXG.AbstractRenderer#updateInternalText
          * @see JXG.AbstractRenderer#updateTextStyle
          */
+        /** 写入文字与样式；尺寸测量和定位由后续阶段完成。 */
+        prepareText: function (el) {
+            if (!el.visPropCalc.visible || el.evalVisProp('display') !== 'html' || this.type === 'no') return;
+            var content = renderWrittenText(el), parentNode, node;
+            this.updateTextStyle(el, false);
+            // Set the content
+            if (el.htmlStr !== content) {
+                try {
+                    if (el.type === Type.OBJECT_TYPE_BUTTON) {
+                        el.rendNodeButton.innerHTML = content;
+                    } else if (
+                        el.type === Type.OBJECT_TYPE_CHECKBOX ||
+                        el.type === Type.OBJECT_TYPE_INPUT
+                    ) {
+                        el.rendNodeLabel.innerHTML = content;
+                    } else {
+                        el.rendNode.innerHTML = content;
+                    }
+                } catch (e) {
+                    // Setting innerHTML sometimes fails in IE8.
+                    // A workaround is to take the node off the DOM, assign innerHTML,
+                    // then append back.
+                    // Works for text elements as they are absolutely positioned.
+                    parentNode = el.rendNode.parentNode;
+                    el.rendNode.parentNode.removeChild(el.rendNode);
+                    el.rendNode.innerHTML = content;
+                    parentNode.appendChild(el.rendNode);
+                }
+                el.htmlStr = content;
+                el.needsSizeUpdate = true;
+
+                if (el.evalVisProp('usemathjax')) {
+                    // Typesetting directly might not work because MathJax was not yet loaded completely
+                    try {
+                        if (MathJax.typeset) {
+                            // Version 3
+                            MathJax.typeset([el.rendNode]);
+                        } else {
+                            // Version 2
+                            MathJax.Hub.Queue(["Typeset", MathJax.Hub, el.rendNode]);
+                        }
+
+                        // Obsolete:
+                        // // Restore the transformation necessary for fullscreen mode
+                        // // MathJax removes it when handling dynamic content
+                        // id = el.board.container;
+                        // wrap_id = "fullscreenwrap_" + id;
+                        // if (document.getElementById(wrap_id)) {
+                        //     scale = el.board.containerObj._cssFullscreenStore.scale;
+                        //     vshift = el.board.containerObj._cssFullscreenStore.vshift;
+                        //     Env.scaleJSXGraphDiv(
+                        //         "#" + wrap_id,
+                        //         "#" + id,
+                        //         scale,
+                        //         vshift
+                        //     );
+                        // }
+                    } catch (e) {
+                        JXG.debug("MathJax (not yet) loaded");
+                    }
+                } else if (el.evalVisProp('usekatex')) {
+                    try {
+                        // Checkboxes et. al. do not possess rendNodeLabel during the first update.
+                        // In this case node will be undefined and not rendered by KaTeX.
+                        if (el.rendNode.innerHTML.indexOf('<span') === 0 &&
+                            el.rendNode.innerHTML.indexOf('<label') > 0 &&
+                            (
+                                el.rendNode.innerHTML.indexOf('<checkbox') > 0 ||
+                                el.rendNode.innerHTML.indexOf('<input') > 0
+                            )
+                         ) {
+                            node = el.rendNodeLabel;
+                        } else if (el.rendNode.innerHTML.indexOf('<button') === 0) {
+                            node = el.rendNodeButton;
+                        } else {
+                            node = el.rendNode;
+                        }
+
+                        if (node) {
+                            /* eslint-disable no-undef */
+                            if (!el.board.formulaRenderer) {
+                                throw new Error('JSXGraph: useKatex requires a Board formulaRenderer.');
+                            }
+                            el.board.formulaRenderer(content, node, formulaOptions(el));
+                            /* eslint-enable no-undef */
+                        }
+                    } catch (e) {
+                        throw e;
+                    }
+                } else if (el.evalVisProp('useasciimathml')) {
+                    // This is not a constructor.
+                    // See http://asciimath.org/ for more information
+                    // about AsciiMathML and the project's source code.
+                    try {
+                        AMprocessNode(el.rendNode, false);
+                    } catch (e) {
+                        JXG.debug("AsciiMathML not loaded (yet)");
+                    }
+                }
+            }
+
+        },
+
         updateText: function (el) {
-            var content = renderWrittenText(el),
-                v, c,
-                parentNode, node,
+            var v, c,
                 // scale, vshift,
                 // id, wrap_id,
                 ax, ay, angle, co, si,
                 to_h, to_v;
 
             if (el.visPropCalc.visible) {
-                this.updateTextStyle(el, false);
+                this.prepareText(el);
+                if (el.evalVisProp('display') !== 'html') this.updateTextStyle(el, false);
 
                 if (el.evalVisProp('display') === "html" && this.type !== 'no') {
+                    if (el.needsSizeUpdate) el.updateSize();
                     // Set the position
                     if (!isNaN(el.coords.scrCoords[1] + el.coords.scrCoords[2])) {
                         // Horizontal
@@ -1280,101 +1383,6 @@ JXG.extend(
                                 el.rendNode.style.top = v + 'px';
                             }
                             el.visPropOld.top = ay + v;
-                        }
-                    }
-
-                    // Set the content
-                    if (el.htmlStr !== content) {
-                        try {
-                            if (el.type === Type.OBJECT_TYPE_BUTTON) {
-                                el.rendNodeButton.innerHTML = content;
-                            } else if (
-                                el.type === Type.OBJECT_TYPE_CHECKBOX ||
-                                el.type === Type.OBJECT_TYPE_INPUT
-                            ) {
-                                el.rendNodeLabel.innerHTML = content;
-                            } else {
-                                el.rendNode.innerHTML = content;
-                            }
-                        } catch (e) {
-                            // Setting innerHTML sometimes fails in IE8.
-                            // A workaround is to take the node off the DOM, assign innerHTML,
-                            // then append back.
-                            // Works for text elements as they are absolutely positioned.
-                            parentNode = el.rendNode.parentNode;
-                            el.rendNode.parentNode.removeChild(el.rendNode);
-                            el.rendNode.innerHTML = content;
-                            parentNode.appendChild(el.rendNode);
-                        }
-                        el.htmlStr = content;
-
-                        if (el.evalVisProp('usemathjax')) {
-                            // Typesetting directly might not work because MathJax was not yet loaded completely
-                            try {
-                                if (MathJax.typeset) {
-                                    // Version 3
-                                    MathJax.typeset([el.rendNode]);
-                                } else {
-                                    // Version 2
-                                    MathJax.Hub.Queue(["Typeset", MathJax.Hub, el.rendNode]);
-                                }
-
-                                // Obsolete:
-                                // // Restore the transformation necessary for fullscreen mode
-                                // // MathJax removes it when handling dynamic content
-                                // id = el.board.container;
-                                // wrap_id = "fullscreenwrap_" + id;
-                                // if (document.getElementById(wrap_id)) {
-                                //     scale = el.board.containerObj._cssFullscreenStore.scale;
-                                //     vshift = el.board.containerObj._cssFullscreenStore.vshift;
-                                //     Env.scaleJSXGraphDiv(
-                                //         "#" + wrap_id,
-                                //         "#" + id,
-                                //         scale,
-                                //         vshift
-                                //     );
-                                // }
-                            } catch (e) {
-                                JXG.debug("MathJax (not yet) loaded");
-                            }
-                        } else if (el.evalVisProp('usekatex')) {
-                            try {
-                                // Checkboxes et. al. do not possess rendNodeLabel during the first update.
-                                // In this case node will be undefined and not rendered by KaTeX.
-                                if (el.rendNode.innerHTML.indexOf('<span') === 0 &&
-                                    el.rendNode.innerHTML.indexOf('<label') > 0 &&
-                                    (
-                                        el.rendNode.innerHTML.indexOf('<checkbox') > 0 ||
-                                        el.rendNode.innerHTML.indexOf('<input') > 0
-                                    )
-                                 ) {
-                                    node = el.rendNodeLabel;
-                                } else if (el.rendNode.innerHTML.indexOf('<button') === 0) {
-                                    node = el.rendNodeButton;
-                                } else {
-                                    node = el.rendNode;
-                                }
-
-                                if (node) {
-                                    /* eslint-disable no-undef */
-                                    if (!el.board.formulaRenderer) {
-                                        throw new Error('JSXGraph: useKatex requires a Board formulaRenderer.');
-                                    }
-                                    el.board.formulaRenderer(content, node, formulaOptions(el));
-                                    /* eslint-enable no-undef */
-                                }
-                            } catch (e) {
-                                throw e;
-                            }
-                        } else if (el.evalVisProp('useasciimathml')) {
-                            // This is not a constructor.
-                            // See http://asciimath.org/ for more information
-                            // about AsciiMathML and the project's source code.
-                            try {
-                                AMprocessNode(el.rendNode, false);
-                            } catch (e) {
-                                JXG.debug("AsciiMathML not loaded (yet)");
-                            }
                         }
                     }
 
@@ -1469,6 +1477,7 @@ JXG.extend(
                                 el[nodeList[node]].style[pair.key] = pair.val;
                             }
                             el.visPropOld[styleList[style] + '_' + node] = cssString;
+                            el.needsSizeUpdate = true;
                         }
                         // el.visPropOld[styleList[style]] = cssString;
                     }

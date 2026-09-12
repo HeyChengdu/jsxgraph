@@ -1002,7 +1002,7 @@ JXG.extend(
     },
 
     removeObject: function (object, saveMethod) {
-        var i, el, le, o, fst, face;
+        var i, el, faces;
 
         // this.board.removeObject(object, saveMethod);
         if (Type.isArray(object)) {
@@ -1028,35 +1028,13 @@ JXG.extend(
                 }
             }
             if (object.type === Const.OBJECT_TYPE_POLYHEDRON3D) {
-                // Special treatment for polyhedron3d.
-                // With this we can avoid the time consuming addChild() calls.
-                le = object.faces.length;
-                if (le > 0) {
-                    fst = object.faces[0]._pos;
-                    fst = (object.faces[0].element2D._pos < fst) ? object.faces[0].element2D._pos : fst;
-                }
-                for (i = 0; i < le; i++) {
-                    face = object.faces[i];
-                    delete this.objects[face.id];
-
-                    // this.board.removeObject(face.element2D, saveMethod);
-                    delete this.board.objects[face.element2D.id];
-                    delete this.board.elementsByName[face.element2D.name];
-                    face.element2D.remove();
-                    this.board.objectsList.splice(face.element2D._pos, 1);
-
-                    delete this.board.objects[face.id];
-                    delete this.board.elementsByName[face.name];
-                    face.remove();
-                    this.board.objectsList.splice(face._pos, 1);
-                }
-                le = this.board.objectsList.length;
-                // Reindex the positions
-                for (i = fst; i < this.board.objectsList.length; i++) {
-                    o = this.board.objectsList[i];
-                    if (o._pos > -1) { o._pos = i; }
-                }
+                // Faces are owned without addChild links. Use the normal removal
+                // path so each face's projection and registry positions stay in sync.
+                faces = object.faces.slice();
                 object.faces = [];
+                for (i = 0; i < faces.length; i++) {
+                    this.removeObject(faces[i], saveMethod);
+                }
             }
 
             delete this.objects[object.id];

@@ -477,39 +477,13 @@ JXG.extend(
              */
             if (ev_d === "html" || this.board.renderer.type === 'vml') {
                 if (Type.exists(node.offsetWidth)) {
-                    that = this;
-                    window.setTimeout(function () {
-                        that.size = [node.offsetWidth, node.offsetHeight];
-
-                        // This would be the way to determine the height of a MathJax formula
-                        // rendered with SVG (i.e. using tex-svg-nofont).
-                        // This is needed if the text element's anchorY === 'middle'
-                        // and the text is included in a board.renderer.dumpToDataURI() call
-                        // with MathJax formulas.
-                        // if (Type.exists(node.firstChild) && node.firstChild.nodeName === 'MJX-CONTAINER' &&
-                        //     Type.exists(node.firstChild.firstChild && node.firstChild.firstChild.nodeName === 'SVG')
-                        // ) {
-                        //     // console.log(that.visProp.fontsize * 0.5)
-                        //     // that.size[1] += 2 * that.visProp.fontsize;
-                        //     that.size = [node.firstChild.firstChild.scrollWidth, node.firstChild.firstChild.scrollHeight];
-                        // }
-
-                        that.needsUpdate = true;
-                        that.updateRenderer();
-                    }, 0);
-                    // In case, there is non-zero padding or borders
-                    // the following approach does not longer work.
-                    // s = [node.offsetWidth, node.offsetHeight];
-                    // if (s[0] === 0 && s[1] === 0) { // Some browsers need some time to set offsetWidth and offsetHeight
-                    //     that = this;
-                    //     window.setTimeout(function () {
-                    //         that.size = [node.offsetWidth, node.offsetHeight];
-                    //         that.needsUpdate = true;
-                    //         that.updateRenderer();
-                    //     }, 0);
-                    // } else {
-                    //     this.size = s;
-                    // }
+                    // 脱离 DOM 时没有可测量尺寸，不能把零写成有效缓存。
+                    if (!node.isConnected) {
+                        this.needsSizeUpdate = true;
+                        return this;
+                    }
+                    this.size = [node.offsetWidth, node.offsetHeight];
+                    this.needsSizeUpdate = false;
                 } else {
                     this.size = this.crudeSizeEstimate();
                 }
@@ -682,7 +656,8 @@ JXG.extend(
             }
 
             this.checkForSizeUpdate();
-            if (this.needsSizeUpdate) {
+            // HTML 必须在 renderer 写入本帧内容和样式之后统一测量。
+            if (this.needsSizeUpdate && this.evalVisProp('display') !== 'html') {
                 this.updateSize();
             }
 
@@ -705,7 +680,7 @@ JXG.extend(
             } else {
                 // For some magic reason it is more efficient on the iPad to
                 // call updateSize() for EVERY text element EVERY time.
-                this.needsSizeUpdate = this.plaintextOld !== this.plaintext;
+                this.needsSizeUpdate = this.needsSizeUpdate || this.plaintextOld !== this.plaintext;
 
                 if (this.needsSizeUpdate) {
                     this.plaintextOld = this.plaintext;

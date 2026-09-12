@@ -5950,7 +5950,8 @@ JXG.extend(
             for (el = 0; el < this.objectsList.length; el++) {
                 pEl = this.objectsList[el];
                 if (this.needsFullUpdate && pEl.elementClass === Const.OBJECT_CLASS_TEXT) {
-                    pEl.updateSize();
+                    if (pEl.evalVisProp('display') === 'html') pEl.needsSizeUpdate = true;
+                    else pEl.updateSize();
                 }
 
                 // For updates of an element we distinguish if the dragged element is updated or
@@ -5982,6 +5983,19 @@ JXG.extend(
             if (!this.renderer) {
                 return;
             }
+
+            // 先批量写入内容，再测量，布局处理器消费同一帧的尺寸，最后提交视觉位置。
+            const htmlTexts = this.objectsList.filter(target =>
+                target.elementClass === Const.OBJECT_CLASS_TEXT &&
+                target.visPropCalc.visible && target.evalVisProp('display') === 'html'
+            );
+            if (this.renderer.type !== 'no') {
+                for (const target of htmlTexts) this.renderer.prepareText(target);
+                for (const target of htmlTexts) {
+                    if (target.needsSizeUpdate) target.updateSize();
+                }
+            }
+            this.triggerEventHandlers(['layout'], []);
 
             /*
             objs = this.objectsList.slice(0);
@@ -6231,6 +6245,7 @@ JXG.extend(
             try {
                 if (
                     this.attr.minimizereflow === 'all' &&
+                    !this.objectsList.some(target => target.elementClass === Const.OBJECT_CLASS_TEXT && target.evalVisProp('display') === 'html') &&
                     this.containerObj &&
                     this.renderer.type !== 'vml'
                 ) {
