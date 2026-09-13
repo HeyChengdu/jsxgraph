@@ -534,6 +534,8 @@ declare namespace JXG {
         indicate(duration?: number): this;
         /** 在真实边界外临时画框，毫秒时长默认 1000。 */
         circumscribe(duration?: number): this;
+        /** Temporarily fill a simple polygon, circle, complete ellipse or sector; default 1000 ms. */
+        shade(duration?: number): this;
         /**
          * Reference to the board associated with the element.
          */
@@ -5119,6 +5121,8 @@ declare namespace JXG {
         : Arguments;
 
     export class Board {
+        /** Fill an ordered simple polygon transiently; vertices must belong to this board. */
+        shade(vertices: readonly Point[], duration?: number): this;
         readonly animationScheduler: AnimationController;
         /** Legacy queue adapted to the Board animation scheduler. */
         animationObjects: Record<string, GeometryElement | null>;

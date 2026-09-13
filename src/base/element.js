@@ -45,6 +45,7 @@ import { animateAttributes, cancelStateAnimations } from '../utils/stateAnimatio
 import { removeLegacyAnimation } from '../utils/legacyAnimation.js';
 import { emphasize, cancelAttention } from '../utils/attention.js';
 import { fade, cancelFade } from '../utils/fade.js';
+import { shadeElement } from '../utils/shade.js';
 
 /**
  * Constructs a new GeometryElement object.
@@ -1833,6 +1834,9 @@ JXG.extend(
         indicate: function (duration) {
             return emphasize(this, 'indicate', duration);
         },
+
+        /** Temporarily fill a closed 2D region without changing its authored style. */
+        shade: function (duration) { return shadeElement(this, duration); },
 
         /** Reveal with transient opacity; duration is milliseconds. */
         fadeIn: function (duration) { return fade(this, true, duration); },

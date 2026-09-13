@@ -232,32 +232,46 @@ export function emphasize(element, kind, duration = 1000, partName = null, selec
 /** 临时呈现共用调度和清理，具体效果只提供绘制与重入判定。 */
 export function scheduleAttention(state, duration, replaces) {
   const board = state.element.board;
+  let scheduled;
+  let ended = false;
   const cleanup = () => {
+    if (ended) return;
+    ended = true;
     restore(state);
     state.node?.remove();
     board._attention?.delete(state);
+    state.dispose?.();
   };
-  state.handle = board.animationScheduler.schedule({
+  // Cancellation is available before a synchronous driver starts rendering.
+  state.handle = { cancel() {
+    if (ended) return;
+    cleanup();
+    scheduled?.cancel();
+  } };
+  scheduled = board.animationScheduler.schedule({
     duration,
     start() {
+      if (ended) return;
       for (const previous of board._attention ?? [])
         if (replaces(previous))
           previous.handle?.cancel();
       board._attention ??= new Set();
       board._attention.add(state);
+      state.prepare?.();
     },
     update(progress) {
-      state.progress = progress;
+      if (!ended) state.progress = progress;
     },
     finish: cleanup,
     cancel: cleanup,
   });
+  if (ended) scheduled.cancel();
 }
 
 export function cancelAttention(element, partName) {
   for (const state of element.board._attention ?? []) {
     if (
-      visualMembers(state).includes(element) &&
+      (state.dependencies ?? visualMembers(state)).includes(element) &&
       (partName === undefined || state.partName === partName)
     )
       state.handle?.cancel();
@@ -270,7 +284,7 @@ export function updateAttention(board) {
   for (const state of board._attention ?? []) {
     const element = state.element;
     if (
-      visualMembers(state).some(member => !member.evalVisProp('visible')) ||
+      (state.isCurrent ? !state.isCurrent() : visualMembers(state).some(member => !member.evalVisProp('visible'))) ||
       state.members?.some((member, index) => state.contents[index] !== member.plaintext) ||
       (state.content !== undefined && state.content !== element.plaintext)
     ) {
