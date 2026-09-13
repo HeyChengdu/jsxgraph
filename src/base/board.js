@@ -6363,7 +6363,12 @@ JXG.extend(
             return this;
         },
 
-        /** Temporarily fill the simple region bounded by ordered points on this board. */
+        /**
+         * Temporarily fill the simple region bounded by ordered points on this board.
+         * @param {Array<JXG.Point>} vertices Ordered boundary points on this board; the ring closes automatically.
+         * @param {Number} [duration=1000] Total duration in milliseconds, including fade-in, hold and fade-out.
+         * @returns {JXG.Board} This board.
+         */
         shade: function (vertices, duration) { return shadePolygon(this, vertices, duration); },
 
         /**

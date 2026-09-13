@@ -1835,7 +1835,12 @@ JXG.extend(
             return emphasize(this, 'indicate', duration);
         },
 
-        /** Temporarily fill a closed 2D region without changing its authored style. */
+        /**
+         * Temporarily fill a visible simple polygon, circle, complete ellipse or sector without changing its authored style.
+         * Unsupported elements, including angles, open curves and 3D objects, are rejected.
+         * @param {Number} [duration=1000] Total duration in milliseconds, including fade-in, hold and fade-out.
+         * @returns {JXG.GeometryElement} This element.
+         */
         shade: function (duration) { return shadeElement(this, duration); },
 
         /** Reveal with transient opacity; duration is milliseconds. */
