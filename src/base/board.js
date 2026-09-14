@@ -58,7 +58,6 @@ import { createAnimationController } from '../utils/animationController.js';
 import { addLegacyAnimation, advanceLegacyAnimations } from '../utils/legacyAnimation.js';
 import { updateAttention, resetAttentionPresentation, renderAttentionCanvas } from '../utils/attention.js';
 import { updateFade, resetFadePresentation, renderFadeCanvas } from '../utils/fade.js';
-import { shadePolygon } from '../utils/shade.js';
 
 /**
  * Constructs a new Board object.
@@ -6362,14 +6361,6 @@ JXG.extend(
 
             return this;
         },
-
-        /**
-         * Temporarily fill the simple region bounded by ordered points on this board.
-         * @param {Array<JXG.Point>} vertices Ordered boundary points on this board; the ring closes automatically.
-         * @param {Number} [duration=1000] Total duration in milliseconds, including fade-in, hold and fade-out.
-         * @returns {JXG.Board} This board.
-         */
-        shade: function (vertices, duration) { return shadePolygon(this, vertices, duration); },
 
         /**
          * Creates a new geometric element of type elementType.

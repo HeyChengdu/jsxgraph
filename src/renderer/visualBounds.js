@@ -1,5 +1,5 @@
 /**
- * [INPUT]: Native element-owned borders, ticks, labels and rendered DOM/pixels
+ * [INPUT]: Native element-owned borders, ticks, labels, 3D projections and rendered DOM/pixels
  * [OUTPUT]: Deduplicated visible families and renderer-space visual bounds, including formula overflow
  * [POS]: Shared renderer ownership boundary consumed by attention and fade
  * [PROTOCOL]: Update this header on change, then check AGENTS.md
@@ -7,8 +7,18 @@
 /** Enumerate native presentation ownership, not mathematical dependencies. */
 export function visualFamily(element) {
   const members = new Set();
+  const visited = new Set();
   function visit(target) {
-    if (!target || members.has(target) || !target.visPropCalc.visible) return;
+    if (!target || visited.has(target) || target.board.objects[target.id] !== target) return;
+    visited.add(target);
+    if (target.is3D) {
+      for (const projection of [target.element2D].flat()) visit(projection);
+      for (const face of target.faces ?? []) visit(face);
+      // Surface meshes own a rendered Polyhedron3D; Face3D.polyhedron is only definition data.
+      if (target.polyhedron?.is3D) visit(target.polyhedron);
+      return;
+    }
+    if (!target.visPropCalc.visible) return;
     members.add(target);
     for (const border of target.borders ?? []) visit(border);
     for (const ticks of target.ticks ?? []) {
@@ -20,6 +30,11 @@ export function visualFamily(element) {
   }
   visit(element);
   return [...members];
+}
+
+/** Spatial wrappers delegate visibility to their native rendered projections. */
+export function isVisuallyVisible(element) {
+  return element.is3D ? visualFamily(element).length > 0 : !!element.evalVisProp('visible');
 }
 
 // 语义 span 的行盒不一定包含分式、上下标等溢出的排版内容。

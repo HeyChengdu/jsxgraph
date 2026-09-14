@@ -183,8 +183,8 @@ JXG.extend(
         write: function (duration, options) {
             return writeComposition(this, duration, options);
         },
-        indicate: function (duration) {
-            return emphasizeComposition(this, 'indicate', duration);
+        indicate: function (duration, options) {
+            return emphasizeComposition(this, 'indicate', duration, options);
         },
         fadeIn: function (duration) { return fade(this, true, duration); },
         fadeOut: function (duration) { return fade(this, false, duration); },

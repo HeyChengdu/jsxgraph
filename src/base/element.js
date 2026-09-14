@@ -45,7 +45,6 @@ import { animateAttributes, cancelStateAnimations } from '../utils/stateAnimatio
 import { removeLegacyAnimation } from '../utils/legacyAnimation.js';
 import { emphasize, cancelAttention } from '../utils/attention.js';
 import { fade, cancelFade } from '../utils/fade.js';
-import { shadeElement } from '../utils/shade.js';
 
 /**
  * Constructs a new GeometryElement object.
@@ -1830,18 +1829,17 @@ JXG.extend(
             return this;
         },
 
-        /** Temporarily scale and tint the rendered object without changing geometry. */
-        indicate: function (duration) {
-            return emphasize(this, 'indicate', duration);
-        },
-
         /**
-         * Temporarily fill a visible simple polygon, circle, complete ellipse or sector without changing its authored style.
-         * Unsupported elements, including angles, open curves and 3D objects, are rejected.
-         * @param {Number} [duration=1000] Total duration in milliseconds, including fade-in, hold and fade-out.
-         * @returns {JXG.GeometryElement} This element.
+         * Temporarily tint, scale and mark the rendered object, then restore it.
+         * Geometry, dependencies and authored styles are never changed.
+         * @param {Number} [duration=1000] Total duration in milliseconds.
+         * @param {Object} [options] Presentation options.
+         * @param {Number} [options.scaleFactor=1] Positive finite scale; use 1.2 for explicit enlargement.
+         * @returns {JXG.GeometryElement} The source element for chaining.
          */
-        shade: function (duration) { return shadeElement(this, duration); },
+        indicate: function (duration, options) {
+            return emphasize(this, 'indicate', duration, null, null, options);
+        },
 
         /** Reveal with transient opacity; duration is milliseconds. */
         fadeIn: function (duration) { return fade(this, true, duration); },

@@ -4,17 +4,17 @@
  * [POS]: Native JSXGraph animation orchestration; owns no geometry or renderer
  * [PROTOCOL]: Update this header on change, then check AGENTS.md
  */
-import { emphasize } from './attention.js';
+import { emphasize, indicateScale } from './attention.js';
+import { isVisuallyVisible } from '../renderer/visualBounds.js';
 
-export function emphasizeComposition(composition, kind, duration = 1000) {
-  const members = compositionMembers(composition).filter(member =>
-    member.evalVisProp('visible')
-  );
+export function emphasizeComposition(composition, kind, duration = 1000, options = {}) {
+  indicateScale(options);
+  const members = compositionMembers(composition).filter(isVisuallyVisible);
   if (members.length)
     emphasize(members[0], kind, duration, null, {
       target: composition,
       members,
-    });
+    }, options);
   else if (!Number.isFinite(duration) || duration < 0)
     throw new Error(
       'JSXGraph: attention duration must be finite and nonnegative.'

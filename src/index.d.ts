@@ -23,6 +23,10 @@ declare namespace JXG {
 
     export type CoordType = 1 | 2;
     export type ColorThemeName = "light" | "dark";
+    export interface IndicateOptions {
+        /** Presentation-only scale; positive and finite, default 1. Use 1.2 for explicit enlargement. */
+        scaleFactor?: number;
+    }
 
     /**
      * Screen coordinates in pixel relative to the upper left corner of the div element.
@@ -41,7 +45,7 @@ declare namespace JXG {
         /** Write unique members simultaneously, or in insertion order; duration is total milliseconds. */
         write(duration?: number, options?: { sequential?: boolean }): this;
         /** Emphasize the currently visible unique members as a single presentation. */
-        indicate(duration?: number): this;
+        indicate(duration?: number, options?: IndicateOptions): this;
         /** Draw one temporary frame around the visible members' union. */
         circumscribe(duration?: number): this;
         /** Reveal unique members; duration is milliseconds, default 1000. */
@@ -530,12 +534,10 @@ declare namespace JXG {
         fadeOut(duration?: number): this;
         /** Progressive drawing for supported elements; duration is in milliseconds. */
         write(duration?: number, options?: { callback?: () => void }): this;
-        /** 对象自身临时放大至 1.2 倍并变色后恢复，不修改几何或原始样式，毫秒时长默认 1000。 */
-        indicate(duration?: number): this;
+        /** Temporarily tint and glow in place, then restore; default duration 1000ms, scaleFactor 1. */
+        indicate(duration?: number, options?: IndicateOptions): this;
         /** 在真实边界外临时画框，毫秒时长默认 1000。 */
         circumscribe(duration?: number): this;
-        /** Temporarily fill a simple polygon, circle, complete ellipse or sector; default 1000 ms. */
-        shade(duration?: number): this;
         /**
          * Reference to the board associated with the element.
          */
@@ -1269,7 +1271,7 @@ declare namespace JXG {
     }
 
     export interface TextParts {
-        indicate(duration?: number): this;
+        indicate(duration?: number, options?: IndicateOptions): this;
         circumscribe(duration?: number): this;
         /** 在两个唯一公式局部之间绘制关系提示；非空标签与正数毫秒时长均必填。 */
         relate(target: TextParts, options: { duration: number; label: string }): this;
@@ -3414,7 +3416,9 @@ declare namespace JXG {
 
     export interface Circle3DAttributes extends GeometryElementAttributes {}
 
-    export interface Circle3D extends Transformable3D {}
+    export interface Circle3D extends Transformable3D {
+        Radius(): number;
+    }
 
     export interface Curve3DAttributes extends CurveAttributes {}
 
@@ -3451,13 +3455,35 @@ declare namespace JXG {
         distance(point: Point3D): number;
     }
 
-    export interface Polygon3DAttributes extends GeometryElementAttributes {}
+    export interface Polygon3DAttributes extends GeometryElementAttributes {
+        /** Attributes of the native projected border lines. */
+        borders?: LineAttributes;
+        /** Attributes of implicitly created spatial vertices. */
+        vertices?: Point3DAttributes;
+        /** Whether to render the projected polygon boundary. */
+        withLines?: boolean;
+    }
 
-    export interface Polygon3D extends Transformable3D {}
+    export interface Polygon3D extends Transformable3D {
+        /** Ordered spatial vertices; the closing vertex is not repeated. */
+        vertices: Point3D[];
+    }
+
+    export interface Angle3DAttributes extends Polygon3DAttributes {
+        /** Marker radius in spatial units, default 0.35. */
+        radius?: number | (() => number);
+    }
+    export interface Angle3D extends Polygon3D {
+        /** Smaller spatial angle in radians; coincident rays return NaN. */
+        Value(): number;
+    }
 
     export interface Sphere3DAttributes extends GeometryElementAttributes {}
 
-    export interface Sphere3D extends Transformable3D {}
+    export interface Sphere3D extends Transformable3D {
+        /** Read the current spatial radius. */
+        Radius(): number;
+    }
 
     export interface Shader3DOptions {
         enabled?: boolean;
@@ -3481,7 +3507,9 @@ declare namespace JXG {
         shader?: Shader3DOptions;
     }
 
-    export interface Polyhedron3D extends Transformable3D {}
+    export interface Polyhedron3D extends Transformable3D {
+        faces: Face3D[];
+    }
 
     export interface Surface3DColormapOptions {
         min?: readonly [number, number];
@@ -3787,6 +3815,11 @@ declare namespace JXG {
             attributes?: Point3DAttributes
         ): Point3D;
         create(
+            elementType: "angle3d",
+            parents: readonly [Point3DInput, Point3DInput, Point3DInput],
+            attributes?: Angle3DAttributes
+        ): Angle3D;
+        create(
             elementType: "polygon3d",
             parents: Polygon3DParents,
             attributes?: Polygon3DAttributes
@@ -3925,6 +3958,7 @@ declare namespace JXG {
         | "chart"
         | "checkbox"
         | "circle"
+        | "angle3d"
         | "circle3d"
         | "circumcenter"
         | "circumcircle"
@@ -5121,8 +5155,6 @@ declare namespace JXG {
         : Arguments;
 
     export class Board {
-        /** Fill an ordered simple polygon transiently; vertices must belong to this board. */
-        shade(vertices: readonly Point[], duration?: number): this;
         readonly animationScheduler: AnimationController;
         /** Legacy queue adapted to the Board animation scheduler. */
         animationObjects: Record<string, GeometryElement | null>;

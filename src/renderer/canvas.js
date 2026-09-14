@@ -46,6 +46,7 @@ import Numerics from "../math/numerics.js";
 import Options from '../options.js';
 import { domVisualBounds, unionBounds, visualFamily } from './visualBounds.js';
 import { captureLayer, tintLayer } from './canvasLayer.js';
+import { paintMarkerCanvas } from './indicateMarker.js';
 import { partialLine } from './partialPath.js';
 import { curveCommands, ellipseCommands, pointCommands, writtenCommands, canvasPath } from './pathDrawing.js';
 import { strokeProgress, fillProgress, writtenTickCount } from '../utils/writePath.js';
@@ -186,6 +187,7 @@ JXG.extend(
                 context.fill('evenodd');
             }
             context.restore();
+            paintMarkerCanvas(this, el, true);
         },
 
         /**
@@ -433,6 +435,7 @@ JXG.extend(
          * @private
          */
         _stroke: function (el) {
+            paintMarkerCanvas(this, el, false);
             var context = this.context,
                 ev_dash = el.evalVisProp('dash'),
                 ds = el.evalVisProp('dashscale'),

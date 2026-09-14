@@ -1,7 +1,8 @@
-/* Native 2D emphasis changes presentation, never geometry or authored styles. */
+/* Native emphasis changes presentation, never geometry or authored styles. */
 import JXG from '../jxg.js';
 import Const from '../base/constants.js';
-import { unionBounds, visualFamily } from '../renderer/visualBounds.js';
+import { unionBounds, visualFamily, isVisuallyVisible } from '../renderer/visualBounds.js';
+import { markerSVG } from '../renderer/indicateMarker.js';
 
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
@@ -26,7 +27,7 @@ export function renderAttentionCanvas(element, render) {
   if (!state || element.rendNode) return render();
   const renderer = board.renderer,
     output = renderer.context;
-  const layer = renderer.captureVisualLayer(element, render);
+  let layer = renderer.captureVisualLayer(element, render);
   const pulse = Math.sin(Math.PI * state.progress);
   const color = JXG.resolveThemeColor(
     'amber-600',
@@ -37,19 +38,23 @@ export function renderAttentionCanvas(element, render) {
     !state.members && state.element === element && visualFamily(element).length === 1
       ? layer.boxes[0]
       : attentionBounds(state)[0];
-  if (!box) return;
-  const sourceBox = layer.boxes[0];
-  if (!sourceBox) return;
+  renderer._indicateMarker = { element, color, pulse };
+  try { layer = renderer.captureVisualLayer(element, render); }
+  finally { renderer._indicateMarker = null; }
+  const markerBox = layer.boxes[0];
+  if (!markerBox) return;
   const buffer = renderer.tintVisualLayer(layer, color, pulse);
-  const [x, y, width, height] = box;
+  // Transparent regions still have a native path: measure their marker drawing.
+  const [x, y, width, height] = box ?? markerBox;
   const cx = x + width / 2,
     cy = y + height / 2;
   output.save();
   try {
     output.translate(cx, cy);
-    output.scale(1 + 0.2 * pulse, 1 + 0.2 * pulse);
+    const scale = 1 + (state.scaleFactor - 1) * pulse;
+    output.scale(scale, scale);
     output.translate(-cx, -cy);
-    output.drawImage(buffer, ...sourceBox);
+    output.drawImage(buffer, ...markerBox);
   } finally {
     output.restore();
   }
@@ -162,7 +167,13 @@ function indicateDOM(state) {
     );
     if (!svg && state.partName !== null)
       style(state, node, 'display', 'inline-block');
-    style(state, node, 'scale', String(1 + 0.2 * pulse));
+    style(state, node, 'scale', String(1 + (state.scaleFactor - 1) * pulse));
+    if (svg) {
+      const member = renderedMembers(state).find(member => member.rendNode === node);
+      if (member) markerSVG(board, member, node, color, pulse);
+    } else {
+      style(state, node, 'background-color', `color-mix(in srgb, ${color} ${22 * pulse}%, transparent)`);
+    }
     node.setAttribute('data-jxg-attention', 'indicate');
     if (!board._attentionPresentation.has(node))
       board._attentionPresentation.set(node, () =>
@@ -187,23 +198,33 @@ function indicateDOM(state) {
   }
 }
 
-export function emphasize(element, kind, duration = 1000, partName = null, selection = null) {
+export function indicateScale(options = {}) {
+  if (!options || typeof options !== 'object' || Array.isArray(options))
+    throw new Error('JSXGraph: indicate options must be an object.');
+  const value = options.scaleFactor === undefined ? 1 : options.scaleFactor;
+  if (!Number.isFinite(value) || value <= 0)
+    throw new Error('JSXGraph: indicate scaleFactor must be finite and positive.');
+  return value;
+}
+
+export function emphasize(element, kind, duration = 1000, partName = null, selection = null, options = {}) {
+  const scaleFactor = indicateScale(options);
   if (!Number.isFinite(duration) || duration < 0)
     throw new Error(
       'JSXGraph: attention duration must be finite and nonnegative.'
     );
   const board = element.board;
   if ((selection?.members ?? [element]).some(member =>
-    member.is3D ||
+    (member.is3D && kind !== 'indicate') ||
     member.elType === 'view3d' ||
     (member.elementClass === Const.OBJECT_CLASS_OTHER &&
       member.type !== Const.OBJECT_TYPE_IMAGE)
   )) {
     throw new Error(
-      'JSXGraph: attention requires a visible 2D geometry element, not a structural or 3D object.'
+      'JSXGraph: attention requires visible geometry; only indicate supports 3D objects.'
     );
   }
-  if (!element.evalVisProp('visible'))
+  if (!isVisuallyVisible(element))
     throw new Error('JSXGraph: attention requires a visible element.');
   if (partName !== null) {
     element.updateText();
@@ -220,6 +241,7 @@ export function emphasize(element, kind, duration = 1000, partName = null, selec
     partName,
     content: element.plaintext,
     progress: 0,
+    scaleFactor,
     node: null,
     handle: null,
   };
@@ -284,7 +306,7 @@ export function updateAttention(board) {
   for (const state of board._attention ?? []) {
     const element = state.element;
     if (
-      (state.isCurrent ? !state.isCurrent() : visualMembers(state).some(member => !member.evalVisProp('visible'))) ||
+      (state.isCurrent ? !state.isCurrent() : visualMembers(state).some(member => !isVisuallyVisible(member))) ||
       state.members?.some((member, index) => state.contents[index] !== member.plaintext) ||
       (state.content !== undefined && state.content !== element.plaintext)
     ) {

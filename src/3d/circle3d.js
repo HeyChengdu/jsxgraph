@@ -152,6 +152,9 @@ JXG.Circle3D = function (view, center, normal, radius, attributes) {
         ],
         attributes
     );
+    // Circle3D owns the same rendered projection as its parametric curve.
+    // Share the native presentation contract for visibility, styles and attention.
+    this.element2D = this.curve.element2D;
 };
 JXG.Circle3D.prototype = new JXG.GeometryElement();
 Type.copyPrototypeMethods(JXG.Circle3D, JXG.GeometryElement3D, 'constructor3D');

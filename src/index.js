@@ -89,6 +89,7 @@ import './3d/linspace3d.js';
 import './3d/text3d.js';
 import './3d/ticks3d.js';
 import './3d/polygon3d.js';
+import './3d/angle3d.js';
 import './3d/face3d.js';
 import './3d/polyhedron3d.js';
 import './3d/sphere3d.js';

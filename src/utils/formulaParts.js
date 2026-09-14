@@ -14,7 +14,7 @@ export function formulaParts(text, name) {
     if (typeof name !== 'string' || !partName.test(name)) throw new Error('JSXGraph: invalid formula part name.');
     if (!text.evalVisProp('usekatex')) throw new Error('JSXGraph: parts() requires KaTeX text.');
     const selection = {
-        indicate(duration) { emphasize(text, 'indicate', duration, name); return selection; },
+        indicate(duration, options) { emphasize(text, 'indicate', duration, name, null, options); return selection; },
         circumscribe(duration) { emphasize(text, 'circumscribe', duration, name); return selection; },
         relate(target, options) {
             relateParts(selections.get(selection), selections.get(target), options);
