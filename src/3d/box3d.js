@@ -403,8 +403,10 @@ JXG.createMesh3D = function (board, parents, attributes) {
                     return q[2] + u * v1[2] + v * v2[2];
                 }
             ],
-            [Math.ceil(s1), Math.floor(e1), (Math.ceil(e1) - Math.floor(s1)) / step_u],
-            [Math.ceil(s2), Math.floor(e2), (Math.ceil(e2) - Math.floor(s2)) / step_v]
+            // Preserve fractional bounds; rounding inward clips the mesh while
+            // the owning plane still extends to its original boundary.
+            [s1, e1, Math.max(1, Math.ceil((e1 - s1) / step_u))],
+            [s2, e2, Math.max(1, Math.ceil((e2 - s2) / step_v))]
         );
         this.dataX = res[0];
         this.dataY = res[1];
