@@ -13,6 +13,37 @@ describe('View3D 清理与并列投影', function () {
         });
     });
     afterEach(function () { JXG.JSXGraph.freeBoard(board); });
+    it('删除三维点时不把已注销投影重新加入深度排序', function () {
+        var point = view.create('point3d', [0, 0, 0], {visible: true});
+        var projection = point.element2D;
+        var original = board.renderer.setLayer;
+        spyOn(board.renderer, 'setLayer').and.callFake(function (element, layer) {
+            expect(board.objects[element.id]).toBe(element);
+            return original.call(this, element, layer);
+        });
+        expect(function () { view.removeObject(point); }).not.toThrow();
+        board.update();
+        expect(board.objects[projection.id]).toBeUndefined();
+        expect(projection.rendNode.parentNode).toBeNull();
+    });
+    it('SVG 图层挂载脱离节点时不用原子移动，已挂载节点继续使用原子移动', function () {
+        var point = board.create('point', [0, 0]);
+        var node = point.rendNode;
+        var layer = board.renderer.layer[point.evalVisProp('layer')];
+        var atomicMove = jasmine.createSpy('moveBefore').and.callFake(function (child, before) {
+            if (!child.parentNode || child.isConnected !== layer.isConnected) {
+                throw new DOMException('无效原子移动', 'HierarchyRequestError');
+            }
+            layer.insertBefore(child, before);
+        });
+        layer.moveBefore = atomicMove;
+        node.parentNode.removeChild(node);
+        board.renderer.setLayer(point, point.evalVisProp('layer'));
+        expect(node.parentNode).toBe(layer);
+        expect(atomicMove).not.toHaveBeenCalled();
+        board.renderer.setLayer(point, point.evalVisProp('layer'));
+        expect(atomicMove).toHaveBeenCalledTimes(1);
+    });
     it('重复删除多面体后不残留 SVG，也不误删后创建的球体', function () {
         for (var round = 0; round < 3; round++) {
             var vertices = [[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];

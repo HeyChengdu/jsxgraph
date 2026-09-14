@@ -964,7 +964,11 @@ JXG.extend(
             }
 
             node = this.layer[level];
-            if (Type.exists(node.moveBefore)) {
+            // 原子移动要求节点已有父级、属于同一文档且连接状态相同；新节点走普通挂载。
+            if (Type.exists(node.moveBefore) &&
+                el.rendNode.parentNode &&
+                el.rendNode.ownerDocument === node.ownerDocument &&
+                el.rendNode.isConnected === node.isConnected) {
                 node.moveBefore(el.rendNode, null);
             } else {
                 node.appendChild(el.rendNode);

@@ -938,6 +938,8 @@ JXG.extend(
                     el.type === Const.OBJECT_TYPE_POLYGON3D
                     ) &&
                     Type.exists(el.element2D) &&
+                    // 删除子元素可能在父元素注销前触发更新；已注销的投影不能重新入层。
+                    this.board.objects[el.element2D.id] === el.element2D &&
                     el.element2D.visPropCalc.visible
                     // el.element2D.evalVisProp('visible')
                 ) {
