@@ -156,6 +156,8 @@ function createMatrix(board, parents, attributes) {
     const brackets = bracketSegments.map((segment) =>
         board.create("line", segment, {
             ...common,
+            point1: { visible: false },
+            point2: { visible: false },
             straightFirst: false,
             straightLast: false
         })

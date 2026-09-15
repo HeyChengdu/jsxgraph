@@ -67,6 +67,30 @@ describe("Cell presentation runtime contracts", () => {
         expect(() => table.cell(2, 0)).toThrowError("table cell (2, 0) does not exist.");
     });
 
+    it("hides construction points of generated table and matrix lines", () => {
+        const currentBoard = createBoard();
+        const table = currentBoard.create("table", [
+            [
+                ["time", "speed"],
+                [1, 2]
+            ]
+        ]);
+        const matrix = currentBoard.create("matrix", [
+            [
+                [1, 0],
+                [0, 1]
+            ]
+        ]);
+
+        const constructionPoints = [
+            ...table.lines.flatMap((line) => [line.point1, line.point2]),
+            ...matrix.brackets.flatMap((line) => [line.point1, line.point2])
+        ];
+
+        expect(constructionPoints.length).toBeGreaterThan(0);
+        expect(constructionPoints.every((point) => point.visProp.visible === false)).toBeTrue();
+    });
+
     it("updates dynamic matrix entries while preserving entry identity", () => {
         const currentBoard = createBoard();
         let value = 2;

@@ -118,6 +118,8 @@ function createTable(board, parents, attributes) {
     );
     const lineAttributes = omitUndefined({
         ...common,
+        point1: { visible: false },
+        point2: { visible: false },
         straightFirst: false,
         straightLast: false,
         strokeColor: visual.strokeColor,
