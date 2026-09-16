@@ -60,6 +60,10 @@ const adaptiveTheme = {
     grid: {
         strokeColor: "slate-300"
     },
+    label: {
+        strokeColor: "slate-900",
+        highlightStrokeColor: "slate-700"
+    },
     line: {
         strokeColor: "blue-600",
         highlightStrokeColor: "blue-400"
@@ -76,6 +80,12 @@ const adaptiveTheme = {
         borders: {
             strokeColor: "blue-600",
             highlightStrokeColor: "blue-400"
+        }
+    },
+    slider: {
+        label: {
+            strokeColor: "slate-900",
+            highlightStrokeColor: "slate-700"
         }
     },
     text: {

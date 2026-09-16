@@ -44,6 +44,16 @@ describe("Adaptive color themes", function () {
         expect(point.evalVisProp("strokeColor")).toEqual("#123456");
     });
 
+    it("resolves point label colors through the active theme", function () {
+        var point = board.create("point", [0, 0], { withLabel: true, name: "L" }),
+            lightColor = point.label.evalVisProp("strokeColor");
+
+        board.setTheme("dark");
+
+        expect(point.label.visProp.strokecolor).toEqual("slate-900");
+        expect(point.label.evalVisProp("strokeColor")).not.toEqual(lightColor);
+    });
+
     it("rejects runtime switching for legacy themes", function () {
         JXG.JSXGraph.freeBoard(board);
         board = JXG.JSXGraph.initBoard("theme-box", {

@@ -71,3 +71,20 @@ export function createBoardRegion(board, padding) {
         top: () => boardTop() - padding
     });
 }
+
+/**
+ * 落点区域：四个边界都收敛在用户坐标 (x, y) 上。
+ * 内容元素（矩阵、表格）只读取区域中心的投影，因此这里就是它们的摆放位置。
+ */
+export function createPointRegion(x, y) {
+    const at = (value) =>
+        typeof value === "function" ? () => Number(value()) : () => Number(value);
+    const centerX = at(x);
+    const centerY = at(y);
+    return createResponsiveRegion({
+        left: centerX,
+        right: centerX,
+        bottom: centerY,
+        top: centerY
+    });
+}

@@ -1344,6 +1344,9 @@ JXG.Legend = function (board, coords, attributes) {
 
     this.board = board;
     this.coords = new Coords(Const.COORDS_BY_USER, coords, this.board);
+    // 图例没有自己的渲染绘制，补齐可见性状态，避免显隐调用读取未初始化的旧值。
+    this.visPropOld = { visible: false };
+    this.visPropCalc = { visible: false };
     this.myAtts = {};
     this.label_array = attr.labelarray || attr.labels;
     this.color_array = attr.colorarray || attr.colors;

@@ -52,8 +52,8 @@ describe("Dynamic authoring lifecycle contracts", () => {
     it("preserves dynamic presentation identity and resource counts across frequent updates", () => {
         const currentBoard = createBoard();
         let value = "0";
-        const table = currentBoard.create("table", [[["value", () => value]]]);
-        const matrix = currentBoard.create("matrix", [[[() => value]]]);
+        const table = currentBoard.create("table", [0, 0, [["value", () => value]]]);
+        const matrix = currentBoard.create("matrix", [0, 0, [[() => value]]]);
         const text = currentBoard.create("text", [0, -6, () => `frame ${value}`]);
         const tableCell = table.cell(0, 1);
         const matrixEntry = matrix.entry(0, 0);
@@ -97,7 +97,7 @@ describe("Dynamic authoring lifecycle contracts", () => {
                 [5, 0]
             ]);
             const point = currentBoard.create("point", numberLine.point(segment % 4));
-            const table = currentBoard.create("table", [[["segment", segment]]]);
+            const table = currentBoard.create("table", [0, 0, [["segment", segment]]]);
             const narration = currentBoard.create("text", [0, -7, `segment ${segment}`]);
             const scene = new JXG.Composition({ numberLine, point, table, narration });
 

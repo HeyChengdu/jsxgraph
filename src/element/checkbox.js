@@ -201,25 +201,28 @@ JXG.createCheckbox = function (board, parents, attributes) {
     Text.prototype.setText = setTextBackup;
 
 
-    t.rendNodeCheckbox = t.rendNode.childNodes[0].childNodes[0];
-    t.rendNodeLabel = t.rendNode.childNodes[0].childNodes[1];
+    // 'no' 渲染器下文本元素没有宿主节点：跳过 HTML 接线，元素本身与取值仍然可用。
+    if (t.rendNode && t.rendNode.childNodes[0]) {
+        t.rendNodeCheckbox = t.rendNode.childNodes[0].childNodes[0];
+        t.rendNodeLabel = t.rendNode.childNodes[0].childNodes[1];
 
-    t.rendNodeTag = t.rendNodeCheckbox; // Needed for unified treatment in setAttribute
-    t.rendNodeTag.disabled = !!attr.disabled;
+        t.rendNodeTag = t.rendNodeCheckbox; // Needed for unified treatment in setAttribute
+        t.rendNodeTag.disabled = !!attr.disabled;
 
-    t.rendNodeCheckbox.id = t.rendNode.id + "_checkbox";
-    t.rendNodeLabel.id = t.rendNode.id + "_label";
-    t.rendNodeLabel.setAttribute("for", t.rendNodeCheckbox.id);
+        t.rendNodeCheckbox.id = t.rendNode.id + "_checkbox";
+        t.rendNodeLabel.id = t.rendNode.id + "_label";
+        t.rendNodeLabel.setAttribute("for", t.rendNodeCheckbox.id);
 
-    // 2. Set parents[2] (string|function) as label of the checkbox element.
-    // abstract.js selects the correct DOM element for the update
-    t.setText(parents[2]);
+        // 2. Set parents[2] (string|function) as label of the checkbox element.
+        // abstract.js selects the correct DOM element for the update
+        t.setText(parents[2]);
 
-    // This sets the font-size of the checkbox itself
-    t.visPropOld.fontsize = '0px';
-    board.renderer.updateTextStyle(t, false);
+        // This sets the font-size of the checkbox itself
+        t.visPropOld.fontsize = '0px';
+        board.renderer.updateTextStyle(t, false);
 
-    t.rendNodeCheckbox.checked = attr.checked;
+        t.rendNodeCheckbox.checked = attr.checked;
+    }
 
     t._value = attr.checked;
 
@@ -241,12 +244,16 @@ JXG.createCheckbox = function (board, parents, attributes) {
     t.update = function () {
         if (this.needsUpdate) {
             JXG.Text.prototype.update.call(this);
-            this._value = this.rendNodeCheckbox.checked;
+            if (this.rendNodeCheckbox) {
+                this._value = this.rendNodeCheckbox.checked;
+            }
         }
         return this;
     };
 
-    Env.addEvent(t.rendNodeCheckbox, "change", priv.CheckboxChangeEventHandler, t);
+    if (t.rendNodeCheckbox) {
+        Env.addEvent(t.rendNodeCheckbox, "change", priv.CheckboxChangeEventHandler, t);
+    }
 
     return t;
 };

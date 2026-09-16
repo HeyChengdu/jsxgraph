@@ -42,6 +42,11 @@ import Const from "./constants.js";
 import Mat from "../math/math.js";
 import Geometry from "../math/geometry.js";
 import Type from "../utils/type.js";
+import { fade, createRevealJob } from '../utils/fade.js';
+import {
+    createCompositeWriteJob,
+    groupMembers
+} from '../utils/compositionAnimation.js';
 
 /**
  * Creates a new instance of Group.
@@ -131,6 +136,41 @@ Type.copyMethodMap(JXG.Group, {
 JXG.extend(
     JXG.Group.prototype,
     /** @lends JXG.Group.prototype */ {
+        /** 组的呈现按成员转发：显隐作用于每个成员点。 */
+        show: function () {
+            for (const member of groupMembers(this)) member.show();
+            return this;
+        },
+
+        /** 隐藏组内全部成员，不删除几何与依赖。 */
+        hide: function () {
+            for (const member of groupMembers(this)) member.hide();
+            return this;
+        },
+
+        /** 淡入组内全部成员。 */
+        fadeIn: function (duration) {
+            return fade(this, true, duration);
+        },
+
+        /** 淡出组内全部成员。 */
+        fadeOut: function (duration) {
+            return fade(this, false, duration);
+        },
+
+        /** 组的书写由成员共同完成；没有可写成员时退化为淡入。 */
+        write: function (duration, options) {
+            const members = groupMembers(this);
+            const job = createCompositeWriteJob(members, duration, {
+                ...options,
+                fadeJob: createRevealJob
+            });
+            if (!job) return this.fadeIn(duration);
+            const handle = members[0].board.animationScheduler.schedule(job);
+            job.bind(handle);
+            return this;
+        },
+
         /**
          * Releases all elements of this group.
          * @returns {JXG.Group} returns this (empty) group

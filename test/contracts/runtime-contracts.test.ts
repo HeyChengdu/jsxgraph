@@ -81,8 +81,10 @@ describe("TypeScript runtime contracts", () => {
             [-5, 0],
             [5, 0]
         ]);
-        const table = currentBoard.create("table", [[["x", "y"]]]);
+        const table = currentBoard.create("table", [0, 0, [["x", "y"]]]);
         const matrix = currentBoard.create("matrix", [
+            0,
+            0,
             [
                 [1, 0],
                 [0, 1]

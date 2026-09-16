@@ -52,6 +52,10 @@ declare namespace JXG {
         fadeIn(duration?: number): this;
         /** Hide unique members after fading, without removing them. */
         fadeOut(duration?: number): this;
+        /** Show every member immediately; 无呈现能力的成员不受影响。 */
+        show(): this;
+        /** Hide every member immediately, without deleting geometry. */
+        hide(): this;
         /** Elements indexed by their JSXGraph id or composition key. */
         elements: { [key: string]: GeometryElement | Composition };
         /** Alias of {@link elements}. */
@@ -532,7 +536,7 @@ declare namespace JXG {
         fadeIn(duration?: number): this;
         /** Hide after fading, without deleting geometry or dependencies. */
         fadeOut(duration?: number): this;
-        /** Progressive drawing for supported elements; duration is in milliseconds. */
+        /** 有路径时沿轮廓渐进绘制，没有路径时以淡入出现；时长毫秒，默认 1000。 */
         write(duration?: number, options?: { callback?: () => void }): this;
         /** Temporarily tint and glow in place, then restore; default duration 1000ms, scaleFactor 1. */
         indicate(duration?: number, options?: IndicateOptions): this;
@@ -4798,7 +4802,14 @@ declare namespace JXG {
         >;
         /** Creates a matrix composition from rows of cell content. */
         matrix: BoardElementDefinition<
-            [parents: [CellRows], attributes?: MatrixAttributes],
+            [
+                parents: readonly [
+                    x: DynamicCoordinate,
+                    y: DynamicCoordinate,
+                    rows: CellRows
+                ],
+                attributes?: MatrixAttributes
+            ],
             MatrixComposition
         >;
         /** Creates dynamic measurement text at board coordinates. */
@@ -5037,7 +5048,14 @@ declare namespace JXG {
         >;
         /** Creates a table composition from rows of cell content. */
         table: BoardElementDefinition<
-            [parents: [CellRows], attributes?: TableAttributes],
+            [
+                parents: readonly [
+                    x: DynamicCoordinate,
+                    y: DynamicCoordinate,
+                    rows: CellRows
+                ],
+                attributes?: TableAttributes
+            ],
             TableComposition
         >;
         /** Creates a tangent line at a glider or point on a supported geometry element. */
@@ -6841,7 +6859,20 @@ declare namespace JXG {
     export type CellContent = string | number | (() => string | number);
     export type CellRows = readonly (readonly CellContent[])[];
 
+    /** 内容盒九宫格锚点：决定创建坐标 (x, y) 指盒子的哪个点，默认正中。 */
+    export type CellGridAnchor =
+        | 'top-left'
+        | 'top-center'
+        | 'top-right'
+        | 'center-left'
+        | 'center'
+        | 'center-right'
+        | 'bottom-left'
+        | 'bottom-center'
+        | 'bottom-right';
+
     export interface TableAttributes extends GeometryElementAttributes {
+        anchor?: CellGridAnchor;
         padding?: number;
         fontSize?: number;
         useKatex?: boolean;
@@ -6855,6 +6886,7 @@ declare namespace JXG {
     }
 
     export interface MatrixAttributes extends GeometryElementAttributes {
+        anchor?: CellGridAnchor;
         columnGap?: number;
         fontSize?: number;
         padding?: number;

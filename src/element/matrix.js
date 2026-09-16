@@ -1,13 +1,14 @@
 import JXG from "../jxg.js";
 import {
     createCellGridGeometry,
+    readCellAnchor,
     normalizeCellContent,
     omitUndefined,
     ownGeneratedLine,
     readCellGridVisualAttributes,
     validateCellRows
 } from "./cellGrid.js";
-import { createBoardRegion } from "./responsiveRegion.js";
+import { createBoardRegion, createPointRegion } from "./responsiveRegion.js";
 const DEFAULT_COLUMN_GAP = 0.35;
 const DEFAULT_PADDING = 0.22;
 const DEFAULT_ROW_GAP = 0.22;
@@ -67,17 +68,43 @@ const DEFAULT_ROW_GAP = 0.22;
  * @augments JXG.Composition
  * @constructor
  * @type JXG.Composition
- * @param {Array} rows A rectangular array of strings, numbers, or functions returning matrix entries.
+ * @param {Array|Number} parents Either `[rows]` (legacy, anchored at the board center) or `[x, y, rows]`.
  * @example
  * var matrix = board.create('matrix', [[['a', 'b'], ['c', 'd']]], {
  *     columnGap: 0.4,
  *     rowGap: 0.25,
  *     useKatex: true
  * });
+ * @example
+ * var anchored = board.create('matrix', [0, 0, [[['a', 'b'], ['c', 'd']]]], {
+ *     columnGap: 0.4
+ * });
  */
+/**
+ * 用函数式 curve 画直线段：不产生任何顶点 Point。
+ * line/polygon 由坐标数组创建时会自动补端点，而这些端点在构造瞬间就被画一次，
+ * 之后即便可见性变成 false 也不会被清除，画面上因此留下永久圆点。
+ */
+function gridSegment(board, from, to, attributes) {
+    const at = (value) => (typeof value === "function" ? value : () => value);
+    const x1 = at(from[0]);
+    const y1 = at(from[1]);
+    const x2 = at(to[0]);
+    const y2 = at(to[1]);
+    return board.create(
+        "curve",
+        [
+            (t) => x1() + t * (x2() - x1()),
+            (t) => y1() + t * (y2() - y1()),
+            0,
+            1
+        ],
+        attributes
+    );
+}
+
 function createMatrix(board, parents, attributes) {
-    const rawRows = readMatrixParents(parents);
-    const region = createBoardRegion(board, 0);
+    const { region, rows: rawRows } = readMatrixParents(board, parents);
     const rows = validateCellRows("matrix", rawRows);
     const columnGap = readNonNegativeNumber(attributes, "columnGap", DEFAULT_COLUMN_GAP);
     const padding = readNonNegativeNumber(attributes, "padding", DEFAULT_PADDING);
@@ -114,6 +141,7 @@ function createMatrix(board, parents, attributes) {
         )
     );
     geometry = createCellGridGeometry(region, entries, {
+        anchor: readCellAnchor(attributes),
         columnGap,
         padding: 0,
         rowGap,
@@ -154,10 +182,8 @@ function createMatrix(board, parents, attributes) {
         ]
     ];
     const brackets = bracketSegments.map((segment) =>
-        board.create("line", segment, {
+        gridSegment(board, segment[0], segment[1], {
             ...common,
-            point1: { visible: false },
-            point2: { visible: false },
             straightFirst: false,
             straightLast: false
         })
@@ -179,13 +205,19 @@ function createMatrix(board, parents, attributes) {
         }
     });
 }
-function readMatrixParents(parents) {
-    if (parents.length !== 1 || !Array.isArray(parents[0])) {
+/**
+ * 兼容两种 parents 形状：[rows] 沿用板面区域中心（随包围盒变化），[x, y, rows] 落在用户坐标点上。
+ */
+function readMatrixParents(board, parents) {
+    if (parents.length === 1 && Array.isArray(parents[0])) {
+        return { region: createBoardRegion(board, 0), rows: parents[0] };
+    }
+    if (parents.length !== 3 || !Array.isArray(parents[2])) {
         throw new Error(
-            "JSXGraph: matrix parents must be [rows]. Example: board.create('matrix', [[['a', 'b']]])."
+            "JSXGraph: matrix parents must be [rows] or [x, y, rows]. Example: board.create('matrix', [[['a'], ['b']]]) or board.create('matrix', [0, 0, [[['a'], ['b']]]])."
         );
     }
-    return parents[0];
+    return { region: createPointRegion(parents[0], parents[1]), rows: parents[2] };
 }
 function readNonNegativeNumber(attributes, key, fallback) {
     const value = attributes[key] ?? fallback;

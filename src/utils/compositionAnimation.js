@@ -44,26 +44,49 @@ export function compositionMembers(composition) {
   const board = members[0]?.board;
   if (members.some(member => member.board !== board))
     throw new Error('JSXGraph: composite animation requires a single Board.');
-  // Polygon borders already belong to their parent's write presentation.
+  return dropOwnedBorders(members);
+}
+
+/** Polygon borders already belong to their parent's presentation. */
+export function dropOwnedBorders(members) {
   const owned = new Set(members.flatMap(member => member.borders ?? []));
   return members.filter(member => !owned.has(member));
 }
 
-export function writeComposition(composition, duration = 1000, options = {}) {
+/** 复合书写只驱动有书写能力、且不被父对象呈现覆盖的成员。 */
+export function writableMembers(members) {
+  return dropOwnedBorders(members).filter(
+    member => typeof member._write === 'function'
+  );
+}
+
+/** 组的呈现成员是它持有的点。 */
+export function groupMembers(group) {
+  return Object.values(group.objects ?? {})
+    .map(entry => entry?.point)
+    .filter(Boolean);
+}
+
+/**
+ * 把成员书写任务聚合成一个可调度的任务：成员能力在发布任何效果之前全部校验。
+ * owner 用于同一目标重入时取消上一次书写；三维元素与组按成员各自的状态处理重入。
+ */
+export function createCompositeWriteJob(members, duration = 1000, options = {}) {
   if (!Number.isFinite(duration) || duration < 0)
     throw new Error(
       'JSXGraph: write() duration must be finite and nonnegative.'
     );
-  const members = compositionMembers(composition);
-  if (!members.length) return composition;
-  const board = members[0].board;
+  if (!members.length) return null;
+  const owner = options.owner;
+  const fadeJob = options.fadeJob;
   // Prepare every child before publishing any effect, including capability validation.
   const jobs = members.map(member => {
-    if (typeof member._write !== 'function')
-      throw new Error(
-        'JSXGraph: write() is not supported by a composition member.'
-      );
-    return member._write(duration);
+    if (typeof member._write === 'function') return member._write(duration);
+    // 能写就写，不能写就以淡入出现；两者都不可用时才失败。
+    if (typeof fadeJob === 'function') return fadeJob(member, duration);
+    throw new Error(
+      'JSXGraph: write() is not supported by a composition member.'
+    );
   });
   const finished = new Set(),
     started = new Set();
@@ -72,8 +95,8 @@ export function writeComposition(composition, duration = 1000, options = {}) {
     if (ended) return;
     ended = true;
     for (const job of started) job.cancel();
-    if (composition._compositionWrite === handle)
-      composition._compositionWrite = null;
+    if (owner && owner._compositionWrite === handle)
+      owner._compositionWrite = null;
   };
   // This bridge is bound before start, so synchronous hiding can cancel the whole job.
   let scheduled;
@@ -84,11 +107,14 @@ export function writeComposition(composition, duration = 1000, options = {}) {
     },
   };
   for (const job of jobs) job.bind(handle);
-  scheduled = board.animationScheduler.schedule({
+  return {
     duration,
+    bind(outer) {
+      scheduled = outer;
+    },
     start() {
-      composition._compositionWrite?.cancel();
-      composition._compositionWrite = handle;
+      owner?._compositionWrite?.cancel();
+      if (owner) owner._compositionWrite = handle;
       for (const job of jobs) {
         if (ended) break;
         started.add(job);
@@ -114,6 +140,17 @@ export function writeComposition(composition, duration = 1000, options = {}) {
       clear();
     },
     cancel: clear,
+  };
+}
+
+export function writeComposition(composition, duration = 1000, options = {}) {
+  const members = compositionMembers(composition);
+  const job = createCompositeWriteJob(members, duration, {
+    ...options,
+    owner: composition,
   });
+  if (!job) return composition;
+  const handle = members[0].board.animationScheduler.schedule(job);
+  job.bind(handle);
   return composition;
 }

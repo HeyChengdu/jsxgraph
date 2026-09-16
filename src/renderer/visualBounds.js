@@ -4,8 +4,8 @@
  * [POS]: Shared renderer ownership boundary consumed by attention and fade
  * [PROTOCOL]: Update this header on change, then check AGENTS.md
  */
-/** Enumerate native presentation ownership, not mathematical dependencies. */
-export function visualFamily(element) {
+/** Resolve native presentation ownership, not mathematical dependencies. */
+function collectFamily(element, includeHidden) {
   const members = new Set();
   const visited = new Set();
   function visit(target) {
@@ -18,7 +18,8 @@ export function visualFamily(element) {
       if (target.polyhedron?.is3D) visit(target.polyhedron);
       return;
     }
-    if (!target.visPropCalc.visible) return;
+    // 书写需要隐藏对象仍然可达的投影，淡入与强调只处理当前可见成员。
+    if (!includeHidden && !target.visPropCalc.visible) return;
     members.add(target);
     for (const border of target.borders ?? []) visit(border);
     for (const ticks of target.ticks ?? []) {
@@ -30,6 +31,16 @@ export function visualFamily(element) {
   }
   visit(element);
   return [...members];
+}
+
+/** Enumerate native presentation ownership, not mathematical dependencies. */
+export function visualFamily(element) {
+  return collectFamily(element, false);
+}
+
+/** Presentation members regardless of current visibility; writable projections stay reachable while hidden. */
+export function presentationMembers(element) {
+  return collectFamily(element, true);
 }
 
 /** Spatial wrappers delegate visibility to their native rendered projections. */

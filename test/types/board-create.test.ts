@@ -87,10 +87,10 @@ if (pointFromObjectTable instanceof JXG.GeometryElement) {
 board.animationScheduler.cancelAll();
 board.animationObjects[a.id]?.getName();
 board.addAnimation(a).animate();
-a.moveTo([1, 2], 100, { effect: '<' });
-a.moveAlong(t => [t / 100, 0], 1000);
+a.moveTo([1, 2], 100, { effect: "<" });
+a.moveAlong((t) => [t / 100, 0], 1000);
 a.visit([1, 2], 100, 2);
-a.animate({ strokeWidth: 4, strokeColor: 'blue-600' }, 100);
+a.animate({ strokeWidth: 4, strokeColor: "blue-600" }, 100);
 board.highlightedObjects[a.id]?.getName();
 board.fullscreenListener(new Event("fullscreenchange"));
 board.pointerDownListener(new PointerEvent("pointerdown"), a, false);
@@ -493,11 +493,23 @@ const plane3 = view.create("plane3d", [p3a, [1, 0, 0], [0, 1, 0]]);
 const sphere3 = view.create("sphere3d", [p3a, p3b]);
 view.create("circle3d", [p3a, [0, 0, 1], 2]);
 view.create("curve3d", [(u) => Math.cos(u), (u) => Math.sin(u), (u) => u, [0, 1]]);
-view.create("curve3d", [[0, 1, 1], [0, 0, 1], [0, 0, 0]]);
-const curveCoordinates = [[0, 1], [0, 1], [0, 0]] as const;
+view.create("curve3d", [
+    [0, 1, 1],
+    [0, 0, 1],
+    [0, 0, 0]
+]);
+const curveCoordinates = [
+    [0, 1],
+    [0, 1],
+    [0, 0]
+] as const;
 view.create("curve3d", curveCoordinates);
 // @ts-expect-error 三维曲线的分量数组不能包含字符串。
-view.create("curve3d", [[0, 1], [0, 1], [0, "1"]]);
+view.create("curve3d", [
+    [0, 1],
+    [0, 1],
+    [0, "1"]
+]);
 view.create("functiongraph3d", [(x, y) => x + y, [-2, 2], [-2, 2]]);
 view.create("functiongraph3d", [(x, y) => x + y, [-2, 2], [-2, 2]], {
     type: "colormap",
@@ -742,8 +754,10 @@ const localNumberLine = board.create("localnumberline", [
     [-5, 0],
     [5, 0]
 ]);
-const table = board.create("table", [[["x", "y"]]]);
+const table = board.create("table", [0, 0, [["x", "y"]]]);
 const matrix = board.create("matrix", [
+    0,
+    0,
     [
         [1, 0],
         [0, 1]

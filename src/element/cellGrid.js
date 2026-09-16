@@ -138,8 +138,42 @@ function isCellContent(value) {
 export function normalizeCellContent(content) {
     return typeof content === "function" ? () => String(content()) : String(content);
 }
+const HORIZONTAL_ANCHORS = { left: 0, center: 0.5, right: 1 };
+const VERTICAL_ANCHORS = { top: 0, center: 0.5, bottom: 1 };
+const CELL_ANCHORS = [
+    "top-left",
+    "top-center",
+    "top-right",
+    "center-left",
+    "center",
+    "center-right",
+    "bottom-left",
+    "bottom-center",
+    "bottom-right"
+];
+
+/** 九宫格锚点：决定 (x, y) 指内容盒的哪个点，默认正中。 */
+export function readCellAnchor(attributes) {
+    const anchor = attributes.anchor ?? "center";
+    if (!CELL_ANCHORS.includes(anchor)) {
+        throw new RangeError(
+            `JSXGraph: anchor must be one of ${CELL_ANCHORS.join(", ")}; received "${String(anchor)}".`
+        );
+    }
+    return anchor;
+}
+
+function anchorFactors(anchor) {
+    if (anchor === "center") return [0.5, 0.5];
+    const [vertical, horizontal] = anchor.split("-");
+    return [HORIZONTAL_ANCHORS[horizontal], VERTICAL_ANCHORS[vertical]];
+}
+
 export function createCellGridGeometry(region, cells, options) {
     const regionCenter = region.point(["center", "center"]);
+    const [horizontalAnchor, verticalAnchor] = anchorFactors(
+        options.anchor ?? "center"
+    );
     const columnCount = cells[0].length;
     const measuredColumnWidths = () =>
         Array.from({ length: columnCount }, (_, column) =>
@@ -167,8 +201,8 @@ export function createCellGridGeometry(region, cells, options) {
         rowHeights().reduce((sum, height) => sum + height, 0) +
         options.padding * 2 * cells.length +
         options.rowGap * Math.max(0, cells.length - 1);
-    const left = () => regionCenter[0]() - totalWidth() / 2;
-    const top = () => regionCenter[1]() + totalHeight() / 2;
+    const left = () => regionCenter[0]() - totalWidth() * horizontalAnchor;
+    const top = () => regionCenter[1]() + totalHeight() * verticalAnchor;
     const columnBoundaries = Array.from({ length: columnCount + 1 }, (_, boundary) => () => {
         const widths = columnWidths();
         return (

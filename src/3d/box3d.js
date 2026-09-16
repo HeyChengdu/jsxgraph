@@ -65,7 +65,10 @@ JXG.createAxes3D = function (board, parents, attributes) {
     range1, range2,
     na, na_parent,
     ticks_attr,
-    axes = {};
+    axes = {},
+    container,
+    presentation = [],
+    name;
 
     if (Type.exists(view.bbox3D)) {
         for (i = 0; i < directions.length; i++) {
@@ -206,7 +209,25 @@ JXG.createAxes3D = function (board, parents, attributes) {
         }
     }
 
-    return axes;
+    // 具名成员保留在同一容器上，同时共享组合的呈现转发：书写、淡入淡出与显隐一次作用于整组坐标轴。
+    container = new JXG.Composition(axes);
+
+    for (name in axes) {
+        if (axes.hasOwnProperty(name) && Type.exists(axes[name])) {
+            if (!Type.exists(container[name])) {
+                container[name] = axes[name];
+            }
+
+            // O 只是中心模式下的内部参照点，不参与呈现。
+            if (name !== "O") {
+                presentation.push(axes[name]);
+            }
+        }
+    }
+
+    container._animationMembers = presentation;
+
+    return container;
 };
 JXG.registerElement("axes3d", JXG.createAxes3D);
 

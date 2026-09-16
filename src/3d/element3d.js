@@ -31,6 +31,12 @@
 import JXG from "../jxg.js";
 import Type from "../utils/type.js";
 import Geometry from '../math/geometry.js';
+import { presentationMembers } from '../renderer/visualBounds.js';
+import { createRevealJob } from '../utils/fade.js';
+import {
+    createCompositeWriteJob,
+    dropOwnedBorders
+} from '../utils/compositionAnimation.js';
 
 /**
  * Constructs a new GeometryElement3D object.
@@ -273,7 +279,54 @@ JXG.extend(JXG.GeometryElement3D.prototype, {
     },
 
     // Documented in element.js
-    remove: function() {}
+    remove: function() {},
+
+    /**
+     * 三维元素以它的二维投影与面参与书写：解析出的成员都是可写的原生二维元素。
+     * 成员在 start 时解析，投影在书写期间被替换时以最新解析结果为准；没有可写投影时退化为淡入。
+     */
+    _write: function (duration, options) {
+        var element = this,
+            aggregate = null,
+            scheduled = null,
+            wrapper = {
+                duration: duration,
+                bind: function (handle) {
+                    scheduled = handle;
+                },
+                start: function () {
+                    var members = dropOwnedBorders(presentationMembers(element));
+                    if (!members.length) {
+                        element.fadeIn(duration);
+                        return;
+                    }
+                    // 书写本身是一次揭示：三维元素的可见状态与它的投影保持一致。
+                    element.setAttribute({ visible: true });
+                    aggregate = createCompositeWriteJob(members, duration, {
+                        ...(options || {}),
+                        fadeJob: createRevealJob
+                    });
+                    aggregate.bind({
+                        cancel: function () {
+                            wrapper.cancel();
+                        }
+                    });
+                    aggregate.start();
+                },
+                update: function (progress) {
+                    if (aggregate) aggregate.update(progress);
+                },
+                finish: function () {
+                    if (aggregate) aggregate.finish();
+                    scheduled = null;
+                },
+                cancel: function () {
+                    if (aggregate) aggregate.cancel();
+                    if (scheduled) scheduled.cancel();
+                }
+            };
+        return wrapper;
+    }
 
 });
 

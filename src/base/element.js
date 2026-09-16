@@ -1818,11 +1818,9 @@ JXG.extend(
             return this;
         },
 
-        /** Delegate progressive drawing to the element's supported capability. */
+        /** 有路径的对象渐进绘制；没有路径的对象以淡入出现，作为统一的"出现"入口。 */
         write: function (duration, options) {
-            if (typeof this._write !== 'function') {
-                throw new Error('JSXGraph: write() is not supported by this element.');
-            }
+            if (typeof this._write !== 'function') return this.fadeIn(duration);
             const job = this._write(duration, options);
             const handle = this.board.animationScheduler.schedule(job);
             job.bind(handle);

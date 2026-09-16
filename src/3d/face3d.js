@@ -447,6 +447,11 @@ JXG.createFace3D = function (board, parents, attributes) {
         faceNumber = parents[2],
         attr, el;
 
+    // 公开声明允许传入已经创建的多面体元素；内部创建传入的是定义数据本身。
+    if (polyhedron && polyhedron.def) {
+        polyhedron = polyhedron.def;
+    }
+
     // TODO Throw new Error
     attr = Type.copyAttributes(attributes, board.options, 'face3d');
     el = new JXG.Face3D(view, polyhedron, faceNumber, attr);
@@ -485,4 +490,3 @@ JXG.createFace3D = function (board, parents, attributes) {
 };
 
 JXG.registerElement("face3d", JXG.createFace3D);
-

@@ -33,7 +33,7 @@
 /*jslint nomen: true, plusplus: true*/
 
 import JXG from "../jxg.js";
-import { fade } from '../utils/fade.js';
+import { fade, createRevealJob } from '../utils/fade.js';
 import Type from "../utils/type.js";
 import { writeComposition, emphasizeComposition } from '../utils/compositionAnimation.js';
 
@@ -57,6 +57,24 @@ JXG.Composition = function (elements) {
     var e,
         that = this,
         genericMethods = [
+            /**
+             * Invokes show for every stored element with a show method and hands over the given arguments.
+             * See {@link JXG.GeometryElement#show} for further description, valid parameters and return values.
+             * @name show
+             * @memberOf JXG.Composition.prototype
+             * @function
+             */
+            "show",
+
+            /**
+             * Invokes hide for every stored element with a hide method and hands over the given arguments.
+             * See {@link JXG.GeometryElement#hide} for further description, valid parameters and return values.
+             * @name hide
+             * @memberOf JXG.Composition.prototype
+             * @function
+             */
+            "hide",
+
             /**
              * Invokes setAttribute for every stored element with a setAttribute method and hands over the given arguments.
              * See {@link JXG.GeometryElement#setAttribute} for further description, valid parameters and return values.
@@ -181,7 +199,10 @@ JXG.extend(
     /** @lends JXG.Composition.prototype */ {
         /** Present unique explicit members using the existing Board animation clock. */
         write: function (duration, options) {
-            return writeComposition(this, duration, options);
+            return writeComposition(this, duration, {
+                ...options,
+                fadeJob: createRevealJob
+            });
         },
         indicate: function (duration, options) {
             return emphasizeComposition(this, 'indicate', duration, options);
