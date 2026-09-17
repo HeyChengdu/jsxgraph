@@ -438,7 +438,7 @@ JXG.extend(
             return this._setText(text);
         },
 
-        /** 文字逐字显示，公式完整排版后从左向右揭示；时长为毫秒，返回当前元素。 */
+        /** 文字按 manim Write 的包络逐字素描边后填色，公式完整排版后从左向右揭示；时长为毫秒，返回当前元素。 */
         _write: function (duration, options) {
             return writeText(this, duration, options);
         },
