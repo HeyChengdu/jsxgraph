@@ -4,6 +4,16 @@
  * [POS]: Shared renderer ownership boundary consumed by attention and fade
  * [PROTOCOL]: Update this header on change, then check AGENTS.md
  */
+/**
+ * Tick ownership is not uniform: lines and axes keep an array of Ticks elements, while a
+ * slider assigns its single Ticks element directly. Consumers must accept both shapes.
+ */
+export function ownedTicks(element) {
+  const ticks = element?.ticks;
+  if (!ticks) return [];
+  return Array.isArray(ticks) ? ticks : [ticks];
+}
+
 /** Resolve native presentation ownership, not mathematical dependencies. */
 function collectFamily(element, includeHidden) {
   const members = new Set();
@@ -22,7 +32,7 @@ function collectFamily(element, includeHidden) {
     if (!includeHidden && !target.visPropCalc.visible) return;
     members.add(target);
     for (const border of target.borders ?? []) visit(border);
-    for (const ticks of target.ticks ?? []) {
+    for (const ticks of ownedTicks(target)) {
       // Tick elements also store coordinate arrays under `ticks`.
       if (ticks?.board) visit(ticks);
     }

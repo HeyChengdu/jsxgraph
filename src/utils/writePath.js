@@ -1,3 +1,5 @@
+import { ownedTicks } from '../renderer/visualBounds.js';
+
 /** Prepare path presentation for either an element or a composite Board job. */
 export function writePath(element, duration = 1000, options = {}) {
   if (!Number.isFinite(duration) || duration < 0) {
@@ -11,7 +13,7 @@ export function writePath(element, duration = 1000, options = {}) {
       element._writeState = null;
       element.needsUpdate = true;
       for (const border of element.borders ?? []) border.needsUpdate = true;
-      for (const ticks of element.ticks ?? []) ticks.needsUpdate = true;
+      for (const ticks of ownedTicks(element)) ticks.needsUpdate = true;
       element.board._pathWrites?.delete(element);
     }
   };
@@ -29,7 +31,7 @@ export function writePath(element, duration = 1000, options = {}) {
       state.progress = Math.max(0, Math.min(1, progress));
       element.needsUpdate = true;
       for (const border of element.borders ?? []) border.needsUpdate = true;
-      for (const ticks of element.ticks ?? []) ticks.needsUpdate = true;
+      for (const ticks of ownedTicks(element)) ticks.needsUpdate = true;
     },
     finish() {
       clear();
