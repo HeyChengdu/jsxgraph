@@ -1,7 +1,7 @@
 /// <reference path="../../src/index.d.ts" />
 /**
  * [INPUT]: 公开呈现 API（write、fadeIn、fadeOut、show、hide）、原生 SVG 节点与受控 Board 时钟
- * [OUTPUT]: 二维、三维、刻度、组与组合的呈现覆盖契约与结构对象边界
+ * [OUTPUT]: 二维、三维、刻度、滑块、组与组合的呈现覆盖契约与结构对象边界
  * [POS]: 原生呈现能力矩阵的浏览器契约测试；不依赖 Mideo 运行时
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -439,6 +439,45 @@ describe('呈现能力覆盖', () => {
         expect(() => view.write(100)).toThrowError(/view3d/);
         expect(() => turtle.fadeIn(100)).toThrowError(/turtle/);
         expect(() => turtle.write(100)).toThrowError(/turtle/);
+    });
+
+    it('滑块把刻度存成单个元素时书写与淡入都能正常完成', () => {
+        // 原生 slider 把刻度的 Ticks 元素直接赋给 `.ticks`，线段与坐标轴存的是数组；
+        // 书写进度与视觉成员枚举必须同时接受这两种形态，且清理路径与更新路径同样安全。
+        const slider = board.create(
+            'slider',
+            [
+                [-2, -2],
+                [2, -2],
+                [0, 2, 2],
+            ],
+            { visible: false }
+        ) as unknown as {
+            id: string;
+            ticks: unknown;
+            write(duration?: number): unknown;
+            fadeIn(duration?: number): unknown;
+            setAttribute(attributes: object): unknown;
+            visPropCalc: { visible: boolean };
+        };
+        board.update();
+        expect(Array.isArray(slider.ticks)).toBe(false);
+
+        expect(() => slider.write(400)).not.toThrow();
+        board.update();
+        expect(slider.visPropCalc.visible).toBe(true);
+        expect(() => tick(0.5)).not.toThrow();
+        expect(() => tick(1)).not.toThrow();
+
+        // 取消书写走同一清理路径：隐藏后不得把中断的进度留在元素上。
+        expect(() => slider.write(400)).not.toThrow();
+        expect(() => slider.setAttribute({ visible: false })).not.toThrow();
+        expect(() => board.update()).not.toThrow();
+
+        expect(() => slider.fadeIn(400)).not.toThrow();
+        board.update();
+        expect(slider.visPropCalc.visible).toBe(true);
+        expect(() => tick(1)).not.toThrow();
     });
 
     it('圆弧与扇形书写按轮廓前缀推进，扇形填充在末段恢复', () => {
