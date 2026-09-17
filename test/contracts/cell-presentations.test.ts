@@ -88,13 +88,23 @@ describe("Cell presentation runtime contracts", () => {
             ]
         ]);
 
-        const constructionPoints = [
-            ...table.lines.flatMap((line) => [line.point1, line.point2]),
-            ...matrix.brackets.flatMap((line) => [line.point1, line.point2])
-        ];
-
-        expect(constructionPoints.length).toBeGreaterThan(0);
-        expect(constructionPoints.every((point) => point.visProp.visible === false)).toBeTrue();
+        // 生成线段可以完全不带顶点（函数式 curve），也可以由 line 补出端点；
+        // 两种实现都不允许在画面上留下可见的构造点。
+        const generated = [...table.lines, ...matrix.brackets];
+        expect(generated.length).toBeGreaterThan(0);
+        const constructionPoints = generated
+            .flatMap((line) => [line.point1, line.point2])
+            .filter((point): point is JXG.Point => Boolean(point));
+        expect(constructionPoints.filter((point) => point.visProp.visible)).toEqual([]);
+        expect(
+            currentBoard.objectsList.filter((object) => {
+                const element = object as {
+                    elType?: string;
+                    visPropCalc?: { visible: boolean };
+                };
+                return element.elType === "point" && element.visPropCalc?.visible === true;
+            })
+        ).toEqual([]);
     });
 
     it("updates dynamic matrix entries while preserving entry identity", () => {

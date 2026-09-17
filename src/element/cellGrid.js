@@ -1,12 +1,16 @@
 import JXG from "../jxg.js";
 
+/**
+ * 生成线段现在由函数式 curve 承担，不带任何构造端点；若某天换回 line 型图元，
+ * Composition 会把补出的端点一并纳入所有权（undefined 成员由 add 忽略）。
+ * 呈现成员始终只有线本身，辅助端点不参与动画与实际呈现。
+ */
 export function ownGeneratedLine(line) {
     const owner = new JXG.Composition({
         line,
         startPoint: line.point1,
         endPoint: line.point2
     });
-    // Ownership includes construction points; presentation includes only the line.
     owner._animationMembers = [line];
     return owner;
 }
