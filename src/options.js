@@ -8810,6 +8810,12 @@ JXG.Options = {
         /**
          * Attributes for the base line of the slider.
          *
+         * Colors accept Tailwind color tokens, e.g. <tt>strokeColor: 'slate-500'</tt>.
+         * Tokens are resolved against the board theme, so one token stays readable on
+         * both a light and a dark board. A plain CSS color, e.g.
+         * <tt>strokeColor: '#000000'</tt>, is passed through unchanged and becomes
+         * invisible on a dark board.
+         *
          * @type Line
          * @name Slider#baseline
          */
@@ -8863,6 +8869,9 @@ JXG.Options = {
 
         /**
          * Attributes for the highlighting line of the slider.
+         *
+         * Colors accept Tailwind color tokens and are resolved against the board
+         * theme, see {@link Slider#baseline}.
          *
          * @type Line
          * @name Slider#highline

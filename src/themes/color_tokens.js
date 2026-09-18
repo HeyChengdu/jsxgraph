@@ -311,9 +311,34 @@ const oppositeShade = {
     950: 50
 };
 
+/*
+    Hand-calibrated dark values for tokens whose mirrored shade is too faint on
+    the dark board (#020617).
+
+    The mirror works for every shade that carries structure: after mirroring,
+    slate-900..400, blue-600..400 and red-600..400 all clear 3:1 (WCAG non-text
+    contrast). The two palest shades of a family exist for low-contrast roles - a
+    fill, a hint - and a mirrored pale shade is still a mid tone, so an author who
+    picks one for a structural role (grid, slider track, ticks) gets an element
+    that disappears:
+
+        slate-300 -> slate-600   1.95:1 -> 7.68:1
+        blue-300  -> blue-700    2.96:1 -> 11.14:1
+
+    Two properties keep this honest, both asserted in test/testTheme.js: every
+    declared token clears 3:1 on both surfaces, and no calibrated token ends up
+    weaker than its own mirrored shade.
+*/
+const calibratedDarkTokens = {
+    "slate-300": "slate-600",
+    "blue-300": "blue-700"
+};
+
 const darkColors = Object.keys(lightColors).reduce(function (colors, token) {
     const match = token.match(/^(.*)-(50|100|200|300|400|500|600|700|800|900|950)$/);
-    if (match) {
+    if (calibratedDarkTokens[token]) {
+        colors[token] = lightColors[calibratedDarkTokens[token]];
+    } else if (match) {
         colors[token] = lightColors[match[1] + "-" + oppositeShade[match[2]]];
     } else if (token === "black") {
         colors[token] = lightColors.white;
