@@ -6902,6 +6902,12 @@ declare namespace JXG {
 
     export interface AnimationJob {
         readonly duration: number;
+        /**
+         * Marks a temporary emphasis job submitted by `indicate` or `circumscribe`.
+         * Geometry, presentation and fade jobs leave it unset, so a host scheduler
+         * can tell attention time apart from subject-matter processes on one clock.
+         */
+        readonly attention?: boolean;
         start(): void;
         update(progress: number): void;
         finish(): void;

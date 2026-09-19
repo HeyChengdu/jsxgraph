@@ -272,6 +272,9 @@ export function scheduleAttention(state, duration, replaces) {
   } };
   scheduled = board.animationScheduler.schedule({
     duration,
+    // Temporary emphasis, not subject-matter motion: hosts classify the time on
+    // their teaching clock by this marker.
+    attention: true,
     start() {
       if (ended) return;
       for (const previous of board._attention ?? [])
