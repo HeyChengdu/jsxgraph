@@ -62,7 +62,7 @@ const DEFAULT_PADDING = 0.18;
  * });
  */
 /**
- * 用函数式 curve 画直线段：不产生任何顶点 Point。
+ * 用两个动态数据点画直线段：不产生任何顶点 Point，也不进行自适应曲线细分。
  * line/polygon 由坐标数组创建时会自动补端点，而这些端点在构造瞬间就被画一次，
  * 之后即便可见性变成 false 也不会被清除，画面上因此留下永久圆点。
  */
@@ -72,16 +72,19 @@ function gridSegment(board, from, to, attributes) {
     const y1 = at(from[1]);
     const x2 = at(to[0]);
     const y2 = at(to[1]);
-    return board.create(
+    const line = board.create(
         "curve",
         [
-            (t) => x1() + t * (x2() - x1()),
-            (t) => y1() + t * (y2() - y1()),
-            0,
-            1
+            [x1(), x2()],
+            [y1(), y2()]
         ],
         attributes
     );
+    line.updateDataArray = function () {
+        this.dataX = [x1(), x2()];
+        this.dataY = [y1(), y2()];
+    };
+    return line;
 }
 
 function createTable(board, parents, attributes) {
