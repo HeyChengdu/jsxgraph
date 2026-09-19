@@ -37,6 +37,9 @@ export function createAnimationController(driver) {
             try {
                 downstream = driver.schedule({
                     duration: job.duration,
+                    // Hosts classify attention time on their clock; forwarding the
+                    // marker is part of this wrapper's job, not the driver's.
+                    attention: job.attention,
                     start() { if (!ended) guard(() => job.start()); },
                     update(progress) { if (!ended) guard(() => job.update(progress)); },
                     finish() {
