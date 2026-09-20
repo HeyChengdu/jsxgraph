@@ -5207,6 +5207,8 @@ declare namespace JXG {
         BOARD_MODE_ZOOM: number;
         BOARD_QUALITY_HIGH: number;
         BOARD_QUALITY_LOW: number;
+        /** Whether projection updates are deferred by a suspended update or open batch. */
+        isUpdateDeferred(): boolean;
         /** Collect synchronous mutations and submit at most one board update. */
         batch<Result>(callback: () => Result): Result;
         /** Start a fresh low-overhead update pipeline profile. */

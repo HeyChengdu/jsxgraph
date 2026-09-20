@@ -114,6 +114,38 @@ describe('indicate 原位荧光与空间投影', () => {
         board.removeObject(line);
         expect(host.querySelector('[data-jxg-attention]')).toBeNull();
     });
+    it('事务内先淡入三维点再强调时按已接受的逻辑可见性调度', () => {
+        const view = board.create('view3d', [[-4, -4], [8, 8], [[-3, 3], [-3, 3], [-3, 3]]], { axesPosition: 'none' });
+        const point = view.create('point3d', [1, 1, 1], {
+            withLabel: false,
+            visible: false,
+        });
+
+        expect(() => board.batch(() => {
+            point.fadeIn(400);
+            point.indicate(800);
+        })).not.toThrow();
+        expect(point.getAttribute('visible')).toBeTrue();
+        const projection = (point as unknown as { element2D: JXG.Point }).element2D;
+        expect(projection.getAttribute('visible')).toBeTrue();
+        tick(0.5);
+        expect(host.querySelector('[data-jxg-attention="indicate-marker"]')).not.toBeNull();
+        tick(1);
+        expect(host.querySelector('[data-jxg-attention]')).toBeNull();
+    });
+    it('事务内未显示的三维点仍拒绝强调且不残留任务', () => {
+        const view = board.create('view3d', [[-4, -4], [8, 8], [[-3, 3], [-3, 3], [-3, 3]]], { axesPosition: 'none' });
+        const point = view.create('point3d', [1, 1, 1], {
+            withLabel: false,
+            visible: false,
+        });
+
+        expect(() => board.batch(() => point.indicate(800))).toThrowError(
+            /attention requires a visible element/
+        );
+        expect(jobs.size).toBe(0);
+        expect(point.getAttribute('visible')).toBeFalse();
+    });
     for (const kind of ['angle', 'nonreflexangle', 'reflexangle', 'sector'] as const) {
         it(`${kind} 的荧光沿当前原生路径且隐藏后清理`, () => {
             const target = board.create(kind, [[2, 0], [0, 0], [0, 2]], {

@@ -6647,6 +6647,15 @@ JXG.extend(
         },
 
         /**
+         * Reports whether visual projection updates are intentionally deferred until a
+         * surrounding update scope commits.
+         * @returns {Boolean} True while updates are suspended or a batch is open.
+         */
+        isUpdateDeferred: function () {
+            return this.isSuspendedUpdate || this._batchUpdateDepth > 0;
+        },
+
+        /**
          * Collect synchronous board mutations and submit at most one update when the
          * outermost transaction finishes. Nested transactions share the same commit.
          * Existing suspendUpdate semantics stay unchanged.

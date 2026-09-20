@@ -82,4 +82,25 @@ describe('Canvas 原位荧光', () => {
         board.stopAllAnimation(); board.update();
         expect(pixels()).toEqual(before);
     });
+    it('事务内淡入三维点后可在同一动作中渲染强调', () => {
+        const view = board.create('view3d', [[-3, -2], [6, 4], [[-3, 3], [-3, 3], [-3, 3]]], {
+            axesPosition: 'none',
+        });
+        const point = view.create('point3d', [1, 1, 1], {
+            withLabel: false,
+            visible: false,
+            size: 4,
+        });
+        board.update();
+        const before = pixels();
+
+        expect(() => board.batch(() => {
+            point.fadeIn(400);
+            point.indicate(800);
+        })).not.toThrow();
+        advance(0.5);
+        expect(pixels()).not.toEqual(before);
+        advance(1);
+        expect(point.getAttribute('visible')).toBeTrue();
+    });
 });
