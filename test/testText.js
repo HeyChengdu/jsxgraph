@@ -66,6 +66,113 @@ describe("Test text handling", function () {
         expect(el.rendNode.innerHTML).toEqual("text 2");
     });
 
+    it("does not read layout metrics when HTML text clipping is disabled", function () {
+        var el = board.create("text", [0, 0, "test"], { clip: false }),
+            reads = 0;
+
+        Object.defineProperty(el.rendNode, "offsetWidth", {
+            configurable: true,
+            get: function () {
+                reads++;
+                return 10;
+            }
+        });
+        Object.defineProperty(el.rendNode, "offsetHeight", {
+            configurable: true,
+            get: function () {
+                reads++;
+                return 10;
+            }
+        });
+
+        board.renderer.updateClipPath(el, false);
+        expect(reads).toEqual(0);
+
+        el.size = [10, 10];
+        el.rendNode.style.inset = "10px auto auto 20px";
+        board.renderer.updateClipPath(el, true);
+        expect(reads).toEqual(0);
+        expect(el.rendNode.style.clipPath).toContain("rect(");
+    });
+
+    it("keeps randomized SVG label processing by default and allows deterministic order", function () {
+        var first = board.create("point", [-0.2, 0], {
+                name: "A",
+                withLabel: true,
+                label: { autoPosition: true }
+            }),
+            second = board.create("point", [0.2, 0], {
+                name: "B",
+                withLabel: true,
+                label: { autoPosition: true }
+            });
+
+        expect(board.options.label.autoPositionRandomOrder).toBe(true);
+
+        board.options.label.autoPositionRandomOrder = false;
+        spyOn(Math, "random").and.callThrough();
+        board.updateRenderer();
+        expect(Math.random).not.toHaveBeenCalled();
+
+        board.options.label.autoPositionRandomOrder = true;
+        board.updateRenderer();
+        expect(Math.random).toHaveBeenCalled();
+
+        board.removeObject([first, second]);
+    });
+
+    it("does not auto-position an empty label", function () {
+        var point = board.create("point", [0, 0], {
+                name: "",
+                withLabel: true,
+                label: { autoPosition: true }
+            }),
+            label = point.label;
+
+        spyOn(label, "calculateScore").and.callThrough();
+        label.setAutoPosition();
+        expect(label.calculateScore).not.toHaveBeenCalled();
+    });
+
+    it("does not treat invisible labels as auto-position conflicts", function () {
+        var targetPoint = board.create("point", [0, 0], {
+                name: "target",
+                withLabel: true
+            }),
+            target = targetPoint.label,
+            conflicts = function (name, labelAttributes) {
+                var obstaclePoint = board.create("point", [0, 0], {
+                        name: name,
+                        withLabel: true,
+                        label: labelAttributes
+                    }),
+                    obstacle = obstaclePoint.label,
+                    center,
+                    result,
+                    whiteList = board.objectsList
+                        .filter(function (obj) {
+                            return obj.id !== obstacle.id;
+                        })
+                        .map(function (obj) {
+                            return obj.id;
+                        });
+
+                obstacle.size = [20, 10];
+                center = [
+                    obstacle.coords.scrCoords[1] + obstacle.size[0] / 2,
+                    obstacle.coords.scrCoords[2] - obstacle.size[1] / 2
+                ];
+                result = target.getNumberOfConflicts(center[0], center[1], 20, 10, whiteList);
+                board.removeObject(obstaclePoint);
+                return result;
+            };
+
+        expect(conflicts("obstacle", {})).toEqual(1);
+        expect(conflicts("   ", {})).toEqual(0);
+        expect(conflicts("hidden", { visible: false })).toEqual(0);
+        expect(conflicts("transparent", { strokeOpacity: 0 })).toEqual(0);
+    });
+
     it("setText", function () {
         var txt = "test <span>SPAN</span>",
             txt2 = 'hello <button onClick="alert(1)">Click</button>',

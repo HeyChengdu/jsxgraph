@@ -65,6 +65,32 @@ describe("Test 3D points", function () {
         expect(p.coords[3]).toEqual(6);
     });
 
+    it("does not create implicit labels for polygon3d vertices", function () {
+        var polygon = view.create("polygon3d", [
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0]
+        ]);
+
+        expect(polygon.vertices.every(function (point) {
+            return point.element2D.hasLabel === false;
+        })).toBeTrue();
+    });
+
+    it("keeps explicit polygon3d vertex labels available", function () {
+        var polygon = view.create("polygon3d", [
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0]
+        ], {
+            vertices: { withLabel: true }
+        });
+
+        expect(polygon.vertices.every(function (point) {
+            return point.element2D.hasLabel === true;
+        })).toBeTrue();
+    });
+
     it("keeps finite Canvas coordinates after resizing a detached 3D board", function () {
         var canvasHost = document.createElement("div"),
             canvasTarget = document.createElement("div"),

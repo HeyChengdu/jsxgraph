@@ -55,6 +55,10 @@ export function presentationMembers(element) {
 
 /** Spatial wrappers delegate visibility to their native rendered projections. */
 export function isVisuallyVisible(element) {
+  // A suspended board has accepted the logical visibility attribute but has not projected it
+  // to the rendered 2D family yet. Animation scheduling can still validate that logical state.
+  if (element.is3D && element.board.isSuspendedUpdate)
+    return !!element.evalVisProp('visible');
   return element.is3D ? visualFamily(element).length > 0 : !!element.evalVisProp('visible');
 }
 

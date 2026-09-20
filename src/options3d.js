@@ -1064,7 +1064,13 @@ JXG.extend(Options, {
         tabindex: -1,
         strokeWidth: 1,
         fillColor: 'none',
-        needsRegularUpdate: true
+        needsRegularUpdate: true,
+
+        // Match 2D polygon semantics: coordinate-provided vertices stay visible, but do not
+        // create implicit A-Z labels unless the caller explicitly opts in.
+        vertices: {
+            withLabel: false
+        }
 
 
         /**#@-*/

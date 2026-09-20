@@ -1896,6 +1896,7 @@ declare namespace JXG {
         anchorX?: AnchorX;
         anchorY?: AnchorY;
         autoPosition?: boolean;
+        autoPositionRandomOrder?: boolean;
         color?: EvaluatableAttribute<string>;
         display?: "internal";
         fixed?: EvaluatableAttribute<boolean>;
@@ -5172,6 +5173,20 @@ declare namespace JXG {
         ? ValidRegularPolygonArguments<Arguments>
         : Arguments;
 
+    export interface UpdateProfileStage {
+        calls: number;
+        milliseconds: number;
+        maximumMs: number;
+    }
+
+    export interface UpdateProfile {
+        enabled: boolean;
+        startedAt: number;
+        stoppedAt: number | null;
+        counters: Record<string, number>;
+        stages: Record<string, UpdateProfileStage>;
+    }
+
     export class Board {
         readonly animationScheduler: AnimationController;
         /** Legacy queue adapted to the Board animation scheduler. */
@@ -5192,6 +5207,14 @@ declare namespace JXG {
         BOARD_MODE_ZOOM: number;
         BOARD_QUALITY_HIGH: number;
         BOARD_QUALITY_LOW: number;
+        /** Collect synchronous mutations and submit at most one board update. */
+        batch<Result>(callback: () => Result): Result;
+        /** Start a fresh low-overhead update pipeline profile. */
+        startUpdateProfiling(): this;
+        /** Stop profiling and return a detached snapshot. */
+        stopUpdateProfiling(): UpdateProfile | null;
+        /** Return a detached snapshot without changing profiling state. */
+        getUpdateProfile(): UpdateProfile | null;
         canvasHeight: number;
         canvasWidth: number;
         /**
@@ -5508,6 +5531,11 @@ declare namespace JXG {
         getAllObjectsUnderMouse(evt: unknown): unknown[];
         getAllUnderMouse(evt: unknown): unknown[];
         getBoundingBox(): [x1: number, y1: number, x2: number, y2: number];
+        /** Mark an element and its required update scope as dirty. */
+        invalidate(
+            element: GeometryElement | string,
+            kind: "geometry" | "visual" | "order"
+        ): this;
         getCoordsTopLeftCorner(): [number, number];
         getMousePosition(e: unknown, i?: number): [number, number];
         getScrCoordsOfMouse(x: number, y: number): [number, number];

@@ -975,9 +975,13 @@ JXG.extend(
     },
 
     updateRenderer: function () {
+        var profileStart;
         if (!this.needsUpdate) {
             return this;
         }
+
+        profileStart = this.board._profileNow();
+        this.board._countUpdateProfile('view3DDepthUpdates');
 
         // console.time('update')
         // Handle depth ordering
@@ -1000,6 +1004,7 @@ JXG.extend(
         // console.timeEnd('update')
 
         this.needsUpdate = false;
+        this.board._recordUpdateProfile('depth', profileStart);
         return this;
     },
 
@@ -1086,7 +1091,9 @@ JXG.extend(
      * in homogeneous user coordinates.
      */
     project3DTo2D: function (x, y, z) {
-        var vec, w;
+        var vec, w,
+            profileStart = this.board._profileNow();
+        this.board._countUpdateProfile('projections3DTo2D');
         if (arguments.length === 3) {
             vec = [1, x, y, z];
         } else {
@@ -1108,10 +1115,13 @@ JXG.extend(
                 w[2] /= w[0];
                 w[3] /= w[0];
                 w[0] /= w[0];
-                return Mat.matVecMult(this.viewPortTransform, w.slice(0, 3));
+                w = Mat.matVecMult(this.viewPortTransform, w.slice(0, 3));
+                this.board._recordUpdateProfile('projection', profileStart);
+                return w;
 
             case 'parallel':
             default:
+                this.board._recordUpdateProfile('projection', profileStart);
                 return w;
         }
     },

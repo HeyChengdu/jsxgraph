@@ -1210,7 +1210,8 @@ JXG.extend(
         setAttribute: function (attr) {
             var i, j, le, key, value, arg,
                 opacity, pair, oldvalue,
-                attributes = {};
+                attributes = {},
+                visualOnly = true;
 
             // Normalize the user input
             for (i = 0; i < arguments.length; i++) {
@@ -1247,6 +1248,7 @@ JXG.extend(
                     // Now, only the supplied label attributes are overwritten.
                     // Otherwise, the value of label would be {visible:false} only.
                     if (Type.isObject(value) && Type.exists(this.visProp[key])) {
+                        visualOnly = false;
                         // this.visProp[key] = Type.merge(this.visProp[key], value);
                         if (!Type.isObject(this.visProp[key]) && value !== null && Type.isObject(value)) {
                             // Handle cases like key=firstarrow and
@@ -1282,6 +1284,9 @@ JXG.extend(
                     }
 
                     oldvalue = this.visProp[key];
+                    if (key !== 'visible') {
+                        visualOnly = false;
+                    }
                     switch (key) {
                         case "checked":
                             // checkbox Is not available on initial call.
@@ -1449,9 +1454,15 @@ JXG.extend(
                             this.setDisplayRendNode(this.evalVisProp('visible'));
                             if (
                                 this.evalVisProp('visible') &&
-                                Type.exists(this.updateSize)
+                                Type.exists(this.updateSize) &&
+                                this.board._batchUpdateDepth === 0
                             ) {
                                 this.updateSize();
+                            } else if (
+                                this.evalVisProp('visible') &&
+                                Type.exists(this.needsSizeUpdate)
+                            ) {
+                                this.needsSizeUpdate = true;
                             }
 
                             break;
@@ -1498,13 +1509,19 @@ JXG.extend(
 
             this.triggerEventHandlers(["attribute"], [attributes, this]);
 
-            if (!this.evalVisProp('needsregularupdate')) {
+            if (visualOnly && this.board._batchUpdateDepth > 0) {
+                this.board.invalidate(this, 'visual').update(this);
+            } else if (!this.evalVisProp('needsregularupdate')) {
                 this.board.fullUpdate();
             } else {
                 this.board.update(this);
             }
             if (this.elementClass === Const.OBJECT_CLASS_TEXT) {
-                this.updateSize();
+                if (this.board._batchUpdateDepth > 0) {
+                    this.needsSizeUpdate = true;
+                } else {
+                    this.updateSize();
+                }
             }
 
             return this;

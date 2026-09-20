@@ -1148,9 +1148,10 @@ JXG.extend(
          */
         updateClipPath: function(el, val) {
             var x, y, x2, y2,
-                w = el.rendNode.offsetWidth,
-                h = el.rendNode.offsetHeight,
-                is = el.rendNode.style.inset.split(' '),
+                w,
+                h,
+                is,
+                clipPath,
                 cw = el.board.canvasWidth,
                 ch = el.board.canvasHeight;
 
@@ -1159,9 +1160,16 @@ JXG.extend(
             }
 
             if (!val) {
-                el.rendNode.style.removeProperty('clip-path');
+                if (el.rendNode.style.clipPath) {
+                    el.rendNode.style.removeProperty('clip-path');
+                }
                 return;
             }
+            // updateText() measures changed HTML once before positioning. Reuse that cached size:
+            // offsetWidth/offsetHeight here would force another synchronous layout for every label.
+            w = el.size[0];
+            h = el.size[1];
+            is = el.rendNode.style.inset.split(' ');
             if (is[3] !== 'auto') {
                 x = parseFloat(is[3]);
                 x2 = cw - x;
@@ -1178,10 +1186,13 @@ JXG.extend(
                 y = ch - y2;
             }
 
-            el.rendNode.style.clipPath = 'rect(' + (-y) + 'px ' // top
-                                        + (x2) + 'px '         // right
-                                        + (y2) + 'px '         // bottom
-                                        + (-x) + 'px)';        // left
+            clipPath = 'rect(' + (-y) + 'px ' // top
+                            + (x2) + 'px '     // right
+                            + (y2) + 'px '     // bottom
+                            + (-x) + 'px)';    // left
+            if (el.rendNode.style.clipPath !== clipPath) {
+                el.rendNode.style.clipPath = clipPath;
+            }
         },
 
         /**
@@ -1302,7 +1313,8 @@ JXG.extend(
                 // scale, vshift,
                 // id, wrap_id,
                 ax, ay, angle, co, si,
-                to_h, to_v;
+                to_h, to_v,
+                profileStart;
 
             if (el.visPropCalc.visible) {
                 this.prepareText(el);
@@ -1401,12 +1413,14 @@ JXG.extend(
                     this.transformRect(el, el.transformations);
                     updateWrittenFormula(el);
 
+                    profileStart = el.board._profileNow();
                     if (el.visProp.islabel && Type.exists(el.visProp.anchor) &&
                         el.evalVisProp('clip') === 'inherit') {
                         this.updateClipPath(el, !!el.visProp.anchor.evalVisProp('clip'));
                     } else {
                         this.updateClipPath(el);
                     }
+                    el.board._recordUpdateProfile('textClipPath', profileStart);
                 } else {
                     this.updateInternalText(el);
                 }

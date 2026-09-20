@@ -392,6 +392,12 @@ JXG.Board = function (container, renderer, id,
      * @type Boolean
      */
     this.isSuspendedRedraw = false;
+    this.isSuspendedUpdate = false;
+    this._suspendUpdateDepth = 0;
+    this._batchUpdateDepth = 0;
+    this._batchUpdateRequested = false;
+    this._batchFullUpdateRequested = false;
+    this._updateProfile = null;
 
     this.calculateSnapSizes();
 
@@ -5872,6 +5878,85 @@ JXG.extend(
         },
 
         /**
+         * Start collecting low-overhead update pipeline measurements. Profiling is
+         * disabled by default and reset on every start.
+         * @returns {JXG.Board} Reference to the board.
+         */
+        startUpdateProfiling: function () {
+            this._updateProfile = {
+                enabled: true,
+                startedAt: Date.now(),
+                stoppedAt: null,
+                counters: {},
+                stages: {}
+            };
+            return this;
+        },
+
+        /**
+         * Stop collecting update pipeline measurements.
+         * @returns {Object|null} A detached snapshot of the collected profile.
+         */
+        stopUpdateProfiling: function () {
+            if (!this._updateProfile) {
+                return null;
+            }
+            this._updateProfile.enabled = false;
+            this._updateProfile.stoppedAt = Date.now();
+            return this.getUpdateProfile();
+        },
+
+        /**
+         * Return a detached snapshot of the current update profile.
+         * @returns {Object|null} Profile counters and accumulated stage timings.
+         */
+        getUpdateProfile: function () {
+            if (!this._updateProfile) {
+                return null;
+            }
+            return JSON.parse(JSON.stringify(this._updateProfile));
+        },
+
+        /** @private */
+        _profileNow: function () {
+            var view;
+            if (!this._updateProfile || !this._updateProfile.enabled) {
+                return null;
+            }
+            view = this.document && this.document.defaultView;
+            return view && view.performance && Type.isFunction(view.performance.now) ?
+                view.performance.now() : Date.now();
+        },
+
+        /** @private */
+        _countUpdateProfile: function (name, amount) {
+            var counters;
+            if (!this._updateProfile || !this._updateProfile.enabled) {
+                return;
+            }
+            counters = this._updateProfile.counters;
+            counters[name] = (counters[name] || 0) + Type.def(amount, 1);
+        },
+
+        /** @private */
+        _recordUpdateProfile: function (name, startedAt) {
+            var elapsed, stage;
+            if (!this._updateProfile || !this._updateProfile.enabled || startedAt === null) {
+                return;
+            }
+            elapsed = this._profileNow() - startedAt;
+            stage = this._updateProfile.stages[name] || {
+                calls: 0,
+                milliseconds: 0,
+                maximumMs: 0
+            };
+            stage.calls += 1;
+            stage.milliseconds += elapsed;
+            stage.maximumMs = Math.max(stage.maximumMs, elapsed);
+            this._updateProfile.stages[name] = stage;
+        },
+
+        /**
          * Sets for all objects the needsUpdate flag to 'true'.
          * @param{JXG.GeometryElement} [drag=undefined] Optional element that is dragged.
          * @returns {JXG.Board} Reference to the board
@@ -5879,7 +5964,10 @@ JXG.extend(
         prepareUpdate: function (drag) {
             var el, i,
                 pEl,
-                len = this.objectsList.length;
+                len = this.objectsList.length,
+                profileStart = this._profileNow();
+
+            this._countUpdateProfile('prepareElementsVisited', len);
 
             /*
             if (this.attr.updatetype === 'hierarchical') {
@@ -5922,6 +6010,8 @@ JXG.extend(
                 }
             }
 
+            this._recordUpdateProfile('prepare', profileStart);
+
             return this;
         },
 
@@ -5931,7 +6021,8 @@ JXG.extend(
          * @returns {JXG.Board} Reference to the board
          */
         updateElements: function (drag) {
-            var el, pEl;
+            var el, pEl,
+                profileStart = this._profileNow();
             //var childId, i = 0;
 
             drag = this.select(drag);
@@ -5949,6 +6040,10 @@ JXG.extend(
             */
             for (el = 0; el < this.objectsList.length; el++) {
                 pEl = this.objectsList[el];
+                this._countUpdateProfile('elementsVisited');
+                if (pEl.needsUpdate) {
+                    this._countUpdateProfile('elementsDirty');
+                }
                 if (this.needsFullUpdate && pEl.elementClass === Const.OBJECT_CLASS_TEXT) {
                     if (pEl.evalVisProp('display') === 'html') pEl.needsSizeUpdate = true;
                     else pEl.updateSize();
@@ -5967,6 +6062,8 @@ JXG.extend(
                 }
             }
 
+            this._recordUpdateProfile('geometry', profileStart);
+
             return this;
         },
 
@@ -5978,7 +6075,9 @@ JXG.extend(
             var el,
                 len = this.objectsList.length,
                 autoPositionLabelList = [],
-                currentIndex, randomIndex;
+                currentIndex, randomIndex,
+                profileStart = this._profileNow(),
+                textStart;
 
             if (!this.renderer) {
                 return;
@@ -5989,11 +6088,19 @@ JXG.extend(
                 target.elementClass === Const.OBJECT_CLASS_TEXT &&
                 target.visPropCalc.visible && target.evalVisProp('display') === 'html'
             );
+            this._countUpdateProfile('htmlTextCandidates', htmlTexts.length);
             if (this.renderer.type !== 'no') {
-                for (const target of htmlTexts) this.renderer.prepareText(target);
+                textStart = this._profileNow();
                 for (const target of htmlTexts) {
-                    if (target.needsSizeUpdate) target.updateSize();
+                    this._countUpdateProfile('htmlTextPrepared');
+                    this.renderer.prepareText(target);
                 }
+                for (const target of htmlTexts) {
+                    if (target.needsSizeUpdate) {
+                        target.updateSize();
+                    }
+                }
+                this._recordUpdateProfile('text', textStart);
             }
             this.triggerEventHandlers(['layout'], []);
 
@@ -6021,13 +6128,15 @@ JXG.extend(
                     }
                 }
 
-                currentIndex = autoPositionLabelList.length;
+                if (this.options.label.autoPositionRandomOrder) {
+                    currentIndex = autoPositionLabelList.length;
 
-                // Randomize the order of the labels
-                while (currentIndex !== 0) {
-                    randomIndex = Math.floor(Math.random() * currentIndex);
-                    currentIndex--;
-                    [autoPositionLabelList[currentIndex], autoPositionLabelList[randomIndex]] = [autoPositionLabelList[randomIndex], autoPositionLabelList[currentIndex]];
+                    // Randomize the order of the labels
+                    while (currentIndex !== 0) {
+                        randomIndex = Math.floor(Math.random() * currentIndex);
+                        currentIndex--;
+                        [autoPositionLabelList[currentIndex], autoPositionLabelList[randomIndex]] = [autoPositionLabelList[randomIndex], autoPositionLabelList[currentIndex]];
+                    }
                 }
 
                 for (el = 0; el < autoPositionLabelList.length; el++) {
@@ -6040,6 +6149,7 @@ JXG.extend(
                 */
             }
             if (!deferPresentation) { updateAttention(this); updateFade(this); }
+            this._recordUpdateProfile('render', profileStart);
             return this;
         },
 
@@ -6058,6 +6168,9 @@ JXG.extend(
                 // last = Number.NEGATIVE_INFINITY.toExponential,
                 depth_order_layers = [],
                 objects_sorted,
+                profileStart,
+                sortStart,
+                elementStart,
 
                 /**
                  * Function to sort elements for depth ordering in canvas renderer.
@@ -6120,7 +6233,11 @@ JXG.extend(
             // objects_sorted = this.objectsList.toSorted(_compareDepth);
 
             // 3D elements are not rendered, but their subelements element2D
+            sortStart = this._profileNow();
             objects_sorted = this.objectsList.filter(function(e) { return !e.is3D; }).toSorted(_compareDepth);
+            this._recordUpdateProfile('canvasSort', sortStart);
+            this._countUpdateProfile('canvasObjectsSorted', objects_sorted.length);
+            profileStart = this._profileNow();
             olen = objects_sorted.length;
             for (el = 0; el < olen; el++) {
                 if (
@@ -6128,9 +6245,14 @@ JXG.extend(
                     objects_sorted[el].type !== Const.OBJECT_TYPE_FACE3D // For these, updateRenderer is triggered in polyhedron3d.updateRenderer
                 ) {
                     const target = objects_sorted[el];
+                    this._countUpdateProfile('canvasObjectsRendered');
+                    elementStart = this._profileNow();
                     renderFadeCanvas(target, () => renderAttentionCanvas(target, () => target.prepareUpdate().updateRenderer()));
+                    this._recordUpdateProfile('canvasElement:' + target.elType, elementStart);
                 }
             }
+
+            this._recordUpdateProfile('canvasRender', profileStart);
 
             return this;
         },
@@ -6233,11 +6355,22 @@ JXG.extend(
          * @returns {JXG.Board} Reference to the board
          */
         update: function (drag) {
-            var i, len, b, insert, storeActiveEl;
+            var i, len, b, insert, storeActiveEl,
+                profileStart;
 
-            if (this.inUpdate || this.isSuspendedUpdate) {
+            this._countUpdateProfile('updateRequests');
+
+            if (this._batchUpdateDepth > 0) {
+                this._countUpdateProfile('updatesDeferredByBatch');
+                this._batchUpdateRequested = true;
                 return this;
             }
+            if (this.inUpdate || this.isSuspendedUpdate) {
+                this._countUpdateProfile('updatesSkipped');
+                return this;
+            }
+            profileStart = this._profileNow();
+            this._countUpdateProfile('updateCommits');
             this.inUpdate = true;
             resetAttentionPresentation(this);
             resetFadePresentation(this);
@@ -6299,6 +6432,7 @@ JXG.extend(
                     storeActiveEl.focus();
                 }
                 this.inUpdate = false;
+                this._recordUpdateProfile('commit', profileStart);
             }
         },
 
@@ -6308,9 +6442,68 @@ JXG.extend(
          * @returns {JXG.Board} Reference to the board
          */
         fullUpdate: function () {
+            this._countUpdateProfile('fullUpdateRequests');
+            if (this._batchUpdateDepth > 0) {
+                this._batchUpdateRequested = true;
+                this._batchFullUpdateRequested = true;
+                return this;
+            }
             this.needsFullUpdate = true;
             this.update();
             this.needsFullUpdate = false;
+            return this;
+        },
+
+        /**
+         * Mark an element for a narrow update. Geometry invalidation follows the
+         * existing child dependency edges; visual invalidation stays local.
+         * Unknown kinds deliberately fall back to a full update.
+         * @param {JXG.GeometryElement} element Element whose derived state changed.
+         * @param {String} kind One of "geometry", "visual", or "order".
+         * @returns {JXG.Board} Reference to the board.
+         */
+        invalidate: function (element, kind) {
+            var child,
+                current,
+                stack,
+                visited = {};
+
+            element = this.select(element);
+            if (!Type.exists(element)) {
+                return this;
+            }
+
+            if (kind === 'visual') {
+                element.needsUpdate = true;
+                if (element.hasLabel && Type.exists(element.label)) {
+                    element.label.needsUpdate = true;
+                }
+                return this;
+            }
+
+            if (kind === 'order') {
+                element.needsUpdate = true;
+                return this;
+            }
+
+            if (kind !== 'geometry') {
+                return this.fullUpdate();
+            }
+
+            stack = [element];
+            while (stack.length > 0) {
+                current = stack.pop();
+                if (!Type.exists(current) || visited[current.id]) {
+                    continue;
+                }
+                visited[current.id] = true;
+                current.needsUpdate = true;
+                for (child in current.childElements) {
+                    if (current.childElements.hasOwnProperty(child)) {
+                        stack.push(current.childElements[child]);
+                    }
+                }
+            }
             return this;
         },
 
@@ -6454,11 +6647,60 @@ JXG.extend(
         },
 
         /**
+         * Collect synchronous board mutations and submit at most one update when the
+         * outermost transaction finishes. Nested transactions share the same commit.
+         * Existing suspendUpdate semantics stay unchanged.
+         * @param {Function} callback Synchronous mutation callback.
+         * @returns {*} The callback result.
+         */
+        batch: function (callback) {
+            var result,
+                error,
+                didThrow = false,
+                shouldCommit,
+                shouldFullUpdate;
+
+            if (!Type.isFunction(callback)) {
+                throw new Error('JSXGraph: Board.batch() expects a function.');
+            }
+
+            this._batchUpdateDepth += 1;
+            try {
+                result = callback();
+            } catch (caughtError) {
+                didThrow = true;
+                error = caughtError;
+            } finally {
+                this._batchUpdateDepth -= 1;
+                if (this._batchUpdateDepth === 0) {
+                    shouldCommit = this._batchUpdateRequested;
+                    shouldFullUpdate = this._batchFullUpdateRequested;
+                    this._batchUpdateRequested = false;
+                    this._batchFullUpdateRequested = false;
+
+                    if (shouldCommit) {
+                        if (shouldFullUpdate) {
+                            this.fullUpdate();
+                        } else {
+                            this.update();
+                        }
+                    }
+                }
+            }
+
+            if (didThrow) {
+                throw error;
+            }
+            return result;
+        },
+
+        /**
          * Stop updates of the board.
          * @returns {JXG.Board} Reference to the board
          */
         suspendUpdate: function () {
             if (!this.inUpdate) {
+                this._suspendUpdateDepth += 1;
                 this.isSuspendedUpdate = true;
             }
             return this;
@@ -6469,7 +6711,10 @@ JXG.extend(
          * @returns {JXG.Board} Reference to the board
          */
         unsuspendUpdate: function () {
-            if (this.isSuspendedUpdate) {
+            if (this._suspendUpdateDepth > 0) {
+                this._suspendUpdateDepth -= 1;
+            }
+            if (this.isSuspendedUpdate && this._suspendUpdateDepth === 0) {
                 this.isSuspendedUpdate = false;
                 this.fullUpdate();
             }
@@ -8453,7 +8698,7 @@ JXG.extend(
                                     start() {},
                                     update() {},
                                     finish: () => { this.rolling(); step(); },
-                                    cancel() {},
+                                    cancel() {}
                                 });
                             };
                             step();

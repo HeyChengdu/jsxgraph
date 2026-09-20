@@ -464,9 +464,13 @@ JXG.extend(
             var tmp,
                 that,
                 node,
-                ev_d = this.evalVisProp('display');
+                ev_d = this.evalVisProp('display'),
+                profileStart = this.board._profileNow();
+
+            this.board._countUpdateProfile('textMeasurements');
 
             if (!Env.isBrowser || this.board.renderer.type === 'no') {
+                this.board._recordUpdateProfile('textMeasure', profileStart);
                 return this;
             }
             node = this.rendNode;
@@ -480,6 +484,7 @@ JXG.extend(
                     // 脱离 DOM 时没有可测量尺寸，不能把零写成有效缓存。
                     if (!node.isConnected) {
                         this.needsSizeUpdate = true;
+                        this.board._recordUpdateProfile('textMeasure', profileStart);
                         return this;
                     }
                     this.size = [node.offsetWidth, node.offsetHeight];
@@ -502,6 +507,8 @@ JXG.extend(
                     this.size = this.crudeSizeEstimate();
                 }
             }
+
+            this.board._recordUpdateProfile('textMeasure', profileStart);
 
             return this;
         },
@@ -694,6 +701,7 @@ JXG.extend(
          * @private
          */
         updateRenderer: function () {
+            var profileStart;
             // Canvas may paint this label before its owning ticks in the same frame.
             if (this._writeTicks && this._writeTickIndex >= writtenTickCount(this._writeTicks)) {
                 this.visPropCalc.visible = false;
@@ -702,9 +710,14 @@ JXG.extend(
                 //this.board.updateQuality === this.board.BOARD_QUALITY_HIGH &&
                 this.evalVisProp('autoposition')
             ) {
+                profileStart = this.board._profileNow();
                 this.setAutoPosition().updateConstraint();
+                this.board._recordUpdateProfile('textAutoPosition', profileStart);
             }
-            return this.updateRendererGeneric('updateText');
+            profileStart = this.board._profileNow();
+            this.updateRendererGeneric('updateText');
+            this.board._recordUpdateProfile('textRendererGeneric', profileStart);
+            return this;
         },
 
         /**
@@ -1172,9 +1185,10 @@ JXG.extend(
          * @param  {Number} w width of the box in pixel
          * @param  {Number} h width of the box in pixel
          * @param  {Array} [whiteList] array of ids which should be ignored
+         * @param  {Array} [conflictObjects] prefiltered objects for repeated candidate scoring
          * @return {Number}   Number of overlapping elements
          */
-        getNumberOfConflicts: function(x, y, w, h, whiteList) {
+        getNumberOfConflicts: function(x, y, w, h, whiteList, conflictObjects) {
             whiteList = whiteList || [];
             var count = 0,
                 i, obj,
@@ -1188,16 +1202,28 @@ JXG.extend(
             // this.board.options.precision.hasPoint = Math.max(w, h) * 0.5;
             this.board.options.precision.hasPoint = (w + h) * 0.3;
 
+            conflictObjects = conflictObjects || this.board.objectsList;
+
             // loop over all objects
-            for (i = 0; i < this.board.objectsList.length; i++) {
-                obj = this.board.objectsList[i];
+            for (i = 0; i < conflictObjects.length; i++) {
+                obj = conflictObjects[i];
 
                 //Skip the object if it is not meant to influence label position
                 if (
+                    conflictObjects !== this.board.objectsList ||
+                    (
                     obj.visPropCalc.visible &&
                     obj !== this &&
                     whiteList.indexOf(obj.id) === -1 &&
-                    obj.evalVisProp('ignoreforlabelautoposition') !== true
+                    obj.evalVisProp('ignoreforlabelautoposition') !== true &&
+                    (
+                        !obj.evalVisProp('islabel') ||
+                        (
+                            String(obj.plaintext).trim().length > 0 &&
+                            obj.evalVisProp('strokeopacity') > 0
+                        )
+                    )
+                    )
                 ) {
                     // Save hasinnerpoints and temporarily disable to handle polygon areas
                     saveHasInnerPoints = obj.visProp.hasinnerpoints;
@@ -1205,7 +1231,7 @@ JXG.extend(
 
                     // If is label or point use other conflict detection
                     if (
-                        obj.visProp.islabel ||
+                        obj.evalVisProp('islabel') ||
                         obj.elementClass === Const.OBJECT_CLASS_POINT
                     ) {
                         // get coords and size of the object
@@ -1271,19 +1297,25 @@ JXG.extend(
          *
          * @param {number} radius radius in pixels
          * @param {number} angle angle in radians
+         * @param {Object} [context] stable values reused while testing candidates
          * @returns {number} Position score, higher values indicate better positions
          */
-        calculateScore: function(radius, angle) {
+        calculateScore: function(radius, angle, context) {
             var x, y, co, si, angleCurrentOffset, angleDifference,
                 score = 0,
                 cornerPoint = [0,0],
-                w = this.getSize()[0],
-                h = this.getSize()[1],
+                w = context ? context.width : this.getSize()[0],
+                h = context ? context.height : this.getSize()[1],
                 anchorCoords,
-                currentOffset = this.evalVisProp('offset'),
-                boundingBox = this.board.getBoundingBox();
+                currentOffset = context ? context.currentOffset : this.evalVisProp('offset'),
+                boundingBox = context ? context.boundingBox : this.board.getBoundingBox(),
+                minDistance = context ? context.minDistance : this.evalVisProp('autopositionmindistance'),
+                whiteList = context ? context.whiteList : Type.evaluate(this.visProp.autopositionwhitelist),
+                conflictObjects = context ? context.conflictObjects : null;
 
-            if (this.evalVisProp('islabel') && Type.exists(this.element)) {
+            if (context) {
+                anchorCoords = context.anchorCoords;
+            } else if (this.evalVisProp('islabel') && Type.exists(this.element)) {
                 anchorCoords = this.element.getLabelAnchor().scrCoords;
             } else {
                 return 0;
@@ -1324,10 +1356,10 @@ JXG.extend(
             }
 
             // Per conflict, score is reduced by 1
-            score -= this.getNumberOfConflicts(x, y, w, h, Type.evaluate(this.visProp.autopositionwhitelist));
+            score -= this.getNumberOfConflicts(x, y, w, h, whiteList, conflictObjects);
 
             // Calculate displacement, minimum score is 0 if radius is minRadius, maximum score is < 1 when radius is maxRadius
-            score -= radius / this.evalVisProp('autopositionmindistance') / 10 - 0.1;
+            score -= radius / minDistance / 10 - 0.1;
 
             // Calculate angle between current offset and new offset
             angleCurrentOffset = Math.atan2(currentOffset[1], currentOffset[0]);
@@ -1374,7 +1406,11 @@ JXG.extend(
                 currentRadius,
                 currentAngle,
                 numAngles = 60,
-                numRadius = 4;
+                numRadius = 4,
+                whiteList,
+                conflictObjects,
+                scoreContext,
+                size;
 
             if (
                 this === this.board.infobox ||
@@ -1384,12 +1420,50 @@ JXG.extend(
             ) {
                 return this;
             }
+            if (String(this.plaintext).trim().length === 0) {
+                this.board._countUpdateProfile('emptyAutoPositionLabelsSkipped');
+                return this;
+            }
+            if (this.evalVisProp('strokeopacity') <= 0) {
+                this.board._countUpdateProfile('transparentAutoPositionLabelsSkipped');
+                return this;
+            }
+            this.board._countUpdateProfile('autoPositionLabelsEvaluated');
+            if (!this.element.hasLabel) {
+                this.board._countUpdateProfile('autoPositionLabelsWithoutAnchorLabel');
+            }
+
+            whiteList = Type.evaluate(this.visProp.autopositionwhitelist) || [];
+            conflictObjects = this.board.objectsList.filter(function(obj) {
+                return obj.visPropCalc.visible &&
+                    obj !== this &&
+                    whiteList.indexOf(obj.id) === -1 &&
+                    obj.evalVisProp('ignoreforlabelautoposition') !== true &&
+                    (
+                        !obj.evalVisProp('islabel') ||
+                        (
+                            String(obj.plaintext).trim().length > 0 &&
+                            obj.evalVisProp('strokeopacity') > 0
+                        )
+                    );
+            }, this);
+            size = this.getSize();
+            scoreContext = {
+                width: size[0],
+                height: size[1],
+                anchorCoords: this.element.getLabelAnchor().scrCoords,
+                currentOffset: currentOffset,
+                boundingBox: this.board.getBoundingBox(),
+                minDistance: minRadius,
+                whiteList: whiteList,
+                conflictObjects: conflictObjects
+            };
 
             // Calculate current position
             currentRadius = Math.sqrt(currentOffset[0] * currentOffset[0] + currentOffset[1] * currentOffset[1]);
             currentAngle = Math.atan2(currentOffset[1], currentOffset[0]);
 
-            if (this.calculateScore(currentRadius, currentAngle) === 0) {
+            if (this.calculateScore(currentRadius, currentAngle, scoreContext) === 0) {
                 return this;
             }
 
@@ -1408,7 +1482,7 @@ JXG.extend(
                     angle = i / numAngles * 2 * Math.PI;
 
                     // calculate score
-                    score = this.calculateScore(radius, angle);
+                    score = this.calculateScore(radius, angle, scoreContext);
 
                     // if score is better than bestScore, set bestAngle, bestRadius and bestScore
                     if (score > bestScore) {

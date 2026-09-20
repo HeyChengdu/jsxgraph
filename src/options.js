@@ -6735,6 +6735,17 @@ JXG.Options = {
         autoPosition: false,
 
         /**
+         * Randomize the processing order of automatically positioned labels for SVG-like
+         * renderers. Disable this option when deterministic rendering is required.
+         *
+         * @name Label#autoPositionRandomOrder
+         * @see Label#autoPosition
+         * @type Boolean
+         * @default true
+         */
+        autoPositionRandomOrder: true,
+
+        /**
          * The auto position algorithm tries to put a label to a conflict-free
          * position around it's anchor element. For this, the algorithm tests 12 positions
          * around the anchor element starting at a distance from the anchor

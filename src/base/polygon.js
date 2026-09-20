@@ -248,10 +248,17 @@ JXG.extend(
          * Uses the boards renderer to update the polygon.
          */
         updateRenderer: function () {
-            var i, len;
+            var i, len,
+                profileStart;
 
             if (!this.needsUpdate) {
                 return this;
+            }
+
+            profileStart = this.board._profileNow();
+            this.board._countUpdateProfile('polygonPathUpdates');
+            if (this.visProp.element3d) {
+                this.board._countUpdateProfile('polygon3DPathUpdates');
             }
 
             if (this.visPropCalc.visible) {
@@ -280,6 +287,7 @@ JXG.extend(
             if (this.visPropCalc.visible) {
                 this.board.renderer.updatePolygon(this);
             }
+            this.board._recordUpdateProfile('polygonPath', profileStart);
 
             /* Update the label if visible. */
             if (this.hasLabel &&
