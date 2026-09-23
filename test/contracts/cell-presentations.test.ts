@@ -69,6 +69,52 @@ describe("Cell presentation runtime contracts", () => {
         expect(() => table.cell(2, 0)).toThrowError("table cell (2, 0) does not exist.");
     });
 
+    it("表格网格线在高低质量更新与动态平移后仍完整连接边界", () => {
+        const currentBoard = createBoard();
+        let x = 0;
+        const table = currentBoard.create("table", [
+            () => x,
+            0,
+            [
+                ["a", "b"],
+                [1, 2]
+            ]
+        ]);
+        const curves = currentBoard.objectsList.filter(
+            (element): element is JXG.Curve => "elType" in element && element.elType === "curve"
+        );
+        expect(curves.length).toBe(6);
+        for (const quality of [
+            currentBoard.BOARD_QUALITY_HIGH,
+            currentBoard.BOARD_QUALITY_LOW
+        ]) {
+            currentBoard.updateQuality = quality;
+            x += 2;
+            currentBoard.update();
+            const corners = table.background.vertices;
+            const [left, right] = [corners[0].X(), corners[1].X()];
+            const [top, bottom] = [corners[0].Y(), corners[2].Y()];
+            expect((left + right) / 2).toBeCloseTo(x, 8);
+            curves.forEach((curve, index) => {
+                // 两端点精确表达直线，也限定隐藏表格的采样开销。
+                expect(curve.numberPoints).toBe(2);
+                const start = [1, curve.X(0, true), curve.Y(0, true)];
+                const end = [1, curve.X(1, true), curve.Y(1, true)];
+                expect(start.every(Number.isFinite)).toBe(true);
+                expect(end.every(Number.isFinite)).toBe(true);
+                if (index < 3) {
+                    expect(start[1]).toBeCloseTo(end[1], 8);
+                    expect(start[2]).toBeCloseTo(top, 8);
+                    expect(end[2]).toBeCloseTo(bottom, 8);
+                } else {
+                    expect(start[2]).toBeCloseTo(end[2], 8);
+                    expect(start[1]).toBeCloseTo(left, 8);
+                    expect(end[1]).toBeCloseTo(right, 8);
+                }
+            });
+        }
+    });
+
     it("hides construction points of generated table and matrix lines", () => {
         const currentBoard = createBoard();
         const table = currentBoard.create("table", [
