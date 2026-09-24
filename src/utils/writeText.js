@@ -43,9 +43,9 @@ function phaseInk(sub, state) {
 function phaseStyle(sub, state) {
     const base = 'white-space:pre-wrap;';
     if (sub <= 0) return base + 'visibility:hidden';
-    if (sub >= 1 || !state.ink) return base + 'visibility:visible';
+    if (sub >= 1 || !state.ink) return base;
     const phase = phaseInk(sub, state);
-    return base + 'visibility:visible;color:transparent;-webkit-text-stroke:' + phase.width + 'px ' +
+    return base + 'color:transparent;-webkit-text-stroke:' + phase.width + 'px ' +
         state.color + ';background-image:linear-gradient(to right,' + state.color + ' ' + phase.ink +
         '%,transparent ' + phase.ink + '%);-webkit-background-clip:text;background-clip:text';
 }
@@ -55,7 +55,7 @@ function applyPhase(span, sub, state) {
     const style = span.style;
     if (sub > 0 && sub < 1 && state.ink) {
         const phase = phaseInk(sub, state);
-        style.visibility = 'visible';
+        style.removeProperty('visibility');
         style.setProperty('color', 'transparent');
         style.setProperty('-webkit-text-stroke', phase.width + 'px ' + state.color);
         style.setProperty('background-image', 'linear-gradient(to right,' + state.color + ' ' + phase.ink +
@@ -65,7 +65,8 @@ function applyPhase(span, sub, state) {
         return;
     }
     // 未开始与终态都回到作者样式，书写期间的内联样式不残留。
-    style.setProperty('visibility', sub <= 0 ? 'hidden' : 'visible');
+    if (sub <= 0) style.setProperty('visibility', 'hidden');
+    else style.removeProperty('visibility');
     style.removeProperty('color');
     style.removeProperty('-webkit-text-stroke');
     style.removeProperty('background-image');

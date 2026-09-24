@@ -1,7 +1,7 @@
 /// <reference path="../../src/index.d.ts" />
 /**
  * [INPUT]: 公开 text.write、Board 的 writeInterval、注入的公式渲染器与受控动画时钟
- * [OUTPUT]: 普通文字按 manim Write 包络书写的字素相位契约，以及公式掩膜路径的边界
+ * [OUTPUT]: 普通文字按 manim Write 包络书写的字素相位、父元素隐藏状态继承，以及公式掩膜路径的边界
  * [POS]: 文字书写时序的浏览器契约测试；不依赖 Mideo 运行时
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -68,6 +68,7 @@ describe('文字书写的 manim Write 时序', () => {
         } as never) as unknown as {
             rendNode: HTMLElement;
             write(duration?: number): unknown;
+            hide(): unknown;
         };
 
     const spansOf = (text: { rendNode: HTMLElement }) =>
@@ -134,7 +135,7 @@ describe('文字书写的 manim Write 时序', () => {
         expect(sub(0.25, 2)).toBeCloseTo(0.15, 10);
         expect(spans.filter(inked).length).toBe(3);
         expect(spans.filter(span => span.style.visibility === 'hidden').length).toBe(4);
-        expect(spans[0].style.visibility).toBe('visible');
+        expect(spans[0].style.visibility).toBe('');
         // 越靠后的字素灌墨越少，说明它们共享同一段重叠窗口。
         expect(inkPercent(spans[0])).toBeGreaterThan(inkPercent(spans[1]));
         expect(inkPercent(spans[1])).toBeGreaterThan(inkPercent(spans[2]));
@@ -149,9 +150,26 @@ describe('文字书写的 manim Write 时序', () => {
         expect(spansOf(text)[7].style.visibility).toBe('hidden');
         tick(1);
         const spans = spansOf(text);
-        expect(spans.every(span => span.style.visibility === 'visible')).toBe(true);
+        expect(spans.every(span => span.style.visibility === '')).toBe(true);
         expect(spans.every(span => span.style.getPropertyValue('-webkit-text-stroke') === '')).toBe(true);
         expect(spans.every(span => span.style.getPropertyValue('background-clip') === '')).toBe(true);
+    });
+
+    it('写完后或写入中隐藏父文本，字素不覆盖父元素的隐藏状态', () => {
+        const finished = textOf('已写完');
+        finished.write(600);
+        tick(1);
+        finished.hide();
+        board.update();
+        expect(getComputedStyle(finished.rendNode).visibility).toBe('hidden');
+        expect(spansOf(finished).every(span => getComputedStyle(span).visibility === 'hidden')).toBe(true);
+
+        const writing = textOf('正在写');
+        writing.write(600);
+        tick(0.5);
+        writing.hide();
+        board.update();
+        expect(spansOf(writing).every(span => getComputedStyle(span).visibility === 'hidden')).toBe(true);
     });
 
     it('重入从第一个字素重新开始，不叠加两次进度', () => {
