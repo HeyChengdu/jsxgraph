@@ -5954,6 +5954,9 @@ declare namespace JXG {
          */
         renderer: "svg" | "canvas" | "vml" | "no" | "auto";
 
+        /** Backing-store pixels per CSS pixel for the Canvas renderer. Default 2. */
+        canvasPixelRatio: number;
+
         /**
          * Control if JSXGraph reacts to resizing of the JSXGraph container element
          * by the user / browser.

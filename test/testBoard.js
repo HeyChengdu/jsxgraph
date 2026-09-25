@@ -93,6 +93,35 @@ describe("Test board handling", function() {
         expect(point.visPropCalc.visible).toBe(true);
     });
 
+    it("uses the configured canvas pixel ratio for its backing store", function() {
+        var container = document.createElement('div'),
+            canvasBoard,
+            canvas;
+
+        container.id = 'canvas-pixel-ratio-board';
+        container.style.cssText = 'width:128px;height:72px';
+        document.body.appendChild(container);
+        canvasBoard = JXG.JSXGraph.initBoard(container.id, {
+            renderer: 'canvas',
+            canvasPixelRatio: 1.5,
+            axis: false,
+            grid: false,
+            boundingbox: [-5, 5, 5, -5],
+            resize: {enabled: false},
+            showCopyright: false,
+            showNavigation: false
+        });
+        canvas = container.querySelector('canvas');
+
+        expect(canvas.style.width).toBe('128px');
+        expect(canvas.style.height).toBe('72px');
+        expect(canvas.width).toBe(192);
+        expect(canvas.height).toBe(108);
+
+        JXG.JSXGraph.freeBoard(canvasBoard);
+        container.remove();
+    });
+
     it("restores and commits a batch when the callback throws", function() {
         var point = board.create('point', [0, 0], {withLabel: false}),
             redraw = spyOn(board.renderer, 'suspendRedraw').and.callThrough();

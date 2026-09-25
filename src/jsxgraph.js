@@ -121,10 +121,11 @@ JXG.JSXGraph = {
      * to the document object of the browser.
      * @param  {Object} attrRenderer Attribute 'renderer', specifies the rendering engine. Possible values are 'auto', 'svg',
      *  'canvas', 'no', and 'vml'.
+     * @param  {Number} canvasPixelRatio Backing-store pixels per CSS pixel for the canvas renderer.
      * @returns {Object}           Reference to the rendering engine object.
      * @private
      */
-    initRenderer: function (box, dim, doc, attrRenderer) {
+    initRenderer: function (box, dim, doc, attrRenderer, canvasPixelRatio) {
         var boxid, renderer;
 
         // Former version:
@@ -154,7 +155,7 @@ JXG.JSXGraph = {
         } else if (attrRenderer === 'vml') {
             renderer = new VMLRenderer(boxid);
         } else if (attrRenderer === 'canvas') {
-            renderer = new CanvasRenderer(boxid, dim);
+            renderer = new CanvasRenderer(boxid, dim, canvasPixelRatio);
         } else {
             renderer = new NoRenderer();
         }
@@ -560,7 +561,7 @@ JXG.JSXGraph = {
             originY = unitY * (bbox[1] + offY);
         }
 
-        renderer = this.initRenderer(box, dimensions, attr.document, attr.renderer);
+        renderer = this.initRenderer(box, dimensions, attr.document, attr.renderer, attr.canvaspixelratio);
         this._setARIA(box, attr);
 
         // Create the board.
@@ -668,7 +669,7 @@ JXG.JSXGraph = {
         attr = this._setAttributes(attributes);
 
         dimensions = Env.getDimensions(box, attr.document);
-        renderer = this.initRenderer(box, dimensions, attr.document, attr.renderer);
+        renderer = this.initRenderer(box, dimensions, attr.document, attr.renderer, attr.canvaspixelratio);
         this._setARIA(box, attr);
 
         /* User default parameters, in parse* the values in the gxt files are submitted to board */
@@ -715,7 +716,7 @@ JXG.JSXGraph = {
         attr = this._setAttributes(attributes);
 
         dimensions = Env.getDimensions(box, attr.document);
-        renderer = this.initRenderer(box, dimensions, attr.document, attr.renderer);
+        renderer = this.initRenderer(box, dimensions, attr.document, attr.renderer, attr.canvaspixelratio);
         this._setARIA(box, attr);
 
         /* User default parameters, in parse* the values in the gxt files are submitted to board */

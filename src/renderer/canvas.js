@@ -61,10 +61,13 @@ import { strokeProgress, fillProgress, writtenTickCount } from '../utils/writePa
  * @param {Object} dim The dimensions of the board
  * @param {Number} dim.width
  * @param {Number} dim.height
+ * @param {Number} [pixelRatio=2] Ratio between backing-store pixels and CSS pixels.
  * @see JXG.AbstractRenderer
  */
-JXG.CanvasRenderer = function (container, dim) {
+JXG.CanvasRenderer = function (container, dim, pixelRatio) {
     this.type = 'canvas';
+
+    this.pixelRatio = Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 2;
 
     this.canvasRoot = null;
     this.suspendHandle = null;
@@ -1554,17 +1557,16 @@ JXG.extend(
                 this.canvasRoot.style.width = parseFloat(w) + 'px';
                 this.canvasRoot.style.height = parseFloat(h) + 'px';
 
-                this.canvasRoot.setAttribute("width", 2 * parseFloat(w) + 'px');
-                this.canvasRoot.setAttribute("height", 2 * parseFloat(h) + 'px');
+                this.canvasRoot.setAttribute("width", this.pixelRatio * parseFloat(w) + 'px');
+                this.canvasRoot.setAttribute("height", this.pixelRatio * parseFloat(h) + 'px');
             } else {
-                this.canvasRoot.width = 2 * parseFloat(w);
-                this.canvasRoot.height = 2 * parseFloat(h);
+                this.canvasRoot.width = this.pixelRatio * parseFloat(w);
+                this.canvasRoot.height = this.pixelRatio * parseFloat(h);
             }
             this.context = this.canvasRoot.getContext('2d');
-            // The width and height of the canvas is set to twice the CSS values,
-            // followed by an appropriate scaling.
+            // Keep CSS geometry in logical pixels while painting directly into the requested backing store.
             // See https://stackoverflow.com/questions/22416462/canvas-element-with-blurred-lines
-            this.context.scale(2, 2);
+            this.context.scale(this.pixelRatio, this.pixelRatio);
         },
 
         removeToInsertLater: function () {

@@ -1091,6 +1091,15 @@ JXG.Options = {
         renderer: 'auto',
 
         /**
+         * Ratio between Canvas backing-store pixels and CSS pixels. This value is immutable.
+         *
+         * @name JXG.Board#canvasPixelRatio
+         * @type Number
+         * @default 2
+         */
+        canvasPixelRatio: 2,
+
+        /**
          * Control if JSXGraph reacts to resizing of the JSXGraph container element
          * by the user / browser.
          * The attribute "throttle" determines the minimal time in msec between to
