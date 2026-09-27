@@ -39,6 +39,12 @@
  *
  */
 
+/**
+ * [INPUT]: 依赖 Board、各 renderer、解析器与共享删除规划
+ * [OUTPUT]: 提供 Board 初始化、加载与聚合错误后仍完成收尾的 freeBoard
+ * [POS]: JSXGraph 会话入口；协调 Board 全局登记与宿主资源释放
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import { removeObjects } from "./utils/compositionLifecycle.js";
 import JXG from "./jxg.js";
 import Env from "./utils/env.js";
@@ -752,35 +758,36 @@ JXG.JSXGraph = {
             board = JXG.boards[board];
         }
 
-        this._removeARIANodes(board);
-        board.animationScheduler.dispose();
-        board.removeEventHandlers();
-        board.suspendUpdate();
-
-        // Remove all objects from the board.
-        removeObjects(board, [...board.objectsList, ...Object.values(board.groups)], true);
-
-        // Remove all the other things, left on the board, XHTML save
-        while (board.containerObj.firstChild) {
-            board.containerObj.removeChild(board.containerObj.firstChild);
-        }
-
-        // Tell the browser the objects aren't needed anymore
-        for (el in board.objects) {
-            if (board.objects.hasOwnProperty(el)) {
-                delete board.objects[el];
+        const errors = [];
+        const attempt = (cleanup) => {
+            try {
+                cleanup();
+            } catch (error) {
+                errors.push(error);
             }
+        };
+
+        // 单个清理阶段失败仍完成其余 Board 收尾，最后统一报告错误。
+        attempt(() => this._removeARIANodes(board));
+        attempt(() => board.animationScheduler.dispose());
+        attempt(() => board.removeEventHandlers());
+        attempt(() => board.suspendUpdate());
+        attempt(() => removeObjects(
+            board, [...board.objectsList, ...Object.values(board.groups)], true
+        ));
+        attempt(() => {
+            while (board.containerObj.firstChild) {
+                board.containerObj.removeChild(board.containerObj.firstChild);
+            }
+        });
+        for (el in board.objects) {
+            if (board.objects.hasOwnProperty(el)) delete board.objects[el];
         }
-
-        // Free the renderer and the algebra object
         delete board.renderer;
-
-        // clear the creator cache
-        board.jc.creator.clearCache();
+        attempt(() => board.jc.creator.clearCache());
         delete board.jc;
-
-        // Finally remove the board itself from the boards array
         delete JXG.boards[board.id];
+        if (errors.length) throw new AggregateError(errors, "JSXGraph: Board cleanup failed.");
     },
 
     /**

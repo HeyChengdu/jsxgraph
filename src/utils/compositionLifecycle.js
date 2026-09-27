@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 Board 注册表、原生几何依赖和 Composition 的直接成员
- * [OUTPUT]: 提供同步工厂资源记录、原子删除预检和对象注销
+ * [OUTPUT]: 提供同步工厂资源记录、限定新增资源的回滚、原子删除预检和对象注销
  * [POS]: JSXGraph Board 与组合共用的生命周期边界，不保存视觉状态
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -39,12 +39,7 @@ export function createWithResources(board, create) {
     try {
         const result = create();
         if (result && result.board === board) {
-            // 已注册返回值由 setId/Group 构造登记；返回旧对象不得扩大回滚范围。
-            const known = (board._knownFactoryResources ??= new WeakSet());
-            if (!result.id && !known.has(result)) {
-                for (const frame of frames) frame.add(result);
-            }
-            known.add(result);
+            // 创建事实由构造/注册入口记录，返回值本身不证明是新增资源。
             result._ownedResources ??= new Set();
             for (const resource of resources) {
                 if (
@@ -60,7 +55,13 @@ export function createWithResources(board, create) {
         return result;
     } catch (error) {
         try {
-            removeObjects(board, [...resources], true);
+            // 临时组合可能接纳旧根对象；回滚只撤销该归属，不能销毁旧对象。
+            for (const resource of resources) {
+                for (const member of ownedResources(resource)) {
+                    if (!resources.has(member)) detachMember(member);
+                }
+            }
+            removeObjects(board, [...resources], true, resources);
         } catch (cleanupError) {
             throw new AggregateError(
                 [error, cleanupError],
@@ -73,7 +74,7 @@ export function createWithResources(board, create) {
     }
 }
 
-export function removeObjects(board, target, releasingBoard = false) {
+export function removeObjects(board, target, releasingBoard = false, rollbackResources) {
     const roots = new Set();
     function resolve(value) {
         if (Array.isArray(value)) {
@@ -115,7 +116,7 @@ export function removeObjects(board, target, releasingBoard = false) {
     }
     const allowed = new Set();
     function own(object) {
-        if (allowed.has(object)) return;
+        if (allowed.has(object) || (rollbackResources && !rollbackResources.has(object))) return;
         allowed.add(object);
         ownedResources(object).forEach(own);
     }
@@ -125,6 +126,7 @@ export function removeObjects(board, target, releasingBoard = false) {
     function visit(object) {
         if (
             !object ||
+            (rollbackResources && !rollbackResources.has(object)) ||
             object.board !== board ||
             visited.has(object) ||
             object._disposed ||

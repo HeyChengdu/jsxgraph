@@ -32,6 +32,12 @@
 /*global JXG: true, define: true*/
 /*jslint nomen: true, plusplus: true, unparam: true*/
 
+/**
+ * [INPUT]: 依赖 Board、渲染器、事件及原生呈现调度
+ * [OUTPUT]: 提供 GeometryElement 基础行为、标签所有权与清理钩子
+ * [POS]: JSXGraph 几何基类；标签由锚点元素拥有并随其释放
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import JXG from "../jxg.js";
 import Const from "./constants.js";
 import Coords from "./coords.js";
@@ -1819,6 +1825,10 @@ JXG.extend(
                         ],
                         attr
                     );
+                    // 标签无论何时创建都由锚点元素拥有，晚启用标签也遵守组合清场边界。
+                    this._ownedResources ??= new Set();
+                    this._ownedResources.add(this.label);
+                    this.label._resourceOwner = this;
                     this.label.elType = 'label';
                     this.label.needsUpdate = true;
                     this.label.dump = false;

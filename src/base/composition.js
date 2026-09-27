@@ -89,8 +89,7 @@ for (const method of ["write", "indicate", "circumscribe", "fadeIn", "fadeOut"])
 for (const method of ["show", "hide", "setAttribute", "highlight", "noHighlight"]) {
     JXG.Composition.prototype[method] = function (...args) {
         this.assertActive();
-        for (const member of this.members) member[method]?.(...args);
-        return this;
+        return ElementSelection.prototype[method].apply(this, args);
     };
 }
 Object.assign(JXG.Composition.prototype, {

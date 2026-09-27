@@ -36,6 +36,12 @@
  * @fileoverview This file contains code for transformations of geometrical objects.
  */
 
+/**
+ * [INPUT]: 依赖 Board、矩阵运算与坐标变换参数
+ * [OUTPUT]: 提供二维/三维 Transformation，并在构造时记录无 id 资源出生
+ * [POS]: JSXGraph 几何变换实现；Board 工厂与 Composition 共用其真实构造记录
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
+ */
 import JXG from "../jxg.js";
 import Const from "./constants.js";
 import Mat from "../math/math.js";
@@ -146,6 +152,8 @@ JXG.Transformation = function (board, type, params, is3D) {
     }
 
     this.board = board;
+    // 无 id 变换也在真实构造时进入同步创建范围，不能靠工厂返回值推测出生。
+    for (const frame of board._creationFrames ?? []) frame.add(this);
     this.isNumericMatrix = false;
     if (this.is3D) {
         this.setMatrix3D(params[0] /* view3d */, type, params.slice(1));
