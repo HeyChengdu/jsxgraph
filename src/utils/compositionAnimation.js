@@ -28,6 +28,7 @@ export function compositionMembers(composition) {
     seen = new Set(),
     visiting = new Set();
   function visit(target) {
+    if (target?._disposed) return;
     if (visiting.has(target)) throw new Error('JSXGraph: composition cycle.');
     if (seen.has(target)) return;
     if (target instanceof JXG.Composition || target instanceof JXG.ElementSelection) {

@@ -3902,6 +3902,8 @@ declare namespace JXG {
             parents: VectorField3DParents,
             attributes?: VectorField3DAttributes
         ): VectorField3D;
+        select(filter: (element: GeometryElement) => boolean): ElementSelection;
+        select(id: string): GeometryElement | null;
         removeObject(
             object: string | GeometryElement | readonly (string | GeometryElement)[],
             saveMethod?: boolean
@@ -5611,7 +5613,7 @@ declare namespace JXG {
         ): this;
         /**
          * Selects an element by id, name, or reference. Object and predicate filters return a
-         * composition containing every matching board element.
+         * non-owning ElementSelection containing every matching board element.
          */
         select(
             idOrName: string,
@@ -5623,9 +5625,10 @@ declare namespace JXG {
         ): Element;
         select(
             filter:
-                | Readonly<Record<string, unknown>> | ((element: GeometryElement | Composition) => boolean),
+                | Readonly<Record<string, unknown>>
+                | ((element: GeometryElement | Composition) => boolean),
             onlyByIdOrName?: false
-        ):  ElementSelection;
+        ): ElementSelection;
         setBoundingBox(
             bbox: [number, number, number, number],
             keepaspectratio?: boolean,

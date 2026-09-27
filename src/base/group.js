@@ -74,6 +74,7 @@ JXG.Group = function (board, id, name, objects, attributes) {
         this.id = id;
     }
     this.board.groups[this.id] = this;
+    for (const frame of this.board._creationFrames ?? []) frame.add(this);
 
     this.type = Const.OBJECT_TYPE_POINT;
     this.elementClass = Const.OBJECT_CLASS_POINT;

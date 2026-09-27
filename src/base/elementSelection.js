@@ -52,7 +52,9 @@ JXG.ElementSelection = function (elements = {}) {
     this._keys = new Map();
     this._nextKey = 0;
     for (const [name, element] of Object.entries(elements)) {
-        if (element) this.add(name, element);
+        if (element && !this.add(name, element)) {
+            throw new Error("JSXGraph: invalid selection member or reserved alias: " + name);
+        }
     }
 };
 Object.defineProperties(JXG.ElementSelection.prototype, {
@@ -110,9 +112,6 @@ Object.assign(JXG.ElementSelection.prototype, {
         if (![...this._aliases.values()].includes(element)) {
             delete this.elements[this._keys.get(element)];
             this._keys.delete(element);
-            for (const key of Object.keys(this.elementsByName)) {
-                if (this.elementsByName[key] === element) delete this.elementsByName[key];
-            }
         }
         return true;
     },

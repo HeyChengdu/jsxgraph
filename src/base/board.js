@@ -7328,7 +7328,7 @@ JXG.extend(
                 for (i = 0; i < l; i++) {
                     olist[flist[i].id] = flist[i];
                 }
-                s = new JXG.ElementSelection(olist);
+                s = new JXG.ElementSelection(flist);
 
                 // It's an element which has been deleted (and still hangs around, e.g. in an attractor list
             } else if (

@@ -323,14 +323,14 @@ JXG.extend(
             (Type.isFunction(s) || (Type.isObject(s) && !Type.isFunction(s.setAttribute)))
         ) {
             // It's a function or an object, but not an element
-            flist = Type.filterElements(this.objectsList, s);
+            flist = Type.filterElements(Object.values(this.objects), s);
 
             olist = {};
             l = flist.length;
             for (i = 0; i < l; i++) {
                 olist[flist[i].id] = flist[i];
             }
-            s = new  JXG.ElementSelection(olist);
+            s = new JXG.ElementSelection(flist);
 
         } else if (
             Type.isObject(s) &&

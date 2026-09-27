@@ -26,9 +26,6 @@ export function detachMember(object) {
             owner._aliases.delete(name);
             delete owner[name];
         }
-        for (const name of Object.keys(owner.elementsByName)) {
-            if (owner.elementsByName[name] === object) delete owner.elementsByName[name];
-        }
         delete object._compositionOwner;
     }
     object._resourceOwner?._ownedResources?.delete(object);
@@ -42,7 +39,12 @@ export function createWithResources(board, create) {
     try {
         const result = create();
         if (result && result.board === board) {
-            for (const frame of frames) frame.add(result);
+            // 已注册返回值由 setId/Group 构造登记；返回旧对象不得扩大回滚范围。
+            const known = (board._knownFactoryResources ??= new WeakSet());
+            if (!result.id && !known.has(result)) {
+                for (const frame of frames) frame.add(result);
+            }
+            known.add(result);
             result._ownedResources ??= new Set();
             for (const resource of resources) {
                 if (
