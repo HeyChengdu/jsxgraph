@@ -35,8 +35,8 @@ function fadeRoots(target) {
   let roots = null;
   if (target?.board && target.board.groups?.[target.id] === target)
     roots = groupMembers(target);
-  else if (target?.board) roots = [target];
   else if (target?.elements) roots = compositionMembers(target);
+  else if (target?.board) roots = [target];
   if (!roots)
     throw new Error('JSXGraph: fade requires an element or composition.');
   for (const root of roots) {

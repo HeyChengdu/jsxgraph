@@ -1,3 +1,4 @@
+import { compose } from "../base/composition.js";
 import JXG from "../jxg.js";
 import {
     createCellGridGeometry,
@@ -164,7 +165,7 @@ function createTable(board, parents, attributes) {
         ),
         ...lines.map((line, index) => [`line${index}`, ownGeneratedLine(line)])
     ]);
-    return Object.assign(new JXG.Composition(objects), {
+    return Object.assign(compose(board, objects, attributes), {
         background,
         cells,
         lines,

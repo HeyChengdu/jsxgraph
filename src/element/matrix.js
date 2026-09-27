@@ -1,3 +1,4 @@
+import { compose } from "../base/composition.js";
 import JXG from "../jxg.js";
 import {
     createCellGridGeometry,
@@ -194,7 +195,7 @@ function createMatrix(board, parents, attributes) {
         ),
         ...brackets.map((line, index) => [`bracket${index}`, ownGeneratedLine(line)])
     ]);
-    return Object.assign(new JXG.Composition(objects), {
+    return Object.assign(compose(board, objects, attributes), {
         brackets,
         entries,
         entry(row, column) {

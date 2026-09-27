@@ -18,7 +18,8 @@ declare module "jsxgraph" {
     }
 }
 
-composition.setAttribute({ visible: true }).update();
+composition.setAttribute({ visible: true });
+board.update();
 // @ts-expect-error Composition attributes use the same typed visual properties as geometry elements.
 composition.setAttribute({ visible: "yes" });
 
@@ -96,7 +97,7 @@ board.fullscreenListener(new Event("fullscreenchange"));
 board.pointerDownListener(new PointerEvent("pointerdown"), a, false);
 // @ts-expect-error Pointer listeners require DOM PointerEvent objects.
 board.pointerDownListener({ type: "pointerdown" }, a);
-const selectedByFilter = board.select((element) => element.getName() === "A");
+const selectedByFilter = board.select((element) => element.name === "A");
 selectedByFilter.objectsList.length.toFixed();
 const selectedByName = board.select("A");
 if (selectedByName instanceof JXG.GeometryElement) {
@@ -778,3 +779,19 @@ board.create("text", [0, 0, "native reveal"], { visible: false }).write(500);
 board.create("table", [a, [["x"]]]);
 // @ts-expect-error A local number line requires two points.
 board.create("localnumberline", [a]);
+
+
+// 组合复用原生 create 的精确父参数与返回类型。
+const unit: JXG.Composition = board.create("composition");
+const unitPoint: JXG.Point = unit.create("point", [1, 2]);
+const selection: JXG.ElementSelection = board.select((element) => element === unitPoint);
+// @ts-expect-error 选择集合不拥有对象，也不能创建元素。
+selection.create("point", [1, 2]);
+// @ts-expect-error 无 Board 的旧构造不再合法。
+new JXG.Composition({ point: unitPoint });
+// @ts-expect-error 组合成员不能是非拥有的选择集合。
+unit.add("selection", selection);
+// @ts-expect-error 必须显式选择要删除的对象。
+board.removeObject(selection);
+// @ts-expect-error 点的 parents 不接受文字。
+unit.create("point", ["invalid"]);

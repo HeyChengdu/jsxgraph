@@ -330,7 +330,7 @@ JXG.extend(
             for (i = 0; i < l; i++) {
                 olist[flist[i].id] = flist[i];
             }
-            s = new Composition(olist);
+            s = new  JXG.ElementSelection(olist);
 
         } else if (
             Type.isObject(s) &&

@@ -141,6 +141,7 @@ constants =
     // to values > 100.
 
     // object classes
+    OBJECT_TYPE_COMPOSITION: 47,
     OBJECT_CLASS_POINT: 1,
     OBJECT_CLASS_LINE: 2,
     OBJECT_CLASS_CIRCLE: 3,

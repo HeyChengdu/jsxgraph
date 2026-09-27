@@ -1207,6 +1207,7 @@ JXG.extend(
             // loop over all objects
             for (i = 0; i < conflictObjects.length; i++) {
                 obj = conflictObjects[i];
+                if (obj instanceof JXG.Composition) continue;
 
                 //Skip the object if it is not meant to influence label position
                 if (
@@ -1435,7 +1436,7 @@ JXG.extend(
 
             whiteList = Type.evaluate(this.visProp.autopositionwhitelist) || [];
             conflictObjects = this.board.objectsList.filter(function(obj) {
-                return obj.visPropCalc.visible &&
+                return !(obj instanceof JXG.Composition) && obj.visPropCalc.visible &&
                     obj !== this &&
                     whiteList.indexOf(obj.id) === -1 &&
                     obj.evalVisProp('ignoreforlabelautoposition') !== true &&

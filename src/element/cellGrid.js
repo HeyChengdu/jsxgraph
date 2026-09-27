@@ -1,3 +1,4 @@
+import { compose } from "../base/composition.js";
 import JXG from "../jxg.js";
 
 /**
@@ -6,11 +7,7 @@ import JXG from "../jxg.js";
  * 呈现成员始终只有线本身，辅助端点不参与动画与实际呈现。
  */
 export function ownGeneratedLine(line) {
-    const owner = new JXG.Composition({
-        line,
-        startPoint: line.point1,
-        endPoint: line.point2
-    });
+    const owner = compose(line.board, { line });
     owner._animationMembers = [line];
     return owner;
 }

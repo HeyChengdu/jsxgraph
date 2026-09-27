@@ -4,6 +4,7 @@
  * [POS]: Native JSXGraph animation orchestration; owns no geometry or renderer
  * [PROTOCOL]: Update this header on change, then check AGENTS.md
  */
+import JXG from "../jxg.js";
 import { emphasize, indicateScale } from './attention.js';
 import { isVisuallyVisible } from '../renderer/visualBounds.js';
 
@@ -29,10 +30,10 @@ export function compositionMembers(composition) {
   function visit(target) {
     if (visiting.has(target)) throw new Error('JSXGraph: composition cycle.');
     if (seen.has(target)) return;
-    if (target.elements && !target.board) {
+    if (target instanceof JXG.Composition || target instanceof JXG.ElementSelection) {
       visiting.add(target);
       for (const child of target._animationMembers ??
-        Object.values(target.elements))
+        target.members)
         visit(child);
       visiting.delete(target);
     } else {

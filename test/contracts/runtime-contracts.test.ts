@@ -108,7 +108,9 @@ describe("TypeScript runtime contracts", () => {
         board = currentBoard;
         const point = currentBoard.create("point", [0, 0]);
         const text = currentBoard.create("text", [1, 1, "note"]);
-        const composition = new JXG.Composition({ point, text });
+        const composition =  currentBoard.create("composition");
+        composition.add("point", point);
+        composition.add("text", text );
 
         currentBoard.removeObject(composition);
 

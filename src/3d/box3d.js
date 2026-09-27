@@ -32,6 +32,7 @@
  * Create axes and rear and front walls of the
  * view3d bounding box bbox3D.
  */
+import { compose } from "../base/composition.js";
 import JXG from "../jxg.js";
 import Type from "../utils/type.js";
 
@@ -210,7 +211,7 @@ JXG.createAxes3D = function (board, parents, attributes) {
     }
 
     // 具名成员保留在同一容器上，同时共享组合的呈现转发：书写、淡入淡出与显隐一次作用于整组坐标轴。
-    container = new JXG.Composition(axes);
+    container = compose(board, axes);
 
     for (name in axes) {
         if (axes.hasOwnProperty(name) && Type.exists(axes[name])) {

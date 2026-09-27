@@ -54,6 +54,7 @@
  *   <li>{@link Reflection}</li></ul>
  */
 
+import { compose } from "../base/composition.js";
 import JXG from "../jxg.js";
 import Mat from "../math/math.js";
 import Geometry from "../math/geometry.js";
@@ -65,7 +66,7 @@ import Const from "../base/constants.js";
 // import Line from "../base/line.js";
 // import Circle from "../base/circle.js";
 // import Transform from "../base/transformation.js";
-import Composition from "../base/composition.js";
+
 // import Curve from "../base/curve.js";
 // import Polygon from "../base/polygon.js";
 
@@ -1335,13 +1336,13 @@ JXG.createAngularBisectorsOfTwoLines = function (board, parents, attributes) {
      * @type Line
      */
 
-    ret = new Composition({ line1: g1, line2: g2 });
+    ret = compose(board, { line1: g1, line2: g2 }, attributes);
 
     g1.dump = false;
     g2.dump = false;
 
     ret.elType = 'bisectorlines';
-    ret.setParents([l1.id, l2.id]);
+    ret.parents = [l1.id, l2.id];
     ret.subs = {
         line1: g1,
         line2: g2

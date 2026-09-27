@@ -29,120 +29,59 @@
     and <https://opensource.org/licenses/MIT/>.
  */
 
-describe("Test JXG.Composition", function () {
-    var board;
+describe("Composition 与 ElementSelection", function () {
 
-    document.getElementsByTagName("body")[0].innerHTML =
-        '<div id="jxgbox" style="width: 100px; height: 100px;"></div>';
-    board = JXG.JSXGraph.initBoard("jxgbox", {
+    let board, container;
+    beforeEach(function () {
+        container = document.createElement("div");
+        container.id = "composition-contract";
+
+    document.body.appendChild(container);
+    board = JXG.JSXGraph.initBoard(container.id, {
         renderer: "svg",
         axis: false,
         grid: false,
-        boundingbox: [-5, 5, 5, -5],
         resize: {enabled: false},
         showCopyright: false,
         showNavigation: false
     });
 
-    it("constructor", function () {
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({
-                element: p
-            }),
-            d = new JXG.Composition();
 
-        expect(c).toBeInstanceOf(Object);
-        expect(c.element).toBeInstanceOf(Object);
-        expect(c.element.id).toEqual("elId");
-        expect(d).toBeInstanceOf(Object);
-        expect(d.elements).not.toBeNull();
     });
-
-    it("Add", function () {
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({});
-        expect(c.add("el", p)).toBeTrue();
-        expect(c.el).toBeInstanceOf(JXG.Point);
-        expect(c.el).toEqual(c.elements.elId);
-        expect(c.add("update", null)).toBeFalse();
-
-        // Composition do not overwrite existing properties
-        expect(c.update).toBeInstanceOf(Function);
+    afterEach(function () {
+        JXG.JSXGraph.freeBoard(board);
+        container.remove();
     });
+    it("创建组合返回注册身份，Board 负责成员更新", function () {
 
-    it("Remove", function () {
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({ element: p });
-
-        expect(c.remove("element")).toBeTrue();
-        expect(c.element).toBeUndefined();
-        expect(c.remove("update")).toBeFalse();
-        expect(c.update).toBeInstanceOf(Function);
+        const unit = board.create("composition");
+        const point = unit.create("point", [0, 0]);
+        expect(board.select(unit.id)).toBe(unit);
+        expect(unit.members).toEqual([point]);
+        expect(() => board.fullUpdate()).not.toThrow();
+        expect(unit.update).toBeUndefined();
     });
-
-    it("Update", function () {
-        var spy = jasmine.createSpy("call update");
-
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({ element: p });
-
-        c.element.update = spy;
-        c.update();
-        expect(c.element.update).toHaveBeenCalled();
+    it("别名不能覆盖 API，显式成员删除同步清理索引", function () {
+        const unit = board.create("composition");
+        const point = unit.create("point", [0, 0], { name: "origin" });
+        expect(unit.add("anchor", point)).toBeTrue();
+        expect(() => unit.add("create", point)).toThrow();
+        expect(unit.select("anchor")).toBe(point);
+        board.removeObject(point);
+        expect(unit.anchor).toBeUndefined();
+        expect(unit.members).toEqual([]);
+        expect(unit.elementsByName.origin).toBeUndefined();
     });
+    it("引用集合解绑不删除成员，支持成员呈现", function () {
+        const point = board.create("point", [0, 0]);
+        const selection = new JXG.ElementSelection({
+                 point });
+        selection.hide();
 
-    it("setAttribute", function () {
-        var spy = jasmine.createSpy("call setAttribute");
-
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({ element: p });
-        c.element.setAttribute = spy;
-        c.setAttribute();
-
-        expect(c.element.setAttribute).toHaveBeenCalled();
-    });
-
-    it("highlight", function () {
-        var spy = jasmine.createSpy("call highlight");
-
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({ element: p });
-        c.element.highlight = spy;
-        c.highlight();
-
-        expect(c.element.highlight).toHaveBeenCalled();
-    });
-
-    it("nohighlight", function () {
-        var spy = jasmine.createSpy("call noHighlight");
-
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({ element: p });
-        c.element.noHighlight = spy;
-        c.noHighlight();
-
-        expect(c.element.noHighlight).toHaveBeenCalled();
-    });
-
-    it("prepareUpdate", function () {
-        var spy = jasmine.createSpy("call prepareUpdate");
-
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({ element: p });
-        c.element.prepareUpdate = spy;
-        c.prepareUpdate();
-
-        expect(c.element.prepareUpdate).toHaveBeenCalled();
-    });
-
-    it("updateRenderer", function () {
-        var spy = jasmine.createSpy("call updateRenderer");
-
-        var p = board.create("point", [0, 0], { id: "elId" }),
-            c = new JXG.Composition({ element: p });
-        c.element.updateRenderer = spy;
-        c.updateRenderer();
-
-        expect(c.element.updateRenderer).toHaveBeenCalled();
+        expect(point.visPropCalc.visible).toBeFalse();
+        selection.show();
+        expect(point.visPropCalc.visible).toBeTrue();
+        expect(selection.remove("point")).toBeTrue();
+        expect(board.objects[point.id]).toBe(point);
     });
 });

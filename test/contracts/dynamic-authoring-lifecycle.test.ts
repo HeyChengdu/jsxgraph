@@ -99,7 +99,11 @@ describe("Dynamic authoring lifecycle contracts", () => {
             const point = currentBoard.create("point", numberLine.point(segment % 4));
             const table = currentBoard.create("table", [0, 0, [["segment", segment]]]);
             const narration = currentBoard.create("text", [0, -7, `segment ${segment}`]);
-            const scene = new JXG.Composition({ numberLine, point, table, narration });
+            const scene = currentBoard.create("composition");
+            scene.add("numberLine", numberLine);
+            scene.add("point", point);
+            scene.add("table", table);
+            scene.add("narration", narration);
 
             currentBoard.update();
             currentBoard.removeObject(scene);

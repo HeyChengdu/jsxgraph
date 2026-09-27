@@ -39,6 +39,7 @@
  *
  */
 
+import { removeObjects } from "./utils/compositionLifecycle.js";
 import JXG from "./jxg.js";
 import Env from "./utils/env.js";
 import Type from "./utils/type.js";
@@ -757,11 +758,7 @@ JXG.JSXGraph = {
         board.suspendUpdate();
 
         // Remove all objects from the board.
-        for (el in board.objects) {
-            if (board.objects.hasOwnProperty(el)) {
-                board.objects[el].remove();
-            }
-        }
+        removeObjects(board, [...board.objectsList, ...Object.values(board.groups)], true);
 
         // Remove all the other things, left on the board, XHTML save
         while (board.containerObj.firstChild) {

@@ -38,83 +38,61 @@ declare namespace JXG {
      */
     export const COORDS_BY_USER: 0x0001;
 
-    /**
-     * A composition is a simple container that manages none or more GeometryElements.
-     */
+    /** 组合拥有同一 Board 上的成员，几何更新仍由 Board 统一调度。 */
+    export interface CompositionAttributes {
+        id?: string;
+        name?: string;
+    }
     export class Composition {
-        /** Write unique members simultaneously, or in insertion order; duration is total milliseconds. */
+        constructor(board: Board, attributes?: CompositionAttributes);
+        readonly board: Board;
+        readonly id: string;
+        readonly name: string;
+        readonly type: number;
+        readonly elType: "composition";
+        readonly state: "active" | "deleting" | "disposed";
+        readonly members: readonly (GeometryElement | Composition)[];
+        readonly elements: Record<string, GeometryElement | Composition>;
+        readonly objects: Composition["elements"];
+        readonly elementsByName: Composition["elements"];
+        readonly objectsList: readonly (GeometryElement | Composition)[];
+        create: Board["create"];
+        add(name: string, element: GeometryElement | Composition): boolean;
+        select(filter: (element: GeometryElement | Composition) => boolean): ElementSelection;
+        select(id: string): GeometryElement | Composition | null;
         write(duration?: number, options?: { sequential?: boolean }): this;
-        /** Emphasize the currently visible unique members as a single presentation. */
         indicate(duration?: number, options?: IndicateOptions): this;
-        /** Draw one temporary frame around the visible members' union. */
         circumscribe(duration?: number): this;
-        /** Reveal unique members; duration is milliseconds, default 1000. */
         fadeIn(duration?: number): this;
-        /** Hide unique members after fading, without removing them. */
         fadeOut(duration?: number): this;
-        /** Show every member immediately; 无呈现能力的成员不受影响。 */
         show(): this;
-        /** Hide every member immediately, without deleting geometry. */
         hide(): this;
-        /** Elements indexed by their JSXGraph id or composition key. */
-        elements: { [key: string]: GeometryElement | Composition };
-        /** Alias of {@link elements}. */
-        objects: { [key: string]: GeometryElement | Composition };
-        /** Elements indexed by their current non-empty name. */
-        elementsByName: { [name: string]: GeometryElement | Composition };
-        /** Elements in insertion order. */
-        objectsList: Array<GeometryElement | Composition>;
-        /**
-         * @param elements A list of elements with a descriptive name for the element as the key and a reference to the element as the value of every list entry. The name is used to access the element later on.
-         */
-        constructor(elements: { [what: string]: GeometryElement | Composition });
-        /**
-         * Adds an element to the composition container.
-
-         * @param what Descriptive name for the element, e.g. startpoint or area. This is used to access the element later on. There are some reserved names: elements, add, remove, update, prepareUpdate, updateRenderer, highlight, noHighlight, and all names that would form invalid object property names in JavaScript.
-         * @param element A reference to the element that is to be added. This can be another composition, too.
-         * @returns True, if the element was added successfully. Reasons why adding the element failed include using a reserved name and providing an invalid element.
-         */
-        add(what: string, element: GeometryElement | Composition): boolean;
-        /**
-         * Invokes fullUpdate for every stored element with a fullUpdate method and hands over the given arguments. See JXG.GeometryElement#fullUpdate for further description, valid parameters and return values.
-         */
-        fullUpdate(): void;
-        /**
-         * Invokes highlight for every stored element with a highlight method and hands over the given arguments. See JXG.GeometryElement#highlight for further description, valid parameters and return values.
-         */
-        highlight(): void;
-        /**
-         * Invokes noHighlight for every stored element with a noHighlight method and hands over the given arguments. See JXG.GeometryElement#noHighlight for further description, valid parameters and return values.
-         */
-        noHighlight(): void;
-        /**
-         * Invokes prepareUpdate for every stored element with a prepareUpdate method and hands over the given arguments. See JXG.GeometryElement#prepareUpdate for further description, valid parameters and return values.
-         */
-        prepareUpdate(): void;
-        /**
-         * Remove an element from the composition container.
-         * @param what The name used to access the element.
-         * @returns True, if the element has been removed successfully.
-         */
-        remove(what: string): boolean;
-        /**
-         * Invokes setAttribute for every stored element with a setAttribute method and hands over the given arguments. See JXG.GeometryElement#setAttribute for further description, valid parameters and return values.
-         */
         setAttribute(attributes: GeometryElementAttributes): this;
-        /**
-         * Invokes setParents for every stored element with a setParents method and hands over the given arguments. See JXG.GeometryElement#setParents for further description, valid parameters and return values.
-         */
-        setParents(parents: (string | GeometryElement)[]): this;
-        // setParents(): void;
-        /**
-         * Invokes update for every stored element with a update method and hands over the given arguments. See JXG.GeometryElement#update for further description, valid parameters and return values.
-         */
-        update(): void;
-        /**
-         * Invokes updateRenderer for every stored element with a updateRenderer method and hands over the given arguments. See JXG.GeometryElement#updateRenderer for further description, valid parameters and return values.
-         */
-        updateRenderer(): void;
+        highlight(): this;
+        noHighlight(): this;
+    }
+    /** 引用集合不注册身份、不拥有成员；remove 仅取消选择。 */
+    export class ElementSelection {
+        constructor(elements?: Record<string, GeometryElement | Composition | ElementSelection>);
+        readonly members: readonly (GeometryElement | Composition | ElementSelection)[];
+        readonly objectsList: readonly (GeometryElement | Composition | ElementSelection)[];
+        readonly elements: Record<string, GeometryElement | Composition | ElementSelection>;
+        readonly objects: ElementSelection["elements"];
+        readonly elementsByName: ElementSelection["elements"];
+        select(filter: (element: GeometryElement | Composition | ElementSelection) => boolean): ElementSelection;
+        select(id: string): GeometryElement | Composition | ElementSelection | null;
+        add(name: string, element: GeometryElement | Composition | ElementSelection): boolean;
+        remove(name: string): boolean;
+        write(duration?: number, options?: { sequential?: boolean }): this;
+        indicate(duration?: number, options?: IndicateOptions): this;
+        circumscribe(duration?: number): this;
+        fadeIn(duration?: number): this;
+        fadeOut(duration?: number): this;
+        show(): this;
+        hide(): this;
+        setAttribute(attributes: GeometryElementAttributes): this;
+        highlight(): this;
+        noHighlight(): this;
     }
 
     /**
@@ -4556,6 +4534,14 @@ declare namespace JXG {
      */
     export interface BoardElementRegistry {
         /** Creates an angle from three points or from two directed lines. */
+
+        /** Creates an angle from three points or from two directed lines. */
+
+        composition: BoardElementDefinition<
+            [parents?: readonly [], attributes?: CompositionAttributes],
+            Composition
+        >;
+        /** Creates an angle from three points or from two directed lines. */
         angle: BoardElementDefinition<
             [parents: AngleParents, attributes?: AngleAttributes],
             Angle
@@ -5636,9 +5622,10 @@ declare namespace JXG {
             onlyByIdOrName?: boolean
         ): Element;
         select(
-            filter: Readonly<Record<string, unknown>> | ((element: GeometryElement) => boolean),
+            filter:
+                | Readonly<Record<string, unknown>> | ((element: GeometryElement | Composition) => boolean),
             onlyByIdOrName?: false
-        ): Composition;
+        ):  ElementSelection;
         setBoundingBox(
             bbox: [number, number, number, number],
             keepaspectratio?: boolean,

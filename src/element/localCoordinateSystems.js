@@ -1,3 +1,4 @@
+import { compose } from "../base/composition.js";
 import JXG from "../jxg.js";
 const RANGE = [-5, 5];
 const value = (v) => (typeof v === "function" ? v() : v);
@@ -52,6 +53,8 @@ function endpoints(parents, attributes) {
 }
 function childAttributes(attributes) {
     const {
+        id: _id,
+        name: _name,
         orientation: _o,
         position: _p,
         range: _r,
@@ -151,18 +154,10 @@ function createLocalNumberLine(board, parents, attributes) {
         ...attributes.ticks
     });
     const point = (v) => between(start, end, () => (value(v) - logicalRange[0]) / span);
-    return Object.assign(
-        new JXG.Composition({
-            ticks,
-            line,
-            startPoint: line.point1,
-            endPoint: line.point2
-        }),
-        {
-            point,
-            range: logicalRange,
-            subs: { line, ticks }
-        }
-    );
+    return Object.assign(compose(board, { ticks, line }, attributes), {
+        point,
+        range: logicalRange,
+        subs: { line, ticks }
+    });
 }
 JXG.registerElement("localnumberline", createLocalNumberLine);

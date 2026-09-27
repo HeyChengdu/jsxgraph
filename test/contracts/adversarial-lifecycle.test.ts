@@ -73,7 +73,10 @@ describe("Adversarial authoring lifecycle contracts", () => {
         const first = currentBoard.create("point", [0, 0]);
         const second = currentBoard.create("point", [2, 0]);
         const segment = currentBoard.create("segment", [first, second]);
-        const composition = new JXG.Composition({ first, second, segment });
+        const composition =  currentBoard.create("composition");
+        composition.add("first", first);
+        composition.add("second", second);
+        composition.add("segment", segment );
         const ids = [first.id, second.id, segment.id];
 
         currentBoard.removeObject(composition);
@@ -94,7 +97,7 @@ describe("Adversarial authoring lifecycle contracts", () => {
                 [5, 0]
             ]);
             const point = currentBoard.create("point", numberLine.point(iteration % 5));
-            currentBoard.removeObject(new JXG.Composition({ numberLine, point }));
+            currentBoard.removeObject([numberLine, point ]);
         }
 
         expect(Object.keys(currentBoard.objects).length).toBe(objectCountBefore);

@@ -311,6 +311,11 @@ JXG.Dump = {
             elementList = [],
             len = board.objectsList.length;
 
+
+
+        if (board.objectsList.some((object) => object instanceof JXG.Composition)) {
+            throw new Error("JSXGraph: composition ownership serialization is not supported.");
+        }
         this.addMarkers(board, "dumped", false);
 
         for (e = 0; e < len; e++) {

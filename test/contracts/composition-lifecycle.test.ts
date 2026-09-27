@@ -54,8 +54,12 @@ describe("Composition lifecycle runtime contracts", () => {
         const first = currentBoard.create("point", [0, 0]);
         const second = currentBoard.create("point", [1, 1]);
         const note = currentBoard.create("text", [2, 2, "evidence"]);
-        const nested = new JXG.Composition({ second, note });
-        const root = new JXG.Composition({ first, nested });
+        const nested =  currentBoard.create("composition");
+        nested.add("second", second);
+        nested.add("note", note );
+        const root =  currentBoard.create("composition");
+        root.add("first", first);
+        root.add("nested", nested );
 
         currentBoard.removeObject(root);
 
@@ -68,7 +72,8 @@ describe("Composition lifecycle runtime contracts", () => {
         const currentBoard = createBoard();
         const member = currentBoard.create("point", [0, 0]);
         const survivor = currentBoard.create("point", [3, 3]);
-        const composition = new JXG.Composition({ member });
+        const composition =  currentBoard.create("composition");
+        composition.add("member", member );
 
         currentBoard.removeObject(composition);
         currentBoard.removeObject(composition);
@@ -80,12 +85,14 @@ describe("Composition lifecycle runtime contracts", () => {
     it("keeps composition indexes consistent when a named member is removed", () => {
         const currentBoard = createBoard();
         const point = currentBoard.create("point", [0, 0], { name: "origin" });
-        const composition = new JXG.Composition({ anchor: point });
+        const composition =  currentBoard.create("composition");
 
-        expect(composition.remove("anchor")).toBeTrue();
+        composition.add("anchor", point);
+
+        currentBoard.removeObject(point);
         expect(composition.objectsList).toEqual([]);
         expect(composition.elementsByName.origin).toBeUndefined();
-        expect(currentBoard.objects[point.id]).toBe(point);
+        expect(currentBoard.objects[point.id]).toBeUndefined();
     });
 
     it("frees a board and recreates a clean board in the same container", () => {

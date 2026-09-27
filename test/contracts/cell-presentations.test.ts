@@ -20,7 +20,9 @@ describe("Cell presentation runtime contracts", () => {
     let container: HTMLDivElement | undefined;
 
     const collectObjectIds = (object: JXG.GeometryElement | JXG.Composition): string[] =>
-        "id" in object ? [object.id] : object.objectsList.flatMap(collectObjectIds);
+        object  instanceof JXG.Composition
+            ? [object.id, ...object.members.flatMap(collectObjectIds)]
+            : [object.id];
 
     const createBoard = () => {
         board = JXG.JSXGraph.initBoard(containerId, {

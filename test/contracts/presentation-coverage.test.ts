@@ -210,7 +210,7 @@ describe('呈现能力覆盖', () => {
         tick(1);
         expect(firstNode.style.opacity).toBe('');
 
-        const composition = new JXG.Composition({ first, second });
+        const composition = new JXG.ElementSelection({ first, second });
         composition.hide();
         expect([first.visPropCalc.visible, second.visPropCalc.visible]).toEqual([
             false,

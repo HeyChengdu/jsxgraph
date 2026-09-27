@@ -53,6 +53,7 @@ import Type from '../utils/type.js';
 import EventEmitter from '../utils/event.js';
 import Env from '../utils/env.js';
 import Composition from './composition.js';
+import { createWithResources, removeObjects } from "../utils/compositionLifecycle.js";
 import { createAnimationScheduler } from '../utils/animationScheduler.js';
 import { createAnimationController } from '../utils/animationController.js';
 import { addLegacyAnimation, advanceLegacyAnimations } from '../utils/legacyAnimation.js';
@@ -964,6 +965,9 @@ JXG.extend(
 
             obj.id = elId;
             this.objects[elId] = obj;
+
+
+            for (const frame of this._creationFrames ?? []) frame.add(obj);
             obj._pos = this.objectsList.length;
             this.objectsList[this.objectsList.length] = obj;
 
@@ -1427,6 +1431,7 @@ JXG.extend(
             //for (el in this.objects) {
             for (el = 0; el < len; el++) {
                 pEl = this.objectsList[el];
+                if (pEl instanceof Composition) continue;
                 haspoint = pEl.hasPoint && pEl.hasPoint(x, y);
 
                 if (pEl.visPropCalc.visible && haspoint) {
@@ -1846,6 +1851,9 @@ JXG.extend(
             // Elements  below the mouse pointer which are not highlighted yet will be highlighted.
             for (el = 0; el < len; el++) {
                 pEl = this.objectsList[el];
+
+
+                if (pEl instanceof Composition) continue;
                 pId = pEl.id;
                 if (
                     Type.exists(pEl.hasPoint) &&
@@ -1874,6 +1882,7 @@ JXG.extend(
 
             for (el = 0; el < len; el++) {
                 pEl = this.objectsList[el];
+                if (pEl instanceof Composition) continue;
                 pId = pEl.id;
                 if (pEl.mouseover) {
                     if (!overObjects[pId]) {
@@ -4986,6 +4995,7 @@ JXG.extend(
 
             for (el = 0; el < len; el++) {
                 pEl = this.objectsList[el];
+                if (pEl instanceof Composition) continue;
                 if (pEl.visPropCalc.visible && pEl.hasPoint && pEl.hasPoint(dx, dy)) {
                     elList[elList.length] = pEl;
                 }
@@ -5005,6 +5015,7 @@ JXG.extend(
 
             for (ob = 0; ob < len; ob++) {
                 el = this.objectsList[ob];
+                if (el instanceof Composition) continue;
 
                 if (Type.exists(el.coords)) {
                     if (el.evalVisProp('frozen') === true) {
@@ -5438,6 +5449,8 @@ JXG.extend(
             for (el = 0; el < len; el++) {
                 pEl = this.objectsList[el];
 
+                if (pEl instanceof Composition) continue;
+
                 if (Type.isPoint(pEl) && pEl.visPropCalc.visible) {
                     if (pEl.coords.usrCoords[1] < minX) {
                         minX = pEl.coords.usrCoords[1];
@@ -5554,103 +5567,7 @@ JXG.extend(
          * @private
          */
         _removeObj: function (object, saveMethod) {
-            var el, o, i;
-
-            if (Type.isArray(object)) {
-                for (i = 0; i < object.length; i++) {
-                    this._removeObj(object[i], saveMethod);
-                }
-
-                return this;
-            }
-
-            object = this.select(object);
-
-            // If the object which is about to be removed is unknown or a string, do nothing.
-            // it is a string if a string was given and could not be resolved to an element.
-            if (!Type.exists(object) || Type.isString(object)) {
-                return this;
-            }
-
-            try {
-                // remove all children.
-                for (el in object.childElements) {
-                    if (object.childElements.hasOwnProperty(el)) {
-                        object.childElements[el].board._removeObj(object.childElements[el]);
-                    }
-                }
-
-                // Remove all children in elements like turtle
-                for (el in object.objects) {
-                    if (object.objects.hasOwnProperty(el)) {
-                        object.objects[el].board._removeObj(object.objects[el]);
-                    }
-                }
-
-                // Remove the element from the childElement list and the descendant list of all elements.
-                if (saveMethod) {
-                    // Running through all objects has quadratic complexity if many objects are deleted.
-                    for (el in this.objects) {
-                        if (this.objects.hasOwnProperty(el)) {
-                            if (
-                                Type.exists(this.objects[el].childElements) &&
-                                Type.exists(
-                                    this.objects[el].childElements.hasOwnProperty(object.id)
-                                )
-                            ) {
-                                delete this.objects[el].childElements[object.id];
-                                delete this.objects[el].descendants[object.id];
-                            }
-                        }
-                    }
-                } else if (Type.exists(object.ancestors)) {
-                    // Running through the ancestors should be much more efficient.
-                    for (el in object.ancestors) {
-                        if (object.ancestors.hasOwnProperty(el)) {
-                            if (
-                                Type.exists(object.ancestors[el].childElements) &&
-                                Type.exists(
-                                    object.ancestors[el].childElements.hasOwnProperty(object.id)
-                                )
-                            ) {
-                                delete object.ancestors[el].childElements[object.id];
-                                delete object.ancestors[el].descendants[object.id];
-                            }
-                        }
-                    }
-                }
-
-                // remove the object itself from our control structures
-                if (object._pos > -1) {
-                    this.objectsList.splice(object._pos, 1);
-                    // Quadratic complexity for reindexing the positions:
-                    for (i = object._pos; i < this.objectsList.length; i++) {
-                        o = this.objectsList[i];
-                        if (o._pos > -1) {
-                            o._pos--;
-                        }
-                    }
-                } else if (object.type !== Const.OBJECT_TYPE_TURTLE) {
-                    JXG.debug(
-                        'Board.removeObject: object ' + object.id + ' not found in list.'
-                    );
-                }
-
-                delete this.objects[object.id];
-                delete this.elementsByName[object.name];
-
-                if (object.visProp && object.evalVisProp('trace')) {
-                    object.clearTrace();
-                }
-
-                // the object deletion itself is handled by the object.
-                if (Type.exists(object.remove)) {
-                    object.remove();
-                }
-            } catch (e) {
-                JXG.debug(object.id + ': Could not be removed: ' + e);
-            }
-
+            removeObjects(this, object);
             return this;
         },
 
@@ -5677,26 +5594,16 @@ JXG.extend(
          * @returns {JXG.Board} Reference to the board
          */
         removeObject: function (object, saveMethod) {
-            var remove;
-
-            remove = function (item) {
-                var j;
-
-                if (Type.isArray(item)) {
-                    for (j = 0; j < item.length; j++) {
-                        remove(item[j]);
-                    }
-                } else if (item instanceof JXG.Composition) {
-                    remove(item.objectsList);
-                } else {
-                    this._removeObj(item, saveMethod);
-                }
-            }.bind(this);
-
+            if (this._deletionPlan) {
+                removeObjects(this, object);
+                return this;
+            }
             this.renderer.suspendRedraw(this);
-            remove(object);
-            this.renderer.unsuspendRedraw();
-
+            try {
+                removeObjects(this, object);
+            } finally {
+                this.renderer.unsuspendRedraw();
+            }
             this.update();
             return this;
         },
@@ -5977,7 +5884,9 @@ JXG.extend(
 
             for (el = 0; el < len; el++) {
                 pEl = this.objectsList[el];
-                if (this._change3DView ||
+                if (pEl instanceof Composition) continue;
+                if (
+                    this._change3DView ||
                     (Type.exists(drag) && drag.elType === 'view3d_slider')
                 ) {
                     // The 3D view has changed. No elements are recomputed,
@@ -6040,6 +5949,8 @@ JXG.extend(
             */
             for (el = 0; el < this.objectsList.length; el++) {
                 pEl = this.objectsList[el];
+
+                if (pEl instanceof Composition) continue;
                 this._countUpdateProfile('elementsVisited');
                 if (pEl.needsUpdate) {
                     this._countUpdateProfile('elementsDirty');
@@ -6121,6 +6032,8 @@ JXG.extend(
                 this.updateRendererCanvas();
             } else {
                 for (el = 0; el < len; el++) {
+
+                    if (this.objectsList[el] instanceof Composition) continue;
                     if (this.objectsList[el].visProp.islabel && this.objectsList[el].visProp.autoposition) {
                         autoPositionLabelList.push(el);
                     } else {
@@ -6221,6 +6134,7 @@ JXG.extend(
             // update the zIndices of the 3D elements.
             for (el = 0; el < olen; el++) {
                 pEl = this.objectsList[el];
+                if (pEl instanceof Composition) continue;
                 if (pEl.elType === 'view3d' &&
                     pEl.evalVisProp('depthorder.enabled')
                 ) {
@@ -6234,7 +6148,7 @@ JXG.extend(
 
             // 3D elements are not rendered, but their subelements element2D
             sortStart = this._profileNow();
-            objects_sorted = this.objectsList.filter(function(e) { return !e.is3D; }).toSorted(_compareDepth);
+            objects_sorted = this.objectsList.filter(function(e) { return !(e instanceof Composition) && !e.is3D; }).toSorted(_compareDepth);
             this._recordUpdateProfile('canvasSort', sortStart);
             this._countUpdateProfile('canvasObjectsSorted', objects_sorted.length);
             profileStart = this._profileNow();
@@ -6567,6 +6481,12 @@ JXG.extend(
          * two or more elements.
          */
         create: function (elementType, parents, attributes) {
+
+            return createWithResources(this, () =>
+                this._create(elementType, parents, attributes)
+            );
+        },
+        _create: function (elementType, parents, attributes) {
             var el, i;
 
             elementType = elementType.toLowerCase();
@@ -6639,7 +6559,9 @@ JXG.extend(
             var el;
 
             for (el = 0; el < this.objectsList.length; el++) {
-                this.objectsList[el].clearTrace();
+
+                if (!(this.objectsList[el] instanceof Composition))
+                    this.objectsList[el].clearTrace();
             }
 
             this.numTraces = 0;
@@ -7297,6 +7219,8 @@ JXG.extend(
                 if (this.objects.hasOwnProperty(e)) {
                     o = this.objects[e];
 
+                    if (o instanceof Composition) continue;
+
                     if (deficiency !== 'none') {
                         if (this.currentCBDef === 'none') {
                             // this could be accomplished by JXG.extend, too. But do not use
@@ -7404,7 +7328,7 @@ JXG.extend(
                 for (i = 0; i < l; i++) {
                     olist[flist[i].id] = flist[i];
                 }
-                s = new Composition(olist);
+                s = new JXG.ElementSelection(olist);
 
                 // It's an element which has been deleted (and still hangs around, e.g. in an attractor list
             } else if (

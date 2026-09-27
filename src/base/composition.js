@@ -29,294 +29,147 @@
  and <https://opensource.org/licenses/MIT/>.
  */
 
-/*global JXG: true, define: true*/
-/*jslint nomen: true, plusplus: true*/
-
-import JXG from "../jxg.js";
-import { fade, createRevealJob } from '../utils/fade.js';
-import Type from "../utils/type.js";
-import { writeComposition, emphasizeComposition } from '../utils/compositionAnimation.js';
-
 /**
- * A composition is a simple container that manages none or more {@link JXG.GeometryElement}s.
- * @param {Object} elements A list of elements with a descriptive name for the element as the key and a reference
- * to the element as the value of every list entry. The name is used to access the element later on.
- * @example
- * var p1 = board.create('point', [1, 2]),
- *     p2 = board.create('point', [2, 3]),
- *     c = new JXG.Composition({
- *         start: p1,
- *         end: p2
- *     });
- *
- * // moves p1 to [3, 3]
- * c.start.moveTo([3, 3]);
- * @class JXG.Composition
+ * [INPUT]: 依赖 Board 注册、ElementSelection 的成员呈现及 JSXGraph 元素工厂
+ * [OUTPUT]: 提供有 Board 身份和唯一所有权的 Composition
+ * [POS]: JSXGraph 非几何组合单元；Board 负责调度与注销
+ * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
-JXG.Composition = function (elements) {
-    var e,
-        that = this,
-        genericMethods = [
-            /**
-             * Invokes show for every stored element with a show method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#show} for further description, valid parameters and return values.
-             * @name show
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "show",
+import JXG from "../jxg.js";
+import Const from "./constants.js";
+import ElementSelection from "./elementSelection.js";
+import { createWithResources } from "../utils/compositionLifecycle.js";
 
-            /**
-             * Invokes hide for every stored element with a hide method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#hide} for further description, valid parameters and return values.
-             * @name hide
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "hide",
-
-            /**
-             * Invokes setAttribute for every stored element with a setAttribute method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#setAttribute} for further description, valid parameters and return values.
-             * @name setAttribute
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "setAttribute",
-
-            /**
-             * Invokes setParents for every stored element with a setParents method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#setParents} for further description, valid parameters and return values.
-             * @name setParents
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "setParents",
-
-            /**
-             * Invokes prepareUpdate for every stored element with a prepareUpdate method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#prepareUpdate} for further description, valid parameters and return values.
-             * @name prepareUpdate
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "prepareUpdate",
-
-            /**
-             * Invokes updateRenderer for every stored element with a updateRenderer method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#updateRenderer} for further description, valid parameters and return values.
-             * @name updateRenderer
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "updateRenderer",
-
-            /**
-             * Invokes update for every stored element with a update method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#update} for further description, valid parameters and return values.
-             * @name update
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "update",
-
-            /**
-             * Invokes fullUpdate for every stored element with a fullUpdate method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#fullUpdate} for further description, valid parameters and return values.
-             * @name fullUpdate
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "fullUpdate",
-
-            /**
-             * Invokes highlight for every stored element with a highlight method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#highlight} for further description, valid parameters and return values.
-             * @name highlight
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "highlight",
-
-            /**
-             * Invokes noHighlight for every stored element with a noHighlight method and hands over the given arguments.
-             * See {@link JXG.GeometryElement#noHighlight} for further description, valid parameters and return values.
-             * @name noHighlight
-             * @memberOf JXG.Composition.prototype
-             * @function
-             */
-            "noHighlight"
-        ],
-        generateMethod = function (what) {
-            return function () {
-                var i;
-
-                for (i in that.elements) {
-                    if (that.elements.hasOwnProperty(i)) {
-                        if (Type.exists(that.elements[i][what])) {
-                            that.elements[i][what].apply(that.elements[i], arguments);
-                        }
-                    }
-                }
-                return that;
-            };
-        };
-
-    for (e = 0; e < genericMethods.length; e++) {
-        this[genericMethods[e]] = generateMethod(genericMethods[e]);
+JXG.Composition = function (board, attributes = {}) {
+    if (!board || typeof board.setId !== "function") {
+        throw new Error(
+            "JSXGraph: Composition requires a Board; use board.create('composition')."
+        );
     }
-
+    this.board = board;
+    this.type = Const.OBJECT_TYPE_COMPOSITION;
+    this.elType = "composition";
+    this.id = attributes.id ?? "";
+    this.name = attributes.name ?? "";
+    this.state = "active";
     this.elements = {};
     this.objects = this.elements;
-
-    this.elementsByName = {};
     this.objectsList = [];
 
-    // unused, required for select()
     this.groups = {};
-
-    for (e in elements) {
-        if (elements.hasOwnProperty(e)) {
-            this.add(e, elements[e]);
-        }
-    }
-
-    this.dump = true;
     this.subs = {};
-};
-
-Type.copyMethodMap(JXG.Composition, {
-    setAttribute: "setAttribute",
-    setProperty: "setAttribute",
-    setParents: "setParents",
-    add: "add",
-    remove: "remove",
-    select: "select"
-});
-
-JXG.extend(
-    JXG.Composition.prototype,
-    /** @lends JXG.Composition.prototype */ {
-        /** Present unique explicit members using the existing Board animation clock. */
-        write: function (duration, options) {
-            return writeComposition(this, duration, {
-                ...options,
-                fadeJob: createRevealJob
-            });
-        },
-        indicate: function (duration, options) {
-            return emphasizeComposition(this, 'indicate', duration, options);
-        },
-        fadeIn: function (duration) { return fade(this, true, duration); },
-        fadeOut: function (duration) { return fade(this, false, duration); },
-        circumscribe: function (duration) {
-            return emphasizeComposition(this, 'circumscribe', duration);
-        },
-        /**
-         * Adds an element to the composition container.
-         * @param {String} what Descriptive name for the element, e.g. <em>startpoint</em> or <em>area</em>. This is used to
-         * access the element later on. There are some reserved names: <em>elements, add, remove, update, prepareUpdate,
-         * updateRenderer, highlight, noHighlight</em>, and all names that would form invalid object property names in
-         * JavaScript.
-         * @param {JXG.GeometryElement|JXG.Composition} element A reference to the element that is to be added. This can be
-         * another composition, too.
-         * @returns {Boolean} True, if the element was added successfully. Reasons why adding the element failed include
-         * using a reserved name and providing an invalid element.
-         */
-        add: function (what, element) {
-            if (!Type.exists(this[what]) && Type.exists(element)) {
-                if (Type.exists(element.id)) {
-                    this.elements[element.id] = element;
-                } else {
-                    this.elements[what] = element;
-                }
-
-                if (Type.exists(element.name)) {
-                    this.elementsByName[element.name] = element;
-                }
-
-                if (Type.isFunction(element.on)) {
-                    element.on("attribute:name", this.nameListener, this);
-                }
-
-                this.objectsList.push(element);
-                this[what] = element;
-                Type.extendInstanceMethodMap(this, what, what);
-
-                return true;
-            }
-
-            return false;
-        },
-
-        /**
-         * Remove an element from the composition container.
-         * @param {String} what The name used to access the element.
-         * @returns {Boolean} True, if the element has been removed successfully.
-         */
-        remove: function (what) {
-            var found = false,
-                e;
-
-            for (e in this.elements) {
-                if (this.elements.hasOwnProperty(e)) {
-                    if (this.elements[e].id === this[what].id) {
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            if (found) {
-                delete this.elements[this[what].id];
-                if (Type.exists(this[what].name)) {
-                    delete this.elementsByName[this[what].name];
-                }
-                Type.removeElementFromArray(this.objectsList, this[what]);
-                if (this.hasOwnProperty("methodMap")) {
-                    delete this.methodMap[what];
-                }
-                delete this[what];
-            }
-
-            return found;
-        },
-
-        nameListener: function (oval, nval, el) {
-            delete this.elementsByName[oval];
-            this.elementsByName[nval] = el;
-        },
-
-        select: function (filter) {
-            // for now, hijack JXG.Board's select() method
-            if (Type.exists(JXG.Board)) {
-                return JXG.Board.prototype.select.call(this, filter);
-            }
-
-            return new JXG.Composition();
-        },
-
-        getParents: function () {
-            return this.parents;
-        },
-
-        getType: function () {
-            return this.elType;
-        },
-
-        getAttributes: function () {
-            var attr = {},
-                e;
-
-            for (e in this.subs) {
-                if (this.subs.hasOwnProperty(e)) {
-                    attr[e] = this.subs[e].visProp;
-                }
-            }
-
-            return this.attr;
-        }
+    this._aliases = new Map();
+    this._memberKeys = new Map();
+    this._nextMemberKey = 0;
+    if ((this.id && board.objects[this.id]) || (this.name && board.elementsByName[this.name])) {
+        throw new Error("JSXGraph: Composition identity already exists.");
     }
-);
+    board.setId(this, "Composition");
+    if (this.name) board.elementsByName[this.name] = this;
+};
+Object.defineProperty(JXG.Composition.prototype, "members", {
+    get() {
+        return [...this.objectsList];
+    }
+});
+Object.defineProperty(JXG.Composition.prototype, "elementsByName", {
+    get() {
+        return Object.fromEntries(
+            this.members.filter((member) => member.name).map((member) => [member.name, member])
+        );
+    }
+});
+// 共享呈现方法，不继承选择集合的成员解绑或更新接口。
+for (const method of ["write", "indicate", "circumscribe", "fadeIn", "fadeOut"]) {
+    JXG.Composition.prototype[method] = function (...args) {
+        this.assertActive();
+        return ElementSelection.prototype[method].apply(this, args);
+    };
+}
+for (const method of ["show", "hide", "setAttribute", "highlight", "noHighlight"]) {
+    JXG.Composition.prototype[method] = function (...args) {
+        this.assertActive();
+        for (const member of this.members) member[method]?.(...args);
+        return this;
+    };
+}
+Object.assign(JXG.Composition.prototype, {
+    assertActive() {
+        if (this.state !== "active" || this.board.objects[this.id] !== this) {
+            throw new Error("JSXGraph: Composition is disposed.");
+        }
+    },
+    select(filter) {
+        this.assertActive();
+        if (typeof filter === "string")
+            return (
+                this._aliases.get(filter) ??
+                this.members.find((member) => member.id === filter || member.name === filter) ??
+                null
+            );
+        return JXG.Board.prototype.select.call(this, filter);
+    },
+    add(name, element) {
+        this.assertActive();
+        if (
+            !element ||
+            element.board !== this.board ||
+            element._disposed ||
+            (element.id &&
+                this.board.objects[element.id] !== element &&
+                this.board.groups[element.id] !== element)
+        ) {
+            throw new Error("JSXGraph: Composition requires a live member on the same Board.");
+        }
+        if (
+            element._resourceOwner ||
+            (element._compositionOwner && element._compositionOwner !== this)
+        ) {
+            throw new Error("JSXGraph: member already has a composition owner.");
+        }
+        for (let ancestor = this; ancestor; ancestor = ancestor._compositionOwner) {
+            if (ancestor === element) throw new Error("JSXGraph: composition cycle.");
+        }
+        if (name !== undefined && name in this && this._aliases.get(name) !== element) {
+            throw new Error("JSXGraph: composition alias conflict: " + name);
+        }
+        if (!this.objectsList.includes(element)) {
+            const key = `member${this._nextMemberKey++}`;
+            this._memberKeys.set(element, key);
+            this.elements[key] = element;
+            this.objectsList.push(element);
+            element._compositionOwner = this;
+        }
+        if (name !== undefined) {
+            this._aliases.set(name, element);
+            this[name] = element;
+        }
 
+        return true;
+    },
+    create(type, parents, attributes) {
+        this.assertActive();
+        return createWithResources(this.board, () => {
+            const element = this.board.create(type, parents, attributes);
+            this.add(undefined, element);
+            return element;
+        });
+    }
+});
+JXG.registerElement("composition", (board, parents, attributes) => {
+    if (parents.length) throw new Error("JSXGraph: composition parents must be empty.");
+    return new JXG.Composition(board, attributes);
+});
 export default JXG.Composition;
+
+/** 内置复合工厂接纳同板成员；调用方的工厂范围负责失败回滚。 */
+export function compose(board, members, attributes = {}) {
+    const composition = board.create("composition", [], {
+        id: attributes.id,
+        name: attributes.name
+    });
+    for (const [name, member] of Object.entries(members)) {
+        if (member != null) composition.add(name, member);
+    }
+    return composition;
+}
