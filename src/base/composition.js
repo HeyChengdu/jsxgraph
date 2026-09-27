@@ -30,7 +30,7 @@
  */
 
 /**
- * [INPUT]: 依赖 Board 注册、ElementSelection 的成员呈现及 JSXGraph 元素工厂
+ * [INPUT]: 依赖 Board 注册、组合/辅助资源所有权链、ElementSelection 呈现及 JSXGraph 工厂
  * [OUTPUT]: 提供有 Board 身份和唯一所有权的 Composition
  * [POS]: JSXGraph 非几何组合单元；Board 负责调度与注销
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
@@ -126,7 +126,12 @@ Object.assign(JXG.Composition.prototype, {
         ) {
             throw new Error("JSXGraph: member already has a composition owner.");
         }
-        for (let ancestor = this; ancestor; ancestor = ancestor._compositionOwner) {
+        // 工厂内部资源与显式成员属于同一所有权树，不能只检查组合成员边。
+        for (
+            let ancestor = this;
+            ancestor;
+            ancestor = ancestor._compositionOwner ?? ancestor._resourceOwner
+        ) {
             if (ancestor === element) throw new Error("JSXGraph: composition cycle.");
         }
         if (name !== undefined && name in this && this._aliases.get(name) !== element) {

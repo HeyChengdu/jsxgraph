@@ -1,6 +1,6 @@
 /**
  * [INPUT]: 依赖 Board 注册表、原生几何依赖和 Composition 的直接成员
- * [OUTPUT]: 提供同步工厂资源记录、限定新增资源的回滚、原子删除预检和对象注销
+ * [OUTPUT]: 提供同步工厂资源记录、限定新增资源的回滚、含 Group 身份解析的原子删除与注销
  * [POS]: JSXGraph Board 与组合共用的生命周期边界，不保存视觉状态
  * [PROTOCOL]: 变更时更新此头部，然后检查 AGENTS.md
  */
@@ -86,7 +86,7 @@ export function removeObjects(board, target, releasingBoard = false, rollbackRes
         }
         const object =
             typeof value === "string"
-                ? (board.objects[value] ?? board.elementsByName[value])
+                ? (board.objects[value] ?? board.elementsByName[value] ?? board.groups[value])
                 : value;
         if (
             !object ||
