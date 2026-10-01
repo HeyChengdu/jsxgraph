@@ -20,7 +20,7 @@ describe("Cell presentation runtime contracts", () => {
     let container: HTMLDivElement | undefined;
 
     const collectObjectIds = (object: JXG.GeometryElement | JXG.Composition): string[] =>
-        object  instanceof JXG.Composition
+        object instanceof JXG.Composition
             ? [object.id, ...object.members.flatMap(collectObjectIds)]
             : [object.id];
 
@@ -69,6 +69,34 @@ describe("Cell presentation runtime contracts", () => {
         expect(table.cell(0, 1)).toBe(table.cells[0][1]);
         expect(table.cell(1, 0).plaintext).toBe("1");
         expect(() => table.cell(2, 0)).toThrowError("table cell (2, 0) does not exist.");
+    });
+
+    it("大表格与矩阵的动态直线保持两端采样，不进入递归曲线绘制", () => {
+        const currentBoard = createBoard();
+        const rows = Array.from({ length: 4 }, (_, row) =>
+            Array.from({ length: 11 }, (_, column) => `${row}.${column}000`)
+        );
+        const table = currentBoard.create("table", [0, 0, rows]);
+        const hiddenTable = currentBoard.create("table", [0, 0, rows], { visible: false });
+        const matrix = currentBoard.create("matrix", [
+            0,
+            0,
+            [
+                [1, 0],
+                [0, 1]
+            ]
+        ]);
+        hiddenTable.setAttribute({ visible: true });
+        currentBoard.update();
+        for (const line of [...table.lines, ...hiddenTable.lines, ...matrix.brackets]) {
+            if (!(line instanceof JXG.Curve)) throw new Error("预期无构造点的曲线段");
+            expect(line.numberPoints).toBe(2);
+            expect(
+                [line.X(0, false), line.Y(0, false), line.X(1, false), line.Y(1, false)].every(
+                    Number.isFinite
+                )
+            ).toBeTrue();
+        }
     });
 
     it("hides construction points of generated table and matrix lines", () => {

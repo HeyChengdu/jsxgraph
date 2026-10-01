@@ -75,13 +75,9 @@ function gridSegment(board, from, to, attributes) {
     const y2 = at(to[1]);
     return board.create(
         "curve",
-        [
-            (t) => x1() + t * (x2() - x1()),
-            (t) => y1() + t * (y2() - y1()),
-            0,
-            1
-        ],
-        attributes
+        [(t) => x1() + t * (x2() - x1()), (t) => y1() + t * (y2() - y1()), 0, 1],
+        // 网格边恒为直线，仅采样两端；递归曲线采样会反复测量所有单元格。
+        { ...attributes, doAdvancedPlot: false, numberPointsHigh: 2, numberPointsLow: 2 }
     );
 }
 

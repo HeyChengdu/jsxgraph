@@ -94,13 +94,9 @@ function gridSegment(board, from, to, attributes) {
     const y2 = at(to[1]);
     return board.create(
         "curve",
-        [
-            (t) => x1() + t * (x2() - x1()),
-            (t) => y1() + t * (y2() - y1()),
-            0,
-            1
-        ],
-        attributes
+        [(t) => x1() + t * (x2() - x1()), (t) => y1() + t * (y2() - y1()), 0, 1],
+        // 方括号的每一段恒为直线，仅采样两端并保持动态坐标更新。
+        { ...attributes, doAdvancedPlot: false, numberPointsHigh: 2, numberPointsLow: 2 }
     );
 }
 
