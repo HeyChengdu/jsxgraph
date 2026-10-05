@@ -25,7 +25,9 @@ export function captureLayer(renderer, element, render) {
     scratch.width = root.width;
     scratch.height = root.height;
   }
-  const context = scratch.getContext('2d');
+  // 临时图层要反复扫描 alpha 边界；必须在首次创建上下文时声明读取用途。
+  // 主显示、裁切缓存与着色 Canvas 保留默认绘制配置。
+  const context = scratch.getContext('2d', { willReadFrequently: true });
   context.reset();
   const output = renderer.context;
   const matrix = output.getTransform();
