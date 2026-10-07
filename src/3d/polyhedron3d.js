@@ -110,6 +110,9 @@ JXG.Polyhedron3D = function (view, polyhedron, faces, attributes) {
         "noHighlight"
     ];
 
+    // 属性先由实体自身接纳，再传播到各面；
+    // 仅向面转发会把实体永久留在隐藏状态，使投影的祖先可见性检查失败。
+
     /**
      * Generate methods like `updateRenderer` or `setAttribute` which call simultaneously
      * the method with the same name for each face3d element of the polyhedron.
@@ -119,6 +122,10 @@ JXG.Polyhedron3D = function (view, polyhedron, faces, attributes) {
     generateMethod = function (what) {
         return function () {
             var i;
+
+            if (what === "setAttribute") {
+                JXG.GeometryElement3D.prototype.setAttribute.apply(that, arguments);
+            }
 
             for (i in that.faces) {
                 if (that.faces.hasOwnProperty(i)) {

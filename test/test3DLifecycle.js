@@ -1,11 +1,20 @@
 /* Regression coverage for View3D ownership and projection. */
 describe('View3D 清理与并列投影', function () {
-    var board, view;
+    var board, view, jobs;
     beforeEach(function () {
+        jobs = new Set();
         document.body.innerHTML = '<div id="lifecycle" style="width:800px;height:600px"></div>';
         board = JXG.JSXGraph.initBoard('lifecycle', {
             renderer: 'svg', boundingbox: [-5, 3.5, 5, -3.5],
-            showCopyright: false, showNavigation: false
+            showCopyright: false, showNavigation: false,
+            animationScheduler: {
+                schedule: function (job) {
+                    jobs.add(job);
+                    job.start();
+                    return { cancel: function () { jobs.delete(job); job.cancel(); } };
+                },
+                dispose: function () { jobs.forEach(function (job) { job.cancel(); }); jobs.clear(); }
+            }
         });
         view = board.create('view3d', [[-3.5, -3.1], [7, 7], [[-4, 4], [-4, 4], [-4, 4]]], {
             projection: 'parallel', axesPosition: 'none',
@@ -13,6 +22,26 @@ describe('View3D 清理与并列投影', function () {
         });
     });
     afterEach(function () { JXG.JSXGraph.freeBoard(board); });
+    it('user 在隐藏多面体书写完成后能看到并强调各面，隐藏和重新显示保持一致', function () {
+        // Given：完整实体和投影从隐藏状态创建。
+        var vertices = [[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+        var faces = [[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
+        var solid = view.create('polyhedron3d', [vertices, faces], { visible: false, withLabel: false });
+        // When：原生受控时钟完成书写并更新投影。
+        solid.write(500);
+        Array.from(jobs).forEach(function (job) { job.update(1); job.finish(); jobs.delete(job); });
+        board.update();
+        // Then：实体与各面共同可见，可以使用原位强调。
+        expect(solid.evalVisProp('visible')).toBe(true);
+        solid.faces.forEach(function (face) { expect(face.element2D.visPropCalc.visible).toBe(true); });
+        expect(function () { solid.indicate(500, { scaleFactor: 1 }); }).not.toThrow();
+        solid.hide(); board.update();
+        expect(solid.evalVisProp('visible')).toBe(false);
+        solid.faces.forEach(function (face) { expect(face.element2D.visPropCalc.visible).toBe(false); });
+        solid.show(); board.update();
+        expect(solid.evalVisProp('visible')).toBe(true);
+        solid.faces.forEach(function (face) { expect(face.element2D.visPropCalc.visible).toBe(true); });
+    });
     it('删除三维点时不把已注销投影重新加入深度排序', function () {
         var point = view.create('point3d', [0, 0, 0], {visible: true});
         var projection = point.element2D;
