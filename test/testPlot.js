@@ -42,6 +42,17 @@ describe("Test plotting of curves", function () {
         showNavigation: false
     });
 
+    it("Two-point parametric sampling includes both endpoints", function () {
+        var curve = board.create("curve", [() => 2, t => 4 - 8 * t, 0, 1], {
+            doAdvancedPlot: false,
+            numberPointsHigh: 2,
+            numberPointsLow: 2
+        });
+        expect(curve.points[0].usrCoords[2]).toBeCloseTo(4, 10);
+        expect(curve.points[1].usrCoords[2]).toBeCloseTo(-4, 10);
+        board.removeObject(curve);
+    });
+
     it("Plot tangens", function () {
         var c, l;
         

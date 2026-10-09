@@ -165,6 +165,12 @@ function createTable(board, parents, attributes) {
         background,
         cells,
         lines,
+        // 由 Board 的测量后布局阶段调用；组合注销后自然退出调度。
+        _updateMeasuredLayout() {
+            for (const cell of cells.flat()) cell.updateCoords();
+            background.prepareUpdate().update();
+            for (const line of lines) line.prepareUpdate().update();
+        },
         cell(row, column) {
             const cell = cells[row]?.[column];
             if (!cell) throw new RangeError(`table cell (${row}, ${column}) does not exist.`);

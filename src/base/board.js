@@ -6014,6 +6014,12 @@ JXG.extend(
                 this._recordUpdateProfile('text', textStart);
             }
             this.triggerEventHandlers(['layout'], []);
+            // 组合布局依赖本帧文字尺寸，必须在测量后、绘制前更新几何。
+            for (const target of this.objectsList) {
+                if (target instanceof Composition && target._updateMeasuredLayout) {
+                    target._updateMeasuredLayout();
+                }
+            }
 
             /*
             objs = this.objectsList.slice(0);

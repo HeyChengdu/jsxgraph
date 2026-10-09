@@ -35,6 +35,7 @@ describe("Composition 与 ElementSelection", function () {
     beforeEach(function () {
         container = document.createElement("div");
         container.id = "composition-contract";
+        container.style.cssText = "width: 500px; height: 500px";
 
     document.body.appendChild(container);
     board = JXG.JSXGraph.initBoard(container.id, {
@@ -60,6 +61,23 @@ describe("Composition 与 ElementSelection", function () {
         expect(unit.members).toEqual([point]);
         expect(() => board.fullUpdate()).not.toThrow();
         expect(unit.update).toBeUndefined();
+    });
+    it("隐藏表格显现后，同帧使用文字尺寸排布单元格和完整边线", function () {
+        const table = board.create("table", [0, 0, [["1.960", "2.045"]]], {
+            visible: false, padding: 0.2, fontSize: 24
+        });
+        table.setAttribute({visible: true});
+        board.update();
+        const first = table.cell(0, 0).bounds();
+        const second = table.cell(0, 1).bounds();
+        expect(second[0] - first[2]).toBeGreaterThanOrEqual(0.39);
+        for (const line of table.lines) {
+            const last = line.points[line.numberPoints - 1].usrCoords;
+            expect(last[1]).toBeCloseTo(line.X(1), 8);
+            expect(last[2]).toBeCloseTo(line.Y(1), 8);
+        }
+        board.removeObject(table);
+        expect(() => board.update()).not.toThrow();
     });
     it("别名不能覆盖 API，显式成员删除同步清理索引", function () {
         const unit = board.create("composition");

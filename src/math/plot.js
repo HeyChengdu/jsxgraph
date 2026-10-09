@@ -85,7 +85,8 @@ Mat.Plot = {
         var i,
             t,
             suspendUpdate = false,
-            stepSize = (ma - mi) / len;
+            // 点数包含两端；只有一个点时保留起点，避免除以零。
+            stepSize = len > 1 ? (ma - mi) / (len - 1) : 0;
 
         for (i = 0; i < len; i++) {
             t = mi + i * stepSize;
